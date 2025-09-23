@@ -1,0 +1,24 @@
+{
+  "name": "edai-accelerator-landing",
+  "version": "1.0.0",
+  "description": "EdAI Accelerator landing page with database connectivity",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step needed for static assets'",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@vercel/postgres": "^0.5.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "vercel": "^32.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["landing-page", "education", "accelerator"],
+  "author": "EdAI Accelerator",
+  "license": "MIT"
+}

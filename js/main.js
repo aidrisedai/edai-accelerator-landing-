@@ -189,7 +189,7 @@
     }
 
     // Handle form submission
-    function handleFormSubmit(e) {
+    async function handleFormSubmit(e) {
         e.preventDefault();
         
         // Validate all fields
@@ -221,17 +221,60 @@
         // Show loading overlay
         showLoading();
 
-        // Simulate form submission (replace with actual API call)
-        setTimeout(() => {
+        // Collect form data
+        const formData = new FormData(applicationForm);
+        const applicationData = {
+            parentName: formData.get('parentName'),
+            parentEmail: formData.get('parentEmail'),
+            parentPhone: formData.get('parentPhone'),
+            teenName: formData.get('teenName'),
+            teenAge: formData.get('teenAge'),
+            teenGrade: formData.get('teenGrade'),
+            teenInterests: formData.get('teenInterests'),
+            parentExpectations: formData.get('parentExpectations'),
+            agreeTerms: formData.get('agreeTerms') === 'on',
+            agreeContact: formData.get('agreeContact') === 'on'
+        };
+
+        try {
+            // Submit to API
+            const response = await fetch('/api/submit-application', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(applicationData)
+            });
+
+            const result = await response.json();
+
             hideLoading();
-            showSuccessModal();
-            
-            // Reset form
-            applicationForm.reset();
-            
-            // In a real application, you would send the data to your server here
-            console.log('Form submitted successfully!');
-        }, 2000);
+
+            if (result.success) {
+                // Show success modal
+                showSuccessModal();
+                
+                // Reset form
+                applicationForm.reset();
+                
+                console.log('Application submitted successfully:', result.data);
+            } else {
+                // Handle validation or other errors
+                if (result.details && Array.isArray(result.details)) {
+                    // Show specific validation errors
+                    result.details.forEach(error => {
+                        console.error('Validation error:', error);
+                    });
+                    alert('Please check your form data: ' + result.details.join(', '));
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to submit application'));
+                }
+            }
+        } catch (error) {
+            hideLoading();
+            console.error('Network error:', error);
+            alert('Network error. Please check your connection and try again.');
+        }
     }
 
     // Mobile menu functionality

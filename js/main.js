@@ -305,12 +305,54 @@ function moveToNextStep() {
     setTimeout(() => {
         hideTypingIndicator();
         
-        // Check if we need to collect info for next child
-        const question = chatQuestions[chatState.step];
-        console.log('Next question:', question ? question.field : 'Application complete');
+        // Check if we just completed the last question for a child (agreeContact is the last question per child)
+        const currentQuestion = chatQuestions[chatState.step - 1];
+        const nextQuestion = chatQuestions[chatState.step];
         
-        if (question) {
-            addBotMessage(question.bot);
+        // If we just finished agreeContact and have more children to process
+        if (currentQuestion && currentQuestion.field === 'agreeContact' && chatState.currentChild < chatState.totalChildren) {
+            console.log(`Finished child ${chatState.currentChild} of ${chatState.totalChildren}. Moving to next child.`);
+            
+            // Store current child's data with child number prefix
+            const childPrefix = `child${chatState.currentChild}_`;
+            const childData = {};
+            
+            // Copy child-specific data with prefix
+            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'agreeTerms'].forEach(field => {
+                if (chatState.data[field]) {
+                    childData[childPrefix + field] = chatState.data[field];
+                    delete chatState.data[field]; // Remove from temp storage
+                }
+            });
+            
+            // Add child data to main data object
+            Object.assign(chatState.data, childData);
+            
+            // Move to next child
+            chatState.currentChild++;
+            
+            // Go back to first child question (teenName - step 4)
+            chatState.step = 4;
+            
+            // Add transition message
+            addBotMessage(`Alhamdulillah! Now let's move on to your ${getOrdinalNumber(chatState.currentChild)} child.`);
+            
+            // Continue with next child
+            setTimeout(() => {
+                const question = chatQuestions[chatState.step];
+                if (question) {
+                    addBotMessage(question.bot);
+                    showInputForCurrentStep();
+                }
+            }, 1500);
+            return;
+        }
+        
+        // Normal flow - check if we have more questions
+        console.log('Next question:', nextQuestion ? nextQuestion.field : 'Application complete');
+        
+        if (nextQuestion) {
+            addBotMessage(nextQuestion.bot);
             showInputForCurrentStep();
         } else {
             console.log('All questions completed, finishing application');
@@ -324,23 +366,51 @@ function completeApplication() {
     
     setTimeout(() => {
         hideTypingIndicator();
+        
+        // Store the last child's data if we haven't already
+        if (chatState.data.teenName && chatState.currentChild <= chatState.totalChildren) {
+            const childPrefix = `child${chatState.currentChild}_`;
+            const childData = {};
+            
+            // Copy child-specific data with prefix
+            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'agreeTerms'].forEach(field => {
+                if (chatState.data[field]) {
+                    childData[childPrefix + field] = chatState.data[field];
+                    delete chatState.data[field]; // Remove from temp storage
+                }
+            });
+            
+            // Add child data to main data object
+            Object.assign(chatState.data, childData);
+        }
+        
         addBotMessage("Barakallahu feeki! I have all the information I need. Let me submit your application now...");
         
-        // Prepare application data
+        // Prepare application data with all children
         const applicationData = {
             parentName: chatState.data.parentName,
             parentEmail: chatState.data.parentEmail,
             parentPhone: chatState.data.parentPhone,
-            teenName: chatState.data.teenName,
-            teenAge: chatState.data.teenAge,
-            teenGrade: chatState.data.teenGrade,
-            teenInterests: chatState.data.teenInterests,
-            parentExpectations: chatState.data.parentExpectations,
-            agreeTerms: chatState.data.agreeTerms,
+            totalChildren: chatState.totalChildren,
             agreeContact: chatState.data.agreeContact,
             applicationMethod: 'chat',
             submissionDate: new Date().toISOString()
         };
+        
+        // Add all children data
+        for (let i = 1; i <= chatState.totalChildren; i++) {
+            const prefix = `child${i}_`;
+            applicationData[`child${i}`] = {
+                name: chatState.data[prefix + 'teenName'],
+                age: chatState.data[prefix + 'teenAge'],
+                grade: chatState.data[prefix + 'teenGrade'],
+                interests: chatState.data[prefix + 'teenInterests'],
+                parentExpectations: chatState.data[prefix + 'parentExpectations'],
+                agreeTerms: chatState.data[prefix + 'agreeTerms']
+            };
+        }
+        
+        console.log('Complete application data:', applicationData);
         
         // Submit application
         submitChatApplication(applicationData);

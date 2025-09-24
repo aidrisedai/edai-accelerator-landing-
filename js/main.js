@@ -496,6 +496,19 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Start chat button NOT found');
     }
     
+    // Program Details Apply Now button
+    const programDetailsApplyBtn = document.getElementById('programDetailsApplyBtn');
+    if (programDetailsApplyBtn) {
+        console.log('Program details apply button found');
+        programDetailsApplyBtn.addEventListener('click', function(e) {
+            console.log('Program details apply button clicked!');
+            e.preventDefault();
+            openChatApplication();
+        });
+    } else {
+        console.log('Program details apply button NOT found');
+    }
+    
     // Chat modal close button
     const chatModalClose = document.getElementById('chatModalClose');
     if (chatModalClose) {

@@ -77,7 +77,7 @@
                     </div>
                 </div>
                 <div class="hero-cta">
-                    <a href="#apply" class="btn btn-primary">Apply Now</a>
+                    <button class="btn btn-primary" onclick="openChatApplication()">Apply Now</button>
                     <a href="#program" class="btn btn-secondary">Learn More</a>
                 </div>
             </div>
@@ -303,90 +303,35 @@
                 </div>
 
                 <div class="application-form-container">
-                    <form class="application-form" id="applicationForm">
-                        <h3>Application Form - Only 15 Spots Available</h3>
+                    <div class="chat-application-intro">
+                        <h3>Start Your Application - Only 15 Spots Available</h3>
+                        <p>Experience our conversational application process designed with Islamic values in mind. We'll guide you through each step with care and respect.</p>
                         
-                        <div class="form-group">
-                            <label for="parentName">Parent/Guardian Name *</label>
-                            <input type="text" id="parentName" name="parentName" required>
+                        <div class="application-features">
+                            <div class="feature">
+                                <span class="feature-icon">💬</span>
+                                <span>Conversational & Personal</span>
+                            </div>
+                            <div class="feature">
+                                <span class="feature-icon">🕌</span>
+                                <span>Islamic Values Centered</span>
+                            </div>
+                            <div class="feature">
+                                <span class="feature-icon">👨‍👩‍👧‍👦</span>
+                                <span>Multiple Children Welcome</span>
+                            </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="parentEmail">Email Address *</label>
-                            <input type="email" id="parentEmail" name="parentEmail" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="parentPhone">Phone Number *</label>
-                            <input type="tel" id="parentPhone" name="parentPhone" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="teenName">Teen's Name *</label>
-                            <input type="text" id="teenName" name="teenName" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="teenAge">Teen's Age *</label>
-                            <select id="teenAge" name="teenAge" required>
-                                <option value="">Select age</option>
-                                <option value="12">12</option>
-                                <option value="13">13</option>
-                                <option value="14">14</option>
-                                <option value="15">15</option>
-                                <option value="16">16</option>
-                                <option value="17">17</option>
-                                <option value="18">18</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="teenGrade">Current Grade *</label>
-                            <select id="teenGrade" name="teenGrade" required>
-                                <option value="">Select grade</option>
-                                <option value="7">7th Grade</option>
-                                <option value="8">8th Grade</option>
-                                <option value="9">9th Grade</option>
-                                <option value="10">10th Grade</option>
-                                <option value="11">11th Grade</option>
-                                <option value="12">12th Grade</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="teenInterests">What excites your teen about creating and building? *</label>
-                            <textarea id="teenInterests" name="teenInterests" required placeholder="Share what drives your teen's curiosity and desire to create..."></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="parentExpectations">What do you hope your teen will gain from this program? *</label>
-                            <textarea id="parentExpectations" name="parentExpectations" required placeholder="Tell us about your goals and expectations..."></textarea>
-                        </div>
-                        
-                        <div class="form-group checkbox-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
-                                <span class="checkmark"></span>
-                                I confirm my teen is Muslim and in 7th grade or above *
-                            </label>
-                        </div>
-                        
-                        <div class="form-group checkbox-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="agreeContact" name="agreeContact">
-                                <span class="checkmark"></span>
-                                I agree to be contacted about this application and program updates
-                            </label>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary btn-submit">
-                            Submit Application
+                        <button class="btn btn-primary btn-large" id="startChatApplication">
+                            <span>🚀</span>
+                            Begin Application Chat
                         </button>
                         
-                        <div class="form-footer">
-                            <p><strong>Only 15 spots available.</strong> Applications reviewed within 48 hours. Questions? <a href="#contact">Contact us</a></p>
-                        </div>
-                    </form>
+                        <p class="application-note">
+                            <strong>Only 15 spots available.</strong> Applications reviewed within 48 hours. 
+                            Questions? <a href="#contact">Contact us</a>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -421,6 +366,27 @@
         </div>
     </footer>
 
+    <!-- Chat Application Modal -->
+    <div id="chatApplicationModal" class="modal">
+        <div class="modal-content chat-modal">
+            <div class="chat-header">
+                <div class="chat-header-info">
+                    <span class="chat-title">EdAI Accelerator Application</span>
+                    <span class="chat-subtitle">Assalamu Alaikum, welcome!</span>
+                </div>
+                <button class="modal-close" id="chatModalClose">&times;</button>
+            </div>
+            <div class="chat-container" id="chatContainer">
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Chat messages will be populated by JavaScript -->
+                </div>
+                <div class="chat-input-container" id="chatInputContainer">
+                    <!-- Input will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Success Modal -->
     <div id="successModal" class="modal">
         <div class="modal-content">
@@ -429,11 +395,11 @@
                 <button class="modal-close" id="modalClose">&times;</button>
             </div>
             <div class="modal-body">
-                <p>Thank you for applying to EdAI Accelerator. We've received your application and will review it within 48 hours.</p>
-                <p>You'll hear from us soon via email with next steps.</p>
+                <p>Barakallahu feeki! Thank you for applying to EdAI Accelerator. We've received your application and will review it within 48 hours.</p>
+                <p>You'll hear from us soon via email with next steps, insha'Allah.</p>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-primary" id="modalOk">Got it!</button>
+                <button class="btn btn-primary" id="modalOk">Jazakallahu Khairan!</button>
             </div>
         </div>
     </div>

@@ -556,11 +556,399 @@
         }, 200);
     });
 
+    // Chat Application System
+    let chatState = {
+        step: 0,
+        data: {},
+        currentChild: 1,
+        totalChildren: 1
+    };
+
+    const chatQuestions = [
+        {
+            bot: "Assalamu Alaikum wa Rahmatullahi wa Barakatuh! Welcome to EdAI Accelerator. I'm delighted to help you with your application. May I please have your name?",
+            type: 'text',
+            field: 'parentName'
+        },
+        {
+            bot: "Barakallahu feeki, {parentName}. Could you please provide your email address so we can keep you updated throughout the process?",
+            type: 'email',
+            field: 'parentEmail'
+        },
+        {
+            bot: "Jazakallahu khair. And your phone number for any urgent communication?",
+            type: 'tel',
+            field: 'parentPhone'
+        },
+        {
+            bot: "Perfect! Now, how many children would you like to enroll in our program? We welcome multiple children from the same family.",
+            type: 'options',
+            options: ['1 child', '2 children', '3 children', '4+ children'],
+            field: 'totalChildren'
+        },
+        {
+            bot: "Wonderful! Let's start with your {childNumber} child. What is their name?",
+            type: 'text',
+            field: 'teenName'
+        },
+        {
+            bot: "Masha'Allah! How old is {teenName}?",
+            type: 'options',
+            options: ['12 years', '13 years', '14 years', '15 years', '16 years', '17 years', '18 years'],
+            field: 'teenAge'
+        },
+        {
+            bot: "And what grade is {teenName} currently in?",
+            type: 'options',
+            options: ['7th Grade', '8th Grade', '9th Grade', '10th Grade', '11th Grade', '12th Grade'],
+            field: 'teenGrade'
+        },
+        {
+            bot: "Tell me, what excites {teenName} about creating and building? What drives their curiosity?",
+            type: 'textarea',
+            field: 'teenInterests',
+            placeholder: "Share what inspires your teen to create and innovate..."
+        },
+        {
+            bot: "Subhan'Allah! As a parent, what do you hope {teenName} will gain from this program? What are your aspirations for them?",
+            type: 'textarea',
+            field: 'parentExpectations',
+            placeholder: "Tell us about your hopes and expectations..."
+        },
+        {
+            bot: "I need to confirm that {teenName} is Muslim and in 7th grade or above, as this is required for our program. Can you confirm this?",
+            type: 'options',
+            options: ['Yes, I confirm', 'No, they do not meet these requirements'],
+            field: 'agreeTerms'
+        },
+        {
+            bot: "Would you like us to keep you updated about program news and future opportunities?",
+            type: 'options',
+            options: ['Yes, please keep me updated', 'No, just this application'],
+            field: 'agreeContact'
+        }
+    ];
+
+    function openChatApplication() {
+        const modal = document.getElementById('chatApplicationModal');
+        const chatMessages = document.getElementById('chatMessages');
+        
+        // Reset chat state
+        chatState = {
+            step: 0,
+            data: {},
+            currentChild: 1,
+            totalChildren: 1
+        };
+        
+        // Clear chat messages
+        chatMessages.innerHTML = '';
+        
+        // Show modal
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        
+        // Start conversation
+        setTimeout(() => {
+            addBotMessage(chatQuestions[0].bot);
+            showInputForCurrentStep();
+        }, 500);
+    }
+
+    function addBotMessage(message) {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message bot';
+        
+        // Replace placeholders with actual data
+        let processedMessage = message;
+        Object.keys(chatState.data).forEach(key => {
+            processedMessage = processedMessage.replace(new RegExp(`{${key}}`, 'g'), chatState.data[key]);
+        });
+        processedMessage = processedMessage.replace('{childNumber}', getOrdinalNumber(chatState.currentChild));
+        
+        messageDiv.innerHTML = `
+            <div class="chat-avatar">EdAI</div>
+            <div class="chat-bubble">${processedMessage}</div>
+        `;
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addUserMessage(message) {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message user';
+        
+        messageDiv.innerHTML = `
+            <div class="chat-avatar">You</div>
+            <div class="chat-bubble">${message}</div>
+        `;
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showInputForCurrentStep() {
+        const container = document.getElementById('chatInputContainer');
+        const question = chatQuestions[chatState.step];
+        
+        if (!question) {
+            // Application complete
+            completeApplication();
+            return;
+        }
+        
+        let inputHTML = '';
+        
+        if (question.type === 'text' || question.type === 'email' || question.type === 'tel') {
+            inputHTML = `
+                <input type="${question.type}" class="chat-input" id="chatInput" 
+                       placeholder="Type your answer..." required>
+                <button class="chat-send-btn" onclick="handleTextInput()">Send</button>
+            `;
+        } else if (question.type === 'textarea') {
+            inputHTML = `
+                <textarea class="chat-input" id="chatInput" rows="3" 
+                          placeholder="${question.placeholder || 'Type your answer...'}"></textarea>
+                <button class="chat-send-btn" onclick="handleTextInput()">Send</button>
+            `;
+        } else if (question.type === 'options') {
+            const optionsHTML = question.options.map((option, index) => 
+                `<button class="chat-option" onclick="handleOptionSelect('${option}')">${option}</button>`
+            ).join('');
+            
+            inputHTML = `
+                <div class="chat-options">${optionsHTML}</div>
+            `;
+        }
+        
+        container.innerHTML = inputHTML;
+        
+        // Focus on input if it's a text input
+        const input = document.getElementById('chatInput');
+        if (input) {
+            input.focus();
+            
+            // Handle Enter key
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleTextInput();
+                }
+            });
+        }
+    }
+
+    function handleTextInput() {
+        const input = document.getElementById('chatInput');
+        const value = input.value.trim();
+        
+        if (!value) return;
+        
+        const question = chatQuestions[chatState.step];
+        
+        // Validate input
+        if (question.type === 'email' && !isValidEmail(value)) {
+            alert('Please enter a valid email address.');
+            return;
+        }
+        
+        if (question.type === 'tel' && !isValidPhone(value)) {
+            alert('Please enter a valid phone number.');
+            return;
+        }
+        
+        // Add user message
+        addUserMessage(value);
+        
+        // Store data
+        if (question.field.includes('teen') && chatState.totalChildren > 1) {
+            // Handle multiple children
+            if (!chatState.data.children) chatState.data.children = [];
+            if (!chatState.data.children[chatState.currentChild - 1]) {
+                chatState.data.children[chatState.currentChild - 1] = {};
+            }
+            chatState.data.children[chatState.currentChild - 1][question.field] = value;
+        } else {
+            chatState.data[question.field] = value;
+        }
+        
+        proceedToNextStep();
+    }
+
+    function handleOptionSelect(option) {
+        const question = chatQuestions[chatState.step];
+        
+        // Add user message
+        addUserMessage(option);
+        
+        // Store data
+        let value = option;
+        if (question.field === 'totalChildren') {
+            chatState.totalChildren = parseInt(option.split(' ')[0]);
+            value = chatState.totalChildren;
+        } else if (question.field === 'teenAge') {
+            value = parseInt(option.split(' ')[0]);
+        } else if (question.field === 'agreeTerms') {
+            value = option.includes('Yes');
+        } else if (question.field === 'agreeContact') {
+            value = option.includes('Yes');
+        }
+        
+        // Store data
+        if (question.field.includes('teen') && chatState.totalChildren > 1) {
+            if (!chatState.data.children) chatState.data.children = [];
+            if (!chatState.data.children[chatState.currentChild - 1]) {
+                chatState.data.children[chatState.currentChild - 1] = {};
+            }
+            chatState.data.children[chatState.currentChild - 1][question.field] = value;
+        } else {
+            chatState.data[question.field] = value;
+        }
+        
+        proceedToNextStep();
+    }
+
+    function proceedToNextStep() {
+        // Show typing indicator
+        showTypingIndicator();
+        
+        setTimeout(() => {
+            hideTypingIndicator();
+            
+            // Check if we need to repeat questions for multiple children
+            const currentQuestion = chatQuestions[chatState.step];
+            if (currentQuestion && currentQuestion.field === 'agreeContact' && chatState.currentChild < chatState.totalChildren) {
+                // Move to next child
+                chatState.currentChild++;
+                chatState.step = 4; // Go back to teen name question
+                
+                addBotMessage(`Now let's get information about your ${getOrdinalNumber(chatState.currentChild)} child.`);
+                setTimeout(() => {
+                    addBotMessage(chatQuestions[chatState.step].bot);
+                    showInputForCurrentStep();
+                }, 1000);
+            } else {
+                // Move to next question
+                chatState.step++;
+                
+                if (chatState.step < chatQuestions.length) {
+                    addBotMessage(chatQuestions[chatState.step].bot);
+                    showInputForCurrentStep();
+                } else {
+                    completeApplication();
+                }
+            }
+        }, 1000);
+    }
+
+    function completeApplication() {
+        addBotMessage("Barakallahu feekum! I have all the information needed. Let me submit your application now...");
+        
+        setTimeout(() => {
+            // Prepare data for submission
+            const applicationData = {
+                ...chatState.data,
+                multipleChildren: chatState.totalChildren > 1,
+                childrenData: chatState.data.children || []
+            };
+            
+            // Submit application (same logic as before)
+            submitChatApplication(applicationData);
+        }, 2000);
+    }
+
+    async function submitChatApplication(data) {
+        try {
+            const response = await fetch('/api/submit-application', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                closeChatModal();
+                showSuccessModal();
+            } else {
+                addBotMessage(`I apologize, there was an issue submitting your application: ${result.error || 'Please try again.'}`);
+            }
+        } catch (error) {
+            addBotMessage('There was a network issue. Please check your connection and try again.');
+        }
+    }
+
+    function showTypingIndicator() {
+        const chatMessages = document.getElementById('chatMessages');
+        const indicator = document.createElement('div');
+        indicator.className = 'typing-indicator';
+        indicator.id = 'typingIndicator';
+        indicator.innerHTML = `
+            <span>EdAI is typing</span>
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        `;
+        chatMessages.appendChild(indicator);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+        const indicator = document.getElementById('typingIndicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+    function closeChatModal() {
+        const modal = document.getElementById('chatApplicationModal');
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    function getOrdinalNumber(num) {
+        const ordinals = ['', 'first', 'second', 'third', 'fourth', 'fifth'];
+        return ordinals[num] || `${num}th`;
+    }
+
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function isValidPhone(phone) {
+        return /^[\+]?[1-9][\d\s\-\(\)]{7,15}$/.test(phone.replace(/[\s\-\(\)]/g, ''));
+    }
+
+    // Add event listener for chat modal close
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatModalClose = document.getElementById('chatModalClose');
+        if (chatModalClose) {
+            chatModalClose.addEventListener('click', closeChatModal);
+        }
+
+        const startChatBtn = document.getElementById('startChatApplication');
+        if (startChatBtn) {
+            startChatBtn.addEventListener('click', openChatApplication);
+        }
+    });
+
+    // Make openChatApplication globally available
+    window.openChatApplication = openChatApplication;
+
     // Export functions for testing (if needed)
     window.EdAILandingPage = {
         validateField,
         showSuccessModal,
-        closeModal
+        closeModal,
+        openChatApplication,
+        closeChatModal
     };
 
-})();
+});

@@ -127,6 +127,11 @@ function addBotMessage(message) {
     });
     processedMessage = processedMessage.replace('{childNumber}', getOrdinalNumber(chatState.currentChild));
     
+    // For child name placeholder, use current teen name if available
+    if (chatState.data.teenName) {
+        processedMessage = processedMessage.replace(new RegExp('{teenName}', 'g'), chatState.data.teenName);
+    }
+    
     messageDiv.innerHTML = `
         <div class="chat-avatar">EdAI</div>
         <div class="chat-bubble">${processedMessage}</div>
@@ -309,15 +314,15 @@ function moveToNextStep() {
         const currentQuestion = chatQuestions[chatState.step - 1];
         const nextQuestion = chatQuestions[chatState.step];
         
-        // If we just finished agreeContact and have more children to process
-        if (currentQuestion && currentQuestion.field === 'agreeContact' && chatState.currentChild < chatState.totalChildren) {
+        // If we just finished agreeTerms (last child-specific question) and have more children to process
+        if (currentQuestion && currentQuestion.field === 'agreeTerms' && chatState.currentChild < chatState.totalChildren) {
             console.log(`Finished child ${chatState.currentChild} of ${chatState.totalChildren}. Moving to next child.`);
             
             // Store current child's data with child number prefix
             const childPrefix = `child${chatState.currentChild}_`;
             const childData = {};
             
-            // Copy child-specific data with prefix
+            // Copy child-specific data with prefix (excluding agreeContact which is asked once at the end)
             ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'agreeTerms'].forEach(field => {
                 if (chatState.data[field]) {
                     childData[childPrefix + field] = chatState.data[field];
@@ -331,8 +336,9 @@ function moveToNextStep() {
             // Move to next child
             chatState.currentChild++;
             
-            // Go back to first child question (teenName - step 4)
-            chatState.step = 4;
+            // Find the index of teenName question dynamically
+            const teenNameQuestionIndex = chatQuestions.findIndex(q => q.field === 'teenName');
+            chatState.step = teenNameQuestionIndex;
             
             // Add transition message
             addBotMessage(`Alhamdulillah! Now let's move on to your ${getOrdinalNumber(chatState.currentChild)} child.`);

@@ -120,15 +120,20 @@ export default async function handler(req, res) {
             });
         }
 
-        // Check for duplicate email
-        const existingApplication = await sql`
-            SELECT id FROM applications WHERE parent_email = ${parentEmail.trim().toLowerCase()}
+        // Check for duplicate email only if trying to register the same child
+        // Allow multiple children from same parent
+        const childNames = children.map(child => child.name.trim().toLowerCase());
+        const existingApplications = await sql`
+            SELECT teen_name FROM applications WHERE parent_email = ${parentEmail.trim().toLowerCase()}
         `;
-
-        if (existingApplication.rows.length > 0) {
+        
+        const existingChildNames = existingApplications.rows.map(row => row.teen_name.toLowerCase());
+        const duplicateChildren = childNames.filter(name => existingChildNames.includes(name));
+        
+        if (duplicateChildren.length > 0) {
             return res.status(409).json({
                 success: false,
-                error: 'An application with this email address already exists'
+                error: `Application already exists for child(ren): ${duplicateChildren.join(', ')}`
             });
         }
 

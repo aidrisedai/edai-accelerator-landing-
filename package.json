@@ -2,11 +2,11 @@
   "name": "edai-accelerator-landing",
   "version": "1.0.0",
   "description": "EdAI Accelerator landing page with database connectivity",
-  "main": "index.html",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build": "echo 'No build step needed'",
+    "build": "echo 'Static files ready for deployment'",
     "deploy": "git push origin main"
   },
   "dependencies": {
@@ -14,13 +14,10 @@
     "pg": "^8.11.3",
     "cors": "^2.8.5"
   },
-  "devDependencies": {
-    "vercel": "^32.7.0"
-  },
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["landing-page", "education", "accelerator"],
+  "keywords": ["landing-page", "education", "accelerator", "render"],
   "author": "EdAI Accelerator",
   "license": "MIT"
 }

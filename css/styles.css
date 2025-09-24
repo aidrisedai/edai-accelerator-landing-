@@ -1074,9 +1074,9 @@ body {
 
 .info-cards {
     display: flex;
-    flex-direction: column;
     gap: var(--spacing-lg);
     margin-top: var(--spacing-2xl);
+    justify-content: space-between;
 }
 
 .info-card {
@@ -1088,6 +1088,8 @@ body {
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-light);
+    flex: 1;
+    min-width: 0;
 }
 
 .info-icon {
@@ -1503,6 +1505,14 @@ body {
     .application-content {
         grid-template-columns: 1fr;
         gap: var(--spacing-2xl);
+    }
+    
+    .info-cards {
+        flex-direction: column;
+    }
+    
+    .info-card {
+        flex: none;
     }
     
     .footer-content {

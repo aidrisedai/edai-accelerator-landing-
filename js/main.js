@@ -741,7 +741,7 @@
         }
     }
 
-    function handleTextInput() {
+    window.handleTextInput = function handleTextInput() {
         const input = document.getElementById('chatInput');
         const value = input.value.trim();
         
@@ -778,7 +778,7 @@
         proceedToNextStep();
     }
 
-    function handleOptionSelect(option) {
+    window.handleOptionSelect = function handleOptionSelect(option) {
         const question = chatQuestions[chatState.step];
         
         // Add user message
@@ -926,18 +926,56 @@
         return /^[\+]?[1-9][\d\s\-\(\)]{7,15}$/.test(phone.replace(/[\s\-\(\)]/g, ''));
     }
 
-    // Add event listener for chat modal close
-    document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners when DOM is ready
+    function setupChatEventListeners() {
+        // Chat modal close button
         const chatModalClose = document.getElementById('chatModalClose');
         if (chatModalClose) {
-            chatModalClose.addEventListener('click', closeChatModal);
+            chatModalClose.addEventListener('click', function() {
+                closeChatModal();
+            });
         }
 
+        // Start chat application button
         const startChatBtn = document.getElementById('startChatApplication');
         if (startChatBtn) {
-            startChatBtn.addEventListener('click', openChatApplication);
+            startChatBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                openChatApplication();
+            });
         }
-    });
+
+        // Hero Apply Now button
+        const heroApplyBtn = document.getElementById('heroApplyBtn');
+        if (heroApplyBtn) {
+            heroApplyBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                openChatApplication();
+            });
+        }
+
+        // Any other Apply Now buttons with onclick attributes
+        const applyButtons = document.querySelectorAll('button[onclick*="openChatApplication"]');
+        applyButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                openChatApplication();
+            });
+        });
+        
+        // Close modal when clicking outside
+        const chatModal = document.getElementById('chatApplicationModal');
+        if (chatModal) {
+            chatModal.addEventListener('click', function(e) {
+                if (e.target === chatModal) {
+                    closeChatModal();
+                }
+            });
+        }
+    }
+
+    // Set up chat event listeners
+    document.addEventListener('DOMContentLoaded', setupChatEventListeners);
 
     // Make openChatApplication globally available
     window.openChatApplication = openChatApplication;

@@ -905,6 +905,7 @@ body {
 .chat-messages {
     flex: 1;
     padding: var(--spacing-lg);
+    padding-bottom: var(--spacing-2xl);
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -925,19 +926,26 @@ body {
     background: white;
     color: var(--text-primary);
     border: 1px solid var(--border-light);
+    font-weight: 450;
 }
 
 .chat-message.user .chat-bubble {
     background: var(--primary-blue);
     color: white;
+    font-weight: 500;
 }
 
 .chat-bubble {
     max-width: 80%;
-    padding: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
     border-radius: var(--radius-lg);
-    line-height: 1.5;
+    line-height: 1.6;
     word-wrap: break-word;
+    font-family: var(--font-primary);
+    font-size: var(--font-size-base);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .chat-avatar {
@@ -967,13 +975,17 @@ body {
 
 .chat-input {
     width: 100%;
-    padding: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
     border: 2px solid var(--border-light);
     border-radius: var(--radius-lg);
     font-size: var(--font-size-base);
     resize: none;
     font-family: var(--font-primary);
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
     transition: border-color var(--transition-fast);
+    background: #ffffff;
 }
 
 .chat-input:focus {
@@ -995,12 +1007,18 @@ body {
     border: none;
     border-radius: var(--radius-full);
     cursor: pointer;
-    transition: background-color var(--transition-fast);
+    transition: all var(--transition-fast);
     font-size: var(--font-size-sm);
+    font-family: var(--font-primary);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
 
 .chat-option:hover {
     background: var(--primary-blue-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
 }
 
 .chat-send-btn {

@@ -239,17 +239,17 @@ function handleTextInput() {
     
     // Validate input
     if (question.type === 'email' && !isValidEmail(value)) {
-        alert('Please enter a valid email address.');
+        addBotMessage('I need a valid email address to keep you updated. Could you please check the format? For example: parent@email.com');
         return;
     }
     
     if (question.type === 'tel' && !isValidPhone(value)) {
-        alert('Please enter a valid phone number.');
+        addBotMessage('Please provide a valid phone number. You can include country codes if needed (e.g., +1-555-123-4567).');
         return;
     }
     
     if (question.type === 'textarea' && value.length < 20) {
-        alert('Please provide at least 20 characters.');
+        addBotMessage('I\'d love to hear more detail in your response. Could you elaborate a bit more? At least 20 characters help me understand better.');
         return;
     }
     
@@ -289,13 +289,48 @@ function handleOptionSelect(option) {
     
     // Special handling for totalChildren
     if (question.field === 'totalChildren') {
-        const num = option.match(/\d+/)[0];
-        chatState.totalChildren = parseInt(num);
+        let num;
+        if (option.includes('4+ children')) {
+            // For 4+ children, we need to ask for the exact number
+            chatState.needsChildrenCount = true;
+            chatState.totalChildren = 4; // Temporary, will be updated
+        } else {
+            num = option.match(/\d+/)[0];
+            chatState.totalChildren = parseInt(num);
+        }
         console.log('Set total children to:', chatState.totalChildren);
     }
     
+    // If 4+ selected, ask for exact number now
+    if (question.field === 'totalChildren' && chatState.needsChildrenCount) {
+        addBotMessage('How many children would you like to register? Please enter a number (e.g., 5).');
+        const container = document.getElementById('chatInputContainer');
+        container.innerHTML = `
+            <input type="number" min="1" max="10" class="chat-input" id="chatInput" placeholder="Enter number of children" required>
+            <button class="chat-send-btn" onclick="handleExactChildrenCount()">Send</button>
+        `;
+        return;
+    }
+
     // Move to next step
     console.log('Moving to next step...');
+    moveToNextStep();
+}
+
+function handleExactChildrenCount() {
+    const input = document.getElementById('chatInput');
+    const count = parseInt(input.value);
+    
+    if (!count || count < 1 || count > 10) {
+        addBotMessage('Please enter a valid number between 1 and 10.');
+        return;
+    }
+    
+    chatState.totalChildren = count;
+    chatState.needsChildrenCount = false;
+    addUserMessage(`${count} children`);
+    addBotMessage(`Wonderful! I'll help you register ${count} children. Let's get started.`);
+    
     moveToNextStep();
 }
 
@@ -310,7 +345,7 @@ function moveToNextStep() {
     setTimeout(() => {
         hideTypingIndicator();
         
-        // Check if we just completed the last question for a child (agreeContact is the last question per child)
+        // Check if we just completed the last child-specific question (agreeTerms)
         const currentQuestion = chatQuestions[chatState.step - 1];
         const nextQuestion = chatQuestions[chatState.step];
         
@@ -390,7 +425,7 @@ function completeApplication() {
             Object.assign(chatState.data, childData);
         }
         
-        addBotMessage("Barakallahu feeki! I have all the information I need. Let me submit your application now...");
+        addBotMessage("Barakallahu feekum! I have all the information I need. Let me submit your application now...");
         
         // Prepare application data with all children
         const applicationData = {
@@ -538,6 +573,7 @@ function scrollChatToBottom(delay = 100) {
 // Make functions globally available for onclick handlers
 window.handleTextInput = handleTextInput;
 window.handleOptionSelect = handleOptionSelect;
+window.handleExactChildrenCount = handleExactChildrenCount;
 window.openChatApplication = openChatApplication;
 
 document.addEventListener('DOMContentLoaded', function() {

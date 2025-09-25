@@ -22,6 +22,9 @@ export default async function handler(req, res) {
     }
 
     try {
+        console.log('=== API DEBUGGING - RECEIVED DATA ===');
+        console.log('Raw req.body:', JSON.stringify(req.body, null, 2));
+        
         const {
             parentName,
             parentEmail,
@@ -32,21 +35,32 @@ export default async function handler(req, res) {
             ...childrenData
         } = req.body;
         
+        console.log('Extracted parent data:', { parentName, parentEmail, parentPhone, totalChildren, agreeContact });
+        console.log('Extracted children data object:', childrenData);
+        
         // Extract children data
         const children = [];
+        console.log('Extracting children data for totalChildren:', totalChildren);
         for (let i = 1; i <= totalChildren; i++) {
+            console.log(`Looking for child${i} in childrenData`);
             const child = childrenData[`child${i}`];
+            console.log(`child${i} data:`, child);
             if (child) {
-                children.push({
+                const extractedChild = {
                     name: child.name,
                     age: child.age,
                     grade: child.grade,
                     interests: child.interests,
                     parentExpectations: child.parentExpectations,
                     agreeTerms: child.agreeTerms
-                });
+                };
+                console.log(`Extracted child ${i}:`, extractedChild);
+                children.push(extractedChild);
+            } else {
+                console.log(`No child${i} found in childrenData`);
             }
         }
+        console.log('Final children array:', children);
 
         // Validation
         const validationErrors = [];

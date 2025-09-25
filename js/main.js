@@ -451,7 +451,16 @@ function completeApplication() {
             };
         }
         
+        console.log('=== DEBUGGING APPLICATION SUBMISSION ===');
+        console.log('Total children:', chatState.totalChildren);
+        console.log('Current child:', chatState.currentChild);
+        console.log('Chat state data keys:', Object.keys(chatState.data));
         console.log('Complete application data:', applicationData);
+        
+        // Verify children data structure
+        for (let i = 1; i <= chatState.totalChildren; i++) {
+            console.log(`Child ${i} data:`, applicationData[`child${i}`]);
+        }
         
         // Submit application
         submitChatApplication(applicationData);
@@ -470,14 +479,44 @@ async function submitChatApplication(data) {
             },
             body: JSON.stringify(data)
         });
-
-        const result = await response.json();
+        
+        console.log('API Response status:', response.status);
+        console.log('API Response headers:', response.headers);
+        
+        if (!response.ok) {
+            console.error('API returned error status:', response.status, response.statusText);
+        }
+        
+        const responseText = await response.text();
+        console.log('Raw API response:', responseText);
+        
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('Failed to parse API response as JSON:', parseError);
+            addBotMessage('There was an unexpected error with the server response. Please try again.');
+            return;
+        }
 
         if (result.success) {
             closeChatModal();
             showSuccessModal();
         } else {
-            addBotMessage(`I apologize, there was an issue submitting your application: ${result.error || 'Please try again.'}`);
+            console.error('API validation failed:', result);
+            
+            // Show detailed validation errors if available
+            let errorMessage = `I apologize, there was an issue submitting your application: ${result.error || 'Please try again.'}`;
+            
+            if (result.details && result.details.length > 0) {
+                console.error('Validation details:', result.details);
+                errorMessage += '\n\nSpecific issues:';
+                result.details.forEach(detail => {
+                    errorMessage += `\n• ${detail}`;
+                });
+            }
+            
+            addBotMessage(errorMessage);
         }
     } catch (error) {
         console.error('API submission failed, this might be local development:', error);

@@ -441,7 +441,10 @@ function completeApplication() {
         // Add all children data
         for (let i = 1; i <= chatState.totalChildren; i++) {
             const prefix = `child${i}_`;
-            applicationData[`child${i}`] = {
+            console.log(`Building data for child ${i} with prefix '${prefix}'`);
+            console.log(`Available keys with this prefix:`, Object.keys(chatState.data).filter(key => key.startsWith(prefix)));
+            
+            const childData = {
                 name: chatState.data[prefix + 'teenName'],
                 age: chatState.data[prefix + 'teenAge'],
                 grade: chatState.data[prefix + 'teenGrade'],
@@ -449,6 +452,9 @@ function completeApplication() {
                 parentExpectations: chatState.data[prefix + 'parentExpectations'],
                 agreeTerms: chatState.data[prefix + 'agreeTerms']
             };
+            
+            console.log(`Child ${i} constructed data:`, childData);
+            applicationData[`child${i}`] = childData;
         }
         
         console.log('=== DEBUGGING APPLICATION SUBMISSION ===');

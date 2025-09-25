@@ -26,35 +26,97 @@ app.get('/', (req, res) => {
 // API endpoint for form submission
 app.post('/api/submit-application', async (req, res) => {
     try {
+        console.log('=== RENDER API DEBUGGING - RECEIVED DATA ===');
+        console.log('Raw req.body:', JSON.stringify(req.body, null, 2));
+        
         const {
             parentName,
             parentEmail,
             parentPhone,
-            teenName,
-            teenAge,
-            teenGrade,
-            teenInterests,
-            parentExpectations,
-            agreeTerms,
-            agreeContact
+            totalChildren,
+            agreeContact,
+            applicationMethod,
+            ...childrenData
         } = req.body;
+        
+        console.log('Extracted parent data:', { parentName, parentEmail, parentPhone, totalChildren, agreeContact });
+        console.log('Extracted children data object:', childrenData);
+        
+        // Extract children data
+        const children = [];
+        console.log('Extracting children data for totalChildren:', totalChildren);
+        for (let i = 1; i <= totalChildren; i++) {
+            console.log(`Looking for child${i} in childrenData`);
+            const child = childrenData[`child${i}`];
+            console.log(`child${i} data:`, child);
+            if (child) {
+                const extractedChild = {
+                    name: child.name,
+                    age: child.age,
+                    grade: child.grade,
+                    interests: child.interests,
+                    parentExpectations: child.parentExpectations,
+                    agreeTerms: child.agreeTerms
+                };
+                console.log(`Extracted child ${i}:`, extractedChild);
+                children.push(extractedChild);
+            } else {
+                console.log(`No child${i} found in childrenData`);
+            }
+        }
+        console.log('Final children array:', children);
 
         // Validation
         const validationErrors = [];
 
+        // Parent validation
         if (!parentName?.trim()) validationErrors.push('Parent name is required');
         if (!parentEmail?.trim()) validationErrors.push('Parent email is required');
         if (!parentPhone?.trim()) validationErrors.push('Parent phone is required');
-        if (!teenName?.trim()) validationErrors.push('Teen name is required');
-        if (!teenAge || teenAge < 12 || teenAge > 18) validationErrors.push('Teen age must be between 12 and 18');
-        if (!teenGrade || teenGrade < 7 || teenGrade > 12) validationErrors.push('Teen grade must be between 7 and 12');
-        if (!teenInterests?.trim() || teenInterests.trim().length < 20) {
-            validationErrors.push('Teen interests must be at least 20 characters');
+        if (!totalChildren || totalChildren < 1 || totalChildren > 10) {
+            validationErrors.push('Total children must be between 1 and 10');
         }
-        if (!parentExpectations?.trim() || parentExpectations.trim().length < 20) {
-            validationErrors.push('Parent expectations must be at least 20 characters');
+        if (children.length !== totalChildren) {
+            validationErrors.push('Number of children data does not match total children');
         }
-        if (!agreeTerms) validationErrors.push('Must agree to eligibility requirements');
+        
+        // Children validation
+        children.forEach((child, index) => {
+            const childNum = index + 1;
+            if (!child.name?.trim()) {
+                validationErrors.push(`Child ${childNum} name is required`);
+            }
+            
+            // Parse age from string like "13 years"
+            let age = child.age;
+            if (typeof age === 'string') {
+                const ageMatch = age.match(/\d+/);
+                age = ageMatch ? parseInt(ageMatch[0]) : null;
+            }
+            if (!age || age < 12 || age > 18) {
+                validationErrors.push(`Child ${childNum} age must be between 12 and 18`);
+            }
+            
+            // Parse grade from string like "8th Grade"
+            let grade = child.grade;
+            if (typeof grade === 'string') {
+                const gradeMatch = grade.match(/\d+/);
+                grade = gradeMatch ? parseInt(gradeMatch[0]) : null;
+            }
+            if (!grade || grade < 7 || grade > 12) {
+                validationErrors.push(`Child ${childNum} grade must be between 7 and 12`);
+            }
+            
+            if (!child.interests?.trim() || child.interests.trim().length < 20) {
+                validationErrors.push(`Child ${childNum} interests must be at least 20 characters`);
+            }
+            if (!child.parentExpectations?.trim() || child.parentExpectations.trim().length < 20) {
+                validationErrors.push(`Child ${childNum} parent expectations must be at least 20 characters`);
+            }
+            if (!child.agreeTerms || child.agreeTerms !== 'Yes, I confirm') {
+                validationErrors.push(`Must agree to eligibility requirements for child ${childNum}`);
+            }
+        });
 
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -76,58 +138,86 @@ app.post('/api/submit-application', async (req, res) => {
             });
         }
 
-        // Check for duplicate email
-        const existingApplication = await pool.query(
-            'SELECT id FROM applications WHERE parent_email = $1',
+        // Check for duplicate email only if trying to register the same child
+        // Allow multiple children from same parent
+        const childNames = children.map(child => child.name.trim().toLowerCase());
+        const existingApplications = await pool.query(
+            'SELECT teen_name FROM applications WHERE parent_email = $1',
             [parentEmail.trim().toLowerCase()]
         );
-
-        if (existingApplication.rows.length > 0) {
+        
+        const existingChildNames = existingApplications.rows.map(row => row.teen_name.toLowerCase());
+        const duplicateChildren = childNames.filter(name => existingChildNames.includes(name));
+        
+        if (duplicateChildren.length > 0) {
             return res.status(409).json({
                 success: false,
-                error: 'An application with this email address already exists'
+                error: `Application already exists for child(ren): ${duplicateChildren.join(', ')}`
             });
         }
 
-        // Insert application into database
-        const result = await pool.query(`
-            INSERT INTO applications (
-                parent_name,
-                parent_email,
-                parent_phone,
-                teen_name,
-                teen_age,
-                teen_grade,
-                teen_interests,
-                parent_expectations,
-                agrees_terms,
-                agrees_contact
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            RETURNING id, submitted_at
-        `, [
-            parentName.trim(),
-            parentEmail.trim().toLowerCase(),
-            parentPhone.trim(),
-            teenName.trim(),
-            parseInt(teenAge),
-            parseInt(teenGrade),
-            teenInterests.trim(),
-            parentExpectations.trim(),
-            Boolean(agreeTerms),
-            Boolean(agreeContact)
-        ]);
-
-        const applicationId = result.rows[0].id;
-        const submittedAt = result.rows[0].submitted_at;
+        // Insert applications for each child
+        const insertedApplications = [];
+        
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            
+            // Parse age and grade from strings
+            let age = child.age;
+            if (typeof age === 'string') {
+                const ageMatch = age.match(/\d+/);
+                age = ageMatch ? parseInt(ageMatch[0]) : null;
+            }
+            
+            let grade = child.grade;
+            if (typeof grade === 'string') {
+                const gradeMatch = grade.match(/\d+/);
+                grade = gradeMatch ? parseInt(gradeMatch[0]) : null;
+            }
+            
+            const result = await pool.query(`
+                INSERT INTO applications (
+                    parent_name,
+                    parent_email,
+                    parent_phone,
+                    teen_name,
+                    teen_age,
+                    teen_grade,
+                    teen_interests,
+                    parent_expectations,
+                    agrees_terms,
+                    agrees_contact
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                RETURNING id, submitted_at
+            `, [
+                parentName.trim(),
+                parentEmail.trim().toLowerCase(),
+                parentPhone.trim(),
+                child.name.trim(),
+                age,
+                grade,
+                child.interests.trim(),
+                child.parentExpectations.trim(),
+                child.agreeTerms === 'Yes, I confirm',
+                Boolean(agreeContact)
+            ]);
+            
+            insertedApplications.push({
+                id: result.rows[0].id,
+                submittedAt: result.rows[0].submitted_at,
+                childName: child.name.trim()
+            });
+        }
 
         // Return success response
         res.status(200).json({
             success: true,
-            message: 'Application submitted successfully!',
+            message: `Application${totalChildren > 1 ? 's' : ''} submitted successfully for ${totalChildren} child${totalChildren > 1 ? 'ren' : ''}!`,
             data: {
-                id: applicationId,
-                submittedAt: submittedAt,
-                parentEmail: parentEmail.trim().toLowerCase()
+                totalApplications: insertedApplications.length,
+                applications: insertedApplications,
+                parentEmail: parentEmail.trim().toLowerCase(),
+                totalChildren: totalChildren
             }
         });
 

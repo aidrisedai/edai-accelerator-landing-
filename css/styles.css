@@ -430,7 +430,7 @@ body {
 
 .program-highlights {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--spacing-2xl);
     margin-bottom: var(--spacing-5xl);
 }

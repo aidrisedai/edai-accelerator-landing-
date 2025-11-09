@@ -44,7 +44,7 @@ const chatQuestions = [
     {
         bot: "And what grade is {teenName} currently in?",
         type: 'options',
-        options: ['7th Grade', '8th Grade', '9th Grade', '10th Grade', '11th Grade', '12th Grade'],
+        options: ['6th Grade', '7th Grade', '8th Grade', '9th Grade', '10th Grade', '11th Grade', '12th Grade'],
         field: 'teenGrade'
     },
     {
@@ -60,7 +60,7 @@ const chatQuestions = [
         placeholder: "Tell us about your hopes and expectations..."
     },
     {
-        bot: "I need to confirm that {teenName} is Muslim and in 7th grade or above, as this is required for our program. Can you confirm this?",
+        bot: "I need to confirm that {teenName} is Muslim and in 6th grade or above, as this is required for our program. Can you confirm this?",
         type: 'options',
         options: ['Yes, I confirm', 'No, they do not meet these requirements'],
         field: 'agreeTerms'

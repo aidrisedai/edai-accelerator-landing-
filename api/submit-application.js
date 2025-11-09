@@ -89,8 +89,8 @@ export default async function handler(req, res) {
                 const ageMatch = age.match(/\d+/);
                 age = ageMatch ? parseInt(ageMatch[0]) : null;
             }
-            if (!age || age < 12 || age > 18) {
-                validationErrors.push(`Child ${childNum} age must be between 12 and 18`);
+            if (!age || age < 11 || age > 18) {
+                validationErrors.push(`Child ${childNum} age must be between 11 and 18`);
             }
             
             // Parse grade from string like "8th Grade"
@@ -99,8 +99,8 @@ export default async function handler(req, res) {
                 const gradeMatch = grade.match(/\d+/);
                 grade = gradeMatch ? parseInt(gradeMatch[0]) : null;
             }
-            if (!grade || grade < 7 || grade > 12) {
-                validationErrors.push(`Child ${childNum} grade must be between 7 and 12`);
+            if (!grade || grade < 6 || grade > 12) {
+                validationErrors.push(`Child ${childNum} grade must be between 6 and 12`);
             }
             
             if (!child.interests?.trim() || child.interests.trim().length < 20) {

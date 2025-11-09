@@ -38,7 +38,7 @@ const chatQuestions = [
     {
         bot: "Masha'Allah! How old is {teenName}?",
         type: 'options',
-        options: ['12 years', '13 years', '14 years', '15 years', '16 years', '17 years', '18 years'],
+        options: ['11 years', '12 years', '13 years', '14 years', '15 years', '16 years', '17 years', '18 years'],
         field: 'teenAge'
     },
     {

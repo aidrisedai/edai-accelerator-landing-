@@ -226,10 +226,19 @@ app.post('/api/submit-application', async (req, res) => {
         
         // Check if it's a constraint violation
         if (error.code === '23514') {
+            const constraint = error.constraint || '';
+            const constraintMap = {
+                applications_teen_age_check: 'Child age must be between 11 and 18',
+                applications_teen_grade_check: 'Child grade must be between 6 and 12',
+                must_agree_terms: 'Must agree to eligibility requirements',
+                valid_email: 'Invalid email format',
+                valid_phone: 'Invalid phone number format'
+            };
+            const friendly = constraintMap[constraint] || 'Invalid data format or constraints violation';
             return res.status(400).json({
                 success: false,
                 error: 'Validation failed',
-                details: ['Invalid data format or constraints violation']
+                details: [friendly]
             });
         }
 

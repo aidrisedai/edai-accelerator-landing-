@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS applications (
     
     -- Teen Information
     teen_name VARCHAR(255) NOT NULL,
-    teen_age INTEGER NOT NULL CHECK (teen_age >= 12 AND teen_age <= 18),
-    teen_grade INTEGER NOT NULL CHECK (teen_grade >= 7 AND teen_grade <= 12),
+    teen_age INTEGER NOT NULL CHECK (teen_age >= 11 AND teen_age <= 18),
+    teen_grade INTEGER NOT NULL CHECK (teen_grade >= 6 AND teen_grade <= 12),
     
     -- Application Details
     teen_interests TEXT NOT NULL CHECK (LENGTH(teen_interests) >= 20),
@@ -56,5 +56,5 @@ CREATE TRIGGER update_applications_updated_at
 -- Comments for documentation
 COMMENT ON TABLE applications IS 'Stores EdAI Accelerator program applications from parents';
 COMMENT ON COLUMN applications.application_status IS 'Status: pending, reviewed, accepted, rejected, waitlisted';
-COMMENT ON COLUMN applications.teen_age IS 'Teen age (12-18 years)';
-COMMENT ON COLUMN applications.teen_grade IS 'Current grade (7-12)';
+COMMENT ON COLUMN applications.teen_age IS 'Teen age (11-18 years)';
+COMMENT ON COLUMN applications.teen_grade IS 'Current grade (6-12)';

@@ -70,10 +70,14 @@ After your database is created:
 2. Click on the "Storage" tab
 3. Click on your Postgres database
 4. Click "Query" or "Browse"
-5. Run the SQL from `schema.sql` to create the tables:
+5. Run the SQL from `schema.sql` to create the tables
+6. To apply policy updates later, run the migration scripts in `migrations/`
+
+Example to update age/grade policy to 11–18 and 6–12:
 
 ```sql
--- Copy and paste the contents of schema.sql file here
+-- Run this in your Vercel Postgres console
+\i migrations/2025-11-09_update_age_grade.sql
 ```
 
 Alternatively, you can use a database client like pgAdmin or DBeaver to connect and run the schema.

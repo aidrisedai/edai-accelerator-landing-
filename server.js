@@ -93,8 +93,8 @@ app.post('/api/submit-application', async (req, res) => {
                 const ageMatch = age.match(/\d+/);
                 age = ageMatch ? parseInt(ageMatch[0]) : null;
             }
-            if (!age || age < 11 || age > 18) {
-                validationErrors.push(`Child ${childNum} age must be between 11 and 18`);
+            if (!age || age < 10 || age > 18) {
+                validationErrors.push(`Child ${childNum} age must be between 10 and 18`);
             }
             
             // Parse grade from string like "8th Grade"
@@ -103,8 +103,8 @@ app.post('/api/submit-application', async (req, res) => {
                 const gradeMatch = grade.match(/\d+/);
                 grade = gradeMatch ? parseInt(gradeMatch[0]) : null;
             }
-            if (!grade || grade < 6 || grade > 12) {
-                validationErrors.push(`Child ${childNum} grade must be between 6 and 12`);
+            if (!grade || grade < 5 || grade > 12) {
+                validationErrors.push(`Child ${childNum} grade must be between 5 and 12`);
             }
             
             if (!child.interests?.trim() || child.interests.trim().length < 20) {
@@ -228,8 +228,8 @@ app.post('/api/submit-application', async (req, res) => {
         if (error.code === '23514') {
             const constraint = error.constraint || '';
             const constraintMap = {
-                applications_teen_age_check: 'Child age must be between 11 and 18',
-                applications_teen_grade_check: 'Child grade must be between 6 and 12',
+                applications_teen_age_check: 'Child age must be between 10 and 18',
+                applications_teen_grade_check: 'Child grade must be between 5 and 12',
                 must_agree_terms: 'Must agree to eligibility requirements',
                 valid_email: 'Invalid email format',
                 valid_phone: 'Invalid phone number format'

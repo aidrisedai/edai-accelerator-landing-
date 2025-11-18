@@ -153,6 +153,7 @@ export default async function handler(req, res) {
 
         // Insert applications for each child
         const insertedApplications = [];
+        const applicationStatus = (applicationMethod === 'waitlist' || req.body.applicationStatus === 'waitlist') ? 'waitlist' : 'pending';
         
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
@@ -181,7 +182,8 @@ export default async function handler(req, res) {
                     teen_interests,
                     parent_expectations,
                     agrees_terms,
-                    agrees_contact
+                    agrees_contact,
+                    application_status
                 ) VALUES (
                     ${parentName.trim()},
                     ${parentEmail.trim().toLowerCase()},
@@ -192,7 +194,8 @@ export default async function handler(req, res) {
                     ${child.interests.trim()},
                     ${child.parentExpectations.trim()},
                     ${child.agreeTerms === 'Yes, I confirm'},
-                    ${Boolean(agreeContact)}
+                    ${Boolean(agreeContact)},
+                    ${applicationStatus}
                 )
                 RETURNING id, submitted_at
             `;

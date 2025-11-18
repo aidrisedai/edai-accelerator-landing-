@@ -1,12 +1,20 @@
 console.log('JavaScript file loaded successfully!');
 
+// Time gate: close current cohort after EOD Thu Nov 20, 2025 PT
+const CUTOFF_TS = new Date('2025-11-21T00:00:00-08:00').getTime();
+const IS_AFTER_CUTOFF = Date.now() >= CUTOFF_TS;
+
 // Chat Application System
 let chatState = {
     step: 0,
     data: {},
     currentChild: 1,
-    totalChildren: 1
+    totalChildren: 1,
+    mode: 'application' // 'application' | 'waitlist'
 };
+
+// Active questions pointer (switches to waitlist when needed)
+let activeQuestions;
 
 const chatQuestions = [
     {
@@ -71,6 +79,21 @@ const chatQuestions = [
         options: ['Yes, please keep me updated', 'No, just this application'],
         field: 'agreeContact'
     }
+]; 
+
+// Waitlist (Feb 2026) chat questions
+const waitlistQuestions = [
+    { bot: "Assalamu Alaikum! Our Nov cohort is closed. We are building the priority waitlist for the February 2026 cohort. May I have your name?", type: 'text', field: 'parentName' },
+    { bot: "Jazakallahu khair, {parentName}. What email should we contact? You'll also receive updates from aidris@edai.fun.", type: 'email', field: 'parentEmail' },
+    { bot: "And your phone number? We'll text you from +1 (515) 357-0454 so you recognize us.", type: 'tel', field: 'parentPhone' },
+    { bot: "Who is the student you want to enroll?", type: 'text', field: 'teenName' },
+    { bot: "How old is {teenName}?", type: 'options', field: 'teenAge', options: ['10 years','11 years','12 years','13 years','14 years','15 years','16 years','17 years','18 years'] },
+    { bot: "What grade is {teenName} in?", type: 'options', field: 'teenGrade', options: ['5th Grade','6th Grade','7th Grade','8th Grade','9th Grade','10th Grade','11th Grade','12th Grade'] },
+    { bot: "Briefly, why is {teenName} excited to join in February?", type: 'textarea', field: 'teenInterests', placeholder: "Share a few sentences (20+ chars)" },
+    { bot: "As a parent/guardian, what outcome do you hope for from this program?", type: 'textarea', field: 'parentExpectations', placeholder: "Share a few sentences (20+ chars)" },
+    { bot: "Please confirm: {teenName} is Muslim and in 5th grade or above.", type: 'options', field: 'agreeTerms', options: ['Yes, I confirm','No, they do not meet these requirements'] },
+    { bot: "To secure priority consideration, please confirm: If offered a seat for February 2026, we are committed to enrolling (bi-idhnillah).", type: 'options', field: 'agreeCommit', options: ['Yes, we commit','Not sure yet'] },
+    { bot: "May we send you SMS from +1 (515) 357-0454 and emails from aidris@edai.fun about the waitlist and onboarding?", type: 'options', field: 'agreeComms', options: ['Yes, you may contact me','No, email only'] }
 ];
 
 function openChatApplication() {
@@ -91,13 +114,21 @@ function openChatApplication() {
         return;
     }
     
+    // If after cutoff, route to waitlist chat
+    if (IS_AFTER_CUTOFF) {
+        return openWaitlistChat();
+    }
+
     // Reset chat state
     chatState = {
         step: 0,
         data: {},
         currentChild: 1,
-        totalChildren: 1
+        totalChildren: 1,
+        mode: 'application'
     };
+
+    activeQuestions = chatQuestions;
     
     // Clear chat messages
     chatMessages.innerHTML = '';
@@ -161,7 +192,7 @@ function addUserMessage(message) {
 
 function showInputForCurrentStep() {
     const container = document.getElementById('chatInputContainer');
-    const question = chatQuestions[chatState.step];
+    const question = activeQuestions[chatState.step];
     
     if (!question) {
         // Application complete
@@ -235,7 +266,7 @@ function handleTextInput() {
     
     if (!value) return;
     
-    const question = chatQuestions[chatState.step];
+    const question = activeQuestions[chatState.step];
     
     // Validate input
     if (question.type === 'email' && !isValidEmail(value)) {
@@ -265,7 +296,7 @@ function handleOptionSelect(option) {
     console.log('Option selected:', option);
     console.log('Current chat state step:', chatState.step);
     
-    const question = chatQuestions[chatState.step];
+    const question = activeQuestions[chatState.step];
     
     if (!question) {
         console.error('No question found for current step');
@@ -346,8 +377,8 @@ function moveToNextStep() {
         hideTypingIndicator();
         
         // Check if we just completed the last child-specific question (agreeTerms)
-        const currentQuestion = chatQuestions[chatState.step - 1];
-        const nextQuestion = chatQuestions[chatState.step];
+        const currentQuestion = activeQuestions[chatState.step - 1];
+        const nextQuestion = activeQuestions[chatState.step];
         
         // If we just finished agreeTerms (last child-specific question) and have more children to process
         if (currentQuestion && currentQuestion.field === 'agreeTerms' && chatState.currentChild < chatState.totalChildren) {
@@ -372,7 +403,7 @@ function moveToNextStep() {
             chatState.currentChild++;
             
             // Find the index of teenName question dynamically
-            const teenNameQuestionIndex = chatQuestions.findIndex(q => q.field === 'teenName');
+            const teenNameQuestionIndex = activeQuestions.findIndex(q => q.field === 'teenName');
             chatState.step = teenNameQuestionIndex;
             
             // Add transition message
@@ -380,7 +411,7 @@ function moveToNextStep() {
             
             // Continue with next child
             setTimeout(() => {
-                const question = chatQuestions[chatState.step];
+                const question = activeQuestions[chatState.step];
                 if (question) {
                     addBotMessage(question.bot);
                     showInputForCurrentStep();
@@ -425,7 +456,10 @@ function completeApplication() {
             Object.assign(chatState.data, childData);
         }
         
-        addBotMessage("Barakallahu feekum! I have all the information I need. Let me submit your application now...");
+        const finishingLine = chatState.mode === 'waitlist' 
+            ? "Barakallahu feekum! I have what I need to add you to the February 2026 waitlist. Submitting now..."
+            : "Barakallahu feekum! I have all the information I need. Let me submit your application now...";
+        addBotMessage(finishingLine);
         
         // Prepare application data with all children
         const applicationData = {
@@ -433,8 +467,9 @@ function completeApplication() {
             parentEmail: chatState.data.parentEmail,
             parentPhone: chatState.data.parentPhone,
             totalChildren: chatState.totalChildren,
-            agreeContact: chatState.data.agreeContact,
-            applicationMethod: 'chat',
+            agreeContact: chatState.data.agreeContact || chatState.data.agreeComms,
+            applicationMethod: chatState.mode === 'waitlist' ? 'waitlist' : 'chat',
+            applicationStatus: chatState.mode === 'waitlist' ? 'waitlist' : 'pending',
             submissionDate: new Date().toISOString()
         };
         
@@ -471,6 +506,30 @@ function completeApplication() {
         // Submit application
         submitChatApplication(applicationData);
     }, 2000);
+}
+
+function openWaitlistChat() {
+    const modal = document.getElementById('chatApplicationModal');
+    const chatMessages = document.getElementById('chatMessages');
+    const headerTitle = document.querySelector('.chat-title');
+    const headerSubtitle = document.querySelector('.chat-subtitle');
+
+    if (!modal || !chatMessages) return;
+
+    chatState = { step: 0, data: {}, currentChild: 1, totalChildren: 1, mode: 'waitlist' };
+    activeQuestions = waitlistQuestions;
+
+    chatMessages.innerHTML = '';
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+
+    if (headerTitle) headerTitle.textContent = 'Waitlist Application — February 2026';
+    if (headerSubtitle) headerSubtitle.textContent = 'Priority consideration comes from the waitlist.';
+
+    setTimeout(() => {
+        addBotMessage(waitlistQuestions[0].bot);
+        showInputForCurrentStep();
+    }, 400);
 }
 
 async function submitChatApplication(data) {
@@ -620,10 +679,33 @@ window.handleTextInput = handleTextInput;
 window.handleOptionSelect = handleOptionSelect;
 window.handleExactChildrenCount = handleExactChildrenCount;
 window.openChatApplication = openChatApplication;
+window.openWaitlistChat = openWaitlistChat;
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM Content Loaded');
     
+    // Gate the UI after cutoff to promote waitlist
+    if (IS_AFTER_CUTOFF) {
+        const badge = document.querySelector('.hero-badge .badge');
+        if (badge) badge.textContent = '🚀 Apply for February 2026 — Join the Waitlist';
+        const header = document.querySelector('#apply .application-header h3');
+        if (header) header.textContent = 'Join the Waitlist';
+        const avail = document.querySelector('.availability-badge span:nth-child(2)');
+        if (avail) avail.textContent = 'Next cohort: Feb 2026';
+        const appDesc = document.querySelector('.application-description');
+        if (appDesc) appDesc.textContent = 'Waitlist applicants are prioritized. You will receive updates by SMS from +1 (515) 357-0454 and email from aidris@edai.fun.';
+        const startBtn = document.getElementById('startChatApplication');
+        if (startBtn) {
+            startBtn.innerHTML = '<span>📝</span> Join Waitlist Chat';
+            startBtn.onclick = (e) => { e.preventDefault(); openWaitlistChat(); };
+        }
+        const programApplyBtn = document.getElementById('programDetailsApplyBtn');
+        if (programApplyBtn) {
+            programApplyBtn.textContent = 'Join Waitlist';
+            programApplyBtn.onclick = (e) => { e.preventDefault(); openWaitlistChat(); };
+        }
+    }
+
     // Hero Apply Now button
     const heroApplyBtn = document.getElementById('heroApplyBtn');
     console.log('Looking for hero apply button with ID: heroApplyBtn');
@@ -634,7 +716,7 @@ document.addEventListener('DOMContentLoaded', function() {
         heroApplyBtn.addEventListener('click', function(e) {
             console.log('Hero apply button clicked!');
             e.preventDefault();
-            openChatApplication();
+            if (IS_AFTER_CUTOFF) { openWaitlistChat(); } else { openChatApplication(); }
         });
     } else {
         console.log('Hero apply button NOT found');
@@ -647,7 +729,7 @@ document.addEventListener('DOMContentLoaded', function() {
         startChatBtn.addEventListener('click', function(e) {
             console.log('Start chat button clicked!');
             e.preventDefault();
-            openChatApplication();
+            if (IS_AFTER_CUTOFF) { openWaitlistChat(); } else { openChatApplication(); }
         });
     } else {
         console.log('Start chat button NOT found');
@@ -660,7 +742,7 @@ document.addEventListener('DOMContentLoaded', function() {
         programDetailsApplyBtn.addEventListener('click', function(e) {
             console.log('Program details apply button clicked!');
             e.preventDefault();
-            openChatApplication();
+            if (IS_AFTER_CUTOFF) { openWaitlistChat(); } else { openChatApplication(); }
         });
     } else {
         console.log('Program details apply button NOT found');

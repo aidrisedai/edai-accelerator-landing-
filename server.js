@@ -158,6 +158,7 @@ app.post('/api/submit-application', async (req, res) => {
 
         // Insert applications for each child
         const insertedApplications = [];
+        const applicationStatus = (applicationMethod === 'waitlist' || req.body.applicationStatus === 'waitlist') ? 'waitlist' : 'pending';
         
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
@@ -186,8 +187,9 @@ app.post('/api/submit-application', async (req, res) => {
                     teen_interests,
                     parent_expectations,
                     agrees_terms,
-                    agrees_contact
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                    agrees_contact,
+                    application_status
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                 RETURNING id, submitted_at
             `, [
                 parentName.trim(),
@@ -199,7 +201,8 @@ app.post('/api/submit-application', async (req, res) => {
                 child.interests.trim(),
                 child.parentExpectations.trim(),
                 child.agreeTerms === 'Yes, I confirm',
-                Boolean(agreeContact)
+                Boolean(agreeContact),
+                applicationStatus
             ]);
             
             insertedApplications.push({

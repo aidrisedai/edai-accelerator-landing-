@@ -1,8 +1,7 @@
 console.log('JavaScript file loaded successfully!');
 
-// Time gate: close current cohort after EOD Thu Nov 20, 2025 PT
-const CUTOFF_TS = new Date('2025-11-21T00:00:00-08:00').getTime();
-const IS_AFTER_CUTOFF = Date.now() >= CUTOFF_TS;
+// Time gate removed. Defaulting to waitlist logic.
+const IS_AFTER_CUTOFF = true;
 
 // Chat Application System
 let chatState = {
@@ -684,27 +683,7 @@ window.openWaitlistChat = openWaitlistChat;
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM Content Loaded');
     
-    // Gate the UI after cutoff to promote waitlist
-    if (IS_AFTER_CUTOFF) {
-        const badge = document.querySelector('.hero-badge .badge');
-        if (badge) badge.textContent = '🚀 Apply for February 2026 — Join the Waitlist';
-        const header = document.querySelector('#apply .application-header h3');
-        if (header) header.textContent = 'Join the Waitlist';
-        const avail = document.querySelector('.availability-badge span:nth-child(2)');
-        if (avail) avail.textContent = 'Next cohort: Feb 2026';
-        const appDesc = document.querySelector('.application-description');
-        if (appDesc) appDesc.textContent = 'Waitlist applicants are prioritized. You will receive updates by SMS from +1 (515) 357-0454 and email from aidris@edai.fun.';
-        const startBtn = document.getElementById('startChatApplication');
-        if (startBtn) {
-            startBtn.innerHTML = '<span>📝</span> Join Waitlist Chat';
-            startBtn.onclick = (e) => { e.preventDefault(); openWaitlistChat(); };
-        }
-        const programApplyBtn = document.getElementById('programDetailsApplyBtn');
-        if (programApplyBtn) {
-            programApplyBtn.textContent = 'Join Waitlist';
-            programApplyBtn.onclick = (e) => { e.preventDefault(); openWaitlistChat(); };
-        }
-    }
+    // Gate the UI after cutoff to promote waitlist logic removed (updated in HTML directly)
 
     // Hero Apply Now button
     const heroApplyBtn = document.getElementById('heroApplyBtn');

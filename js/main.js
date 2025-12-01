@@ -1,7 +1,7 @@
 console.log('JavaScript file loaded successfully!');
 
-// Time gate removed. Defaulting to waitlist logic.
-const IS_AFTER_CUTOFF = true;
+// Time gate disabled - we are now in rolling admissions mode
+const IS_AFTER_CUTOFF = false;
 
 // Chat Application System
 let chatState = {
@@ -22,12 +22,12 @@ const chatQuestions = [
         field: 'parentName'
     },
     {
-        bot: "Barakallahu feeki, {parentName}. Could you please provide your email address so we can keep you updated throughout the process?",
+        bot: "Barakallahu feeki, {parentName}. Could you please provide your email address? Please ensure this is your current email as we will send the interview invite here (from aidris@edai.fun).",
         type: 'email',
         field: 'parentEmail'
     },
     {
-        bot: "Jazakallahu khair. And your phone number for any urgent communication?",
+        bot: "Jazakallahu khair. And your phone number? Expect a text or call from 515-357-0454 for any urgent communication.",
         type: 'tel',
         field: 'parentPhone'
     },
@@ -43,7 +43,7 @@ const chatQuestions = [
         field: 'teenName'
     },
     {
-        bot: "Masha'Allah! How old is {teenName}?",
+        bot: "Masha'Allah! How old is {teenName}? (Late elementary/Grade 5+ students are welcome!)",
         type: 'options',
         options: ['10 years', '11 years', '12 years', '13 years', '14 years', '15 years', '16 years', '17 years', '18 years'],
         field: 'teenAge'
@@ -67,9 +67,15 @@ const chatQuestions = [
         placeholder: "Tell us about your hopes and expectations..."
     },
     {
-        bot: "I need to confirm that {teenName} is Muslim and in 5th grade or above, as this is required for our program. Can you confirm this?",
+        bot: "Since our Nov cohort is full, we are accepting rolling admissions for Feb 2026. However, if demand is high, we may start an early cohort. Which schedule works best for you?",
         type: 'options',
-        options: ['Yes, I confirm', 'No, they do not meet these requirements'],
+        options: ['Sun 9 AM - 12:30 PM', 'Sat 5 PM - 8 PM', 'Feb 2026 Only', 'Other (Please specify in interview)'],
+        field: 'schedulePreference'
+    },
+    {
+        bot: "Almost done! Please confirm: {teenName} is Muslim, Grade 5 or above, has a laptop for class, and you understand the program cost is $800 (interview required for admission).",
+        type: 'options',
+        options: ['Yes, I confirm all terms', 'No, I have questions'],
         field: 'agreeTerms'
     },
     {
@@ -388,7 +394,7 @@ function moveToNextStep() {
             const childData = {};
             
             // Copy child-specific data with prefix (excluding agreeContact which is asked once at the end)
-            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'agreeTerms'].forEach(field => {
+            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'agreeTerms'].forEach(field => {
                 if (chatState.data[field]) {
                     childData[childPrefix + field] = chatState.data[field];
                     delete chatState.data[field]; // Remove from temp storage
@@ -444,7 +450,7 @@ function completeApplication() {
             const childData = {};
             
             // Copy child-specific data with prefix
-            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'agreeTerms'].forEach(field => {
+            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'agreeTerms'].forEach(field => {
                 if (chatState.data[field]) {
                     childData[childPrefix + field] = chatState.data[field];
                     delete chatState.data[field]; // Remove from temp storage
@@ -457,7 +463,7 @@ function completeApplication() {
         
         const finishingLine = chatState.mode === 'waitlist' 
             ? "Barakallahu feekum! I have what I need to add you to the February 2026 waitlist. Submitting now..."
-            : "Barakallahu feekum! I have all the information I need. Let me submit your application now...";
+            : "Barakallahu feekum! Application submitted. Please watch your email (aidris@edai.fun) for an interview invite. We will also text you from 515-357-0454.";
         addBotMessage(finishingLine);
         
         // Prepare application data with all children
@@ -484,6 +490,7 @@ function completeApplication() {
                 grade: chatState.data[prefix + 'teenGrade'],
                 interests: chatState.data[prefix + 'teenInterests'],
                 parentExpectations: chatState.data[prefix + 'parentExpectations'],
+                schedulePreference: chatState.data[prefix + 'schedulePreference'],
                 agreeTerms: chatState.data[prefix + 'agreeTerms']
             };
             

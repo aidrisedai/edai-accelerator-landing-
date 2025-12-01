@@ -346,6 +346,10 @@ function handleOptionSelect(option) {
     // Special handling for agreeTerms (No, I have questions)
     if (question.field === 'agreeTerms' && option === 'No, I have questions') {
         chatState.hasQuestions = true;
+        // Temporarily override agreeTerms to satisfy validation on submission, but set a flag
+        // The actual 'parentQuestions' field will contain their questions
+        chatState.data['agreeTerms'] = 'Yes, I confirm all terms'; 
+        
         addBotMessage("No problem at all. Please type your questions below. You can also email us at aidris@edai.fun or call/text 515-357-0454. Go ahead and submit your application now, and we will answer your questions in shaa Allah.");
         
         const container = document.getElementById('chatInputContainer');

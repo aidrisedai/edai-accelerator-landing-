@@ -17,7 +17,7 @@ let activeQuestions;
 
 const chatQuestions = [
     {
-        bot: "Assalamu Alaikum wa Rahmatullahi wa Barakatuh! Welcome to EdAI Accelerator. I'm delighted to help you with your application. May I please have your name?",
+        bot: "Assalamu Alaikum wa Rahmatullahi wa Barakatuh! Welcome to EdAI Accelerator. I'm delighted to help you with your application. May I please have your name? (Please enter Parent/Guardian Name)",
         type: 'text',
         field: 'parentName'
     },
@@ -73,7 +73,13 @@ const chatQuestions = [
         field: 'schedulePreference'
     },
     {
-        bot: "Almost done! Please confirm: {teenName} is Muslim, Grade 5 or above, has a laptop for class, and you understand the program cost is $800 (interview required for admission).",
+        bot: "Almost done! The program cost is $800. Do you require financial aid to participate?",
+        type: 'options',
+        options: ['No, I can pay the full amount', 'Yes, I would like to apply for financial aid'],
+        field: 'financialAid'
+    },
+    {
+        bot: "Finally, please confirm: {teenName} is Muslim, Grade 5 or above, has a laptop for class, and you understand an interview is required for admission.",
         type: 'options',
         options: ['Yes, I confirm all terms', 'No, I have questions'],
         field: 'agreeTerms'
@@ -394,7 +400,7 @@ function moveToNextStep() {
             const childData = {};
             
             // Copy child-specific data with prefix (excluding agreeContact which is asked once at the end)
-            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'agreeTerms'].forEach(field => {
+            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'financialAid', 'agreeTerms'].forEach(field => {
                 if (chatState.data[field]) {
                     childData[childPrefix + field] = chatState.data[field];
                     delete chatState.data[field]; // Remove from temp storage
@@ -450,7 +456,7 @@ function completeApplication() {
             const childData = {};
             
             // Copy child-specific data with prefix
-            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'agreeTerms'].forEach(field => {
+            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'financialAid', 'agreeTerms'].forEach(field => {
                 if (chatState.data[field]) {
                     childData[childPrefix + field] = chatState.data[field];
                     delete chatState.data[field]; // Remove from temp storage
@@ -491,6 +497,7 @@ function completeApplication() {
                 interests: chatState.data[prefix + 'teenInterests'],
                 parentExpectations: chatState.data[prefix + 'parentExpectations'],
                 schedulePreference: chatState.data[prefix + 'schedulePreference'],
+                financialAid: chatState.data[prefix + 'financialAid'],
                 agreeTerms: chatState.data[prefix + 'agreeTerms']
             };
             

@@ -2116,10 +2116,18 @@ body {
         min-width: auto;
     }
     
+    .benefit-content h4 {
+        font-size: var(--font-size-lg);
+        line-height: 1.3;
+        word-wrap: break-word;
+        hyphens: auto;
+    }
+    
     .benefit-item {
         flex-direction: column;
         text-align: center;
         gap: var(--spacing-md);
+        padding: 0 var(--spacing-sm);
     }
     
     .application-header {
@@ -2706,6 +2714,7 @@ body {
         grid-template-columns: 1fr;
         gap: var(--spacing-2xl);
         text-align: center;
+        padding: 0 var(--spacing-lg);
     }
     
     .hero-visual {
@@ -2860,12 +2869,16 @@ body {
         padding: 0 var(--spacing-sm);
     }
     
-    .hero-title {
-        font-size: var(--font-size-3xl);
+    .section-title {
+        font-size: var(--font-size-2xl);
+        line-height: 1.2;
+        padding: 0 var(--spacing-xs);
+        word-wrap: break-word;
     }
     
-    .hero-subtitle {
+    .section-subtitle {
         font-size: var(--font-size-base);
+        padding: 0 var(--spacing-xs);
     }
     
     .hero-stats {
@@ -2886,7 +2899,7 @@ body {
     }
     
     .container {
-        padding: 0 var(--spacing-sm);
+        padding: 0 var(--spacing-md);
         width: 100%;
         overflow-x: hidden;
     }

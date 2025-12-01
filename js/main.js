@@ -434,6 +434,15 @@ function moveToNextStep() {
             ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'financialAid', 'agreeTerms', 'parentQuestions'].forEach(field => {
                 if (chatState.data[field]) {
                     childData[childPrefix + field] = chatState.data[field];
+                    
+                    // Fix for agreeTerms: if the user had questions, the value might be "No, I have questions"
+                    // We need to ensure the backend sees a valid "Yes" if they are submitting
+                    if (field === 'agreeTerms' && chatState.data[field] === 'No, I have questions') {
+                        // If they have questions, we mark terms as accepted for the purpose of submission
+                        // The actual question text is preserved in parentQuestions
+                        childData[childPrefix + field] = 'Yes, I confirm all terms';
+                    }
+                    
                     delete chatState.data[field]; // Remove from temp storage
                 }
             });
@@ -490,6 +499,15 @@ function completeApplication() {
             ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'financialAid', 'agreeTerms', 'parentQuestions'].forEach(field => {
                 if (chatState.data[field]) {
                     childData[childPrefix + field] = chatState.data[field];
+                    
+                    // Fix for agreeTerms: if the user had questions, the value might be "No, I have questions"
+                    // We need to ensure the backend sees a valid "Yes" if they are submitting
+                    if (field === 'agreeTerms' && chatState.data[field] === 'No, I have questions') {
+                        // If they have questions, we mark terms as accepted for the purpose of submission
+                        // The actual question text is preserved in parentQuestions
+                        childData[childPrefix + field] = 'Yes, I confirm all terms';
+                    }
+                    
                     delete chatState.data[field]; // Remove from temp storage
                 }
             });

@@ -343,6 +343,20 @@ function handleOptionSelect(option) {
         console.log('Set total children to:', chatState.totalChildren);
     }
     
+    // Special handling for agreeTerms (No, I have questions)
+    if (question.field === 'agreeTerms' && option === 'No, I have questions') {
+        chatState.hasQuestions = true;
+        addBotMessage("No problem at all. Please type your questions below. You can also email us at aidris@edai.fun or call/text 515-357-0454. Go ahead and submit your application now, and we will answer your questions in shaa Allah.");
+        
+        const container = document.getElementById('chatInputContainer');
+        container.innerHTML = `
+            <textarea class="chat-input" id="chatInput" rows="3" 
+                      placeholder="Type your questions here..."></textarea>
+            <button class="chat-send-btn" onclick="handleQuestionInput()">Submit Application</button>
+        `;
+        return;
+    }
+    
     // If 4+ selected, ask for exact number now
     if (question.field === 'totalChildren' && chatState.needsChildrenCount) {
         addBotMessage('How many children would you like to register? Please enter a number (e.g., 5).');
@@ -356,6 +370,23 @@ function handleOptionSelect(option) {
 
     // Move to next step
     console.log('Moving to next step...');
+    moveToNextStep();
+}
+
+function handleQuestionInput() {
+    const input = document.getElementById('chatInput');
+    const value = input.value.trim();
+    
+    if (!value) {
+        addBotMessage('Please type your question or just type "None" if you changed your mind.');
+        return;
+    }
+    
+    // Add user message and store data
+    addUserMessage(value);
+    chatState.data['parentQuestions'] = value;
+    
+    // Move to next step (agreeContact)
     moveToNextStep();
 }
 
@@ -400,7 +431,7 @@ function moveToNextStep() {
             const childData = {};
             
             // Copy child-specific data with prefix (excluding agreeContact which is asked once at the end)
-            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'financialAid', 'agreeTerms'].forEach(field => {
+            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'financialAid', 'agreeTerms', 'parentQuestions'].forEach(field => {
                 if (chatState.data[field]) {
                     childData[childPrefix + field] = chatState.data[field];
                     delete chatState.data[field]; // Remove from temp storage
@@ -456,7 +487,7 @@ function completeApplication() {
             const childData = {};
             
             // Copy child-specific data with prefix
-            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'financialAid', 'agreeTerms'].forEach(field => {
+            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'financialAid', 'agreeTerms', 'parentQuestions'].forEach(field => {
                 if (chatState.data[field]) {
                     childData[childPrefix + field] = chatState.data[field];
                     delete chatState.data[field]; // Remove from temp storage
@@ -498,7 +529,8 @@ function completeApplication() {
                 parentExpectations: chatState.data[prefix + 'parentExpectations'],
                 schedulePreference: chatState.data[prefix + 'schedulePreference'],
                 financialAid: chatState.data[prefix + 'financialAid'],
-                agreeTerms: chatState.data[prefix + 'agreeTerms']
+                agreeTerms: chatState.data[prefix + 'agreeTerms'],
+                questions: chatState.data[prefix + 'parentQuestions']
             };
             
             console.log(`Child ${i} constructed data:`, childData);
@@ -690,6 +722,7 @@ function scrollChatToBottom(delay = 100) {
 // Make functions globally available for onclick handlers
 window.handleTextInput = handleTextInput;
 window.handleOptionSelect = handleOptionSelect;
+window.handleQuestionInput = handleQuestionInput;
 window.handleExactChildrenCount = handleExactChildrenCount;
 window.openChatApplication = openChatApplication;
 window.openWaitlistChat = openWaitlistChat;

@@ -81,7 +81,7 @@ const chatQuestions = [
     {
         bot: "Finally, please confirm: {teenName} is Muslim, Grade 5 or above, has a laptop for class, and you understand an interview is required for admission.",
         type: 'options',
-        options: ['Yes, I confirm all terms', 'No, I have questions'],
+        options: ['Yes, I confirm', 'No, I have questions'],
         field: 'agreeTerms'
     },
     {
@@ -348,7 +348,7 @@ function handleOptionSelect(option) {
         chatState.hasQuestions = true;
         // Temporarily override agreeTerms to satisfy validation on submission, but set a flag
         // The actual 'parentQuestions' field will contain their questions
-        chatState.data['agreeTerms'] = 'Yes, I confirm all terms'; 
+        chatState.data['agreeTerms'] = 'Yes, I confirm';
         
         addBotMessage("No problem at all. Please type your questions below. You can also email us at aidris@edai.fun or call/text 515-357-0454. Go ahead and submit your application now, and we will answer your questions in shaa Allah.");
         
@@ -444,7 +444,7 @@ function moveToNextStep() {
                     if (field === 'agreeTerms' && chatState.data[field] === 'No, I have questions') {
                         // If they have questions, we mark terms as accepted for the purpose of submission
                         // The actual question text is preserved in parentQuestions
-                        childData[childPrefix + field] = 'Yes, I confirm all terms';
+                        childData[childPrefix + field] = 'Yes, I confirm';
                     }
                     
                     delete chatState.data[field]; // Remove from temp storage
@@ -509,7 +509,7 @@ function completeApplication() {
                     if (field === 'agreeTerms' && chatState.data[field] === 'No, I have questions') {
                         // If they have questions, we mark terms as accepted for the purpose of submission
                         // The actual question text is preserved in parentQuestions
-                        childData[childPrefix + field] = 'Yes, I confirm all terms';
+                        childData[childPrefix + field] = 'Yes, I confirm';
                     }
                     
                     delete chatState.data[field]; // Remove from temp storage

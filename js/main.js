@@ -67,9 +67,9 @@ const chatQuestions = [
         placeholder: "Tell us about your hopes and expectations..."
     },
     {
-        bot: "Since our Nov cohort is full, we are accepting rolling admissions for Feb 2026. However, if demand is high, we may start an early cohort. Which schedule works best for you?",
+        bot: "Since our Nov cohort is full, we are accepting rolling admissions for Dec 2025. However, if demand is high, we may start an early cohort. Which schedule works best for you?",
         type: 'options',
-        options: ['Sun 9 AM - 12:30 PM', 'Sat 5 PM - 8 PM', 'Feb 2026 Only', 'Other (Please specify in interview)'],
+        options: ['Sun 9 AM - 12:30 PM', 'Sat 5 PM - 8 PM', 'Dec 2025 Only', 'Other (Please specify in interview)'],
         field: 'schedulePreference'
     },
     {
@@ -92,9 +92,9 @@ const chatQuestions = [
     }
 ]; 
 
-// Waitlist (Feb 2026) chat questions
+// Waitlist (Dec 2025) chat questions
 const waitlistQuestions = [
-    { bot: "Assalamu Alaikum! Our Nov cohort is closed. We are building the priority waitlist for the February 2026 cohort. May I have your name?", type: 'text', field: 'parentName' },
+    { bot: "Assalamu Alaikum! Our Nov cohort is closed. We are building the priority waitlist for the December 2025 cohort. May I have your name?", type: 'text', field: 'parentName' },
     { bot: "Jazakallahu khair, {parentName}. What email should we contact? You'll also receive updates from aidris@edai.fun.", type: 'email', field: 'parentEmail' },
     { bot: "And your phone number? We'll text you from +1 (515) 357-0454 so you recognize us.", type: 'tel', field: 'parentPhone' },
     { bot: "Who is the student you want to enroll?", type: 'text', field: 'teenName' },
@@ -103,7 +103,7 @@ const waitlistQuestions = [
     { bot: "Briefly, why is {teenName} excited to join in February?", type: 'textarea', field: 'teenInterests', placeholder: "Share a few sentences (20+ chars)" },
     { bot: "As a parent/guardian, what outcome do you hope for from this program?", type: 'textarea', field: 'parentExpectations', placeholder: "Share a few sentences (20+ chars)" },
     { bot: "Please confirm: {teenName} is Muslim and in 5th grade or above.", type: 'options', field: 'agreeTerms', options: ['Yes, I confirm','No, they do not meet these requirements'] },
-    { bot: "To secure priority consideration, please confirm: If offered a seat for February 2026, we are committed to enrolling (bi-idhnillah).", type: 'options', field: 'agreeCommit', options: ['Yes, we commit','Not sure yet'] },
+    { bot: "To secure priority consideration, please confirm: If offered a seat for December 2025, we are committed to enrolling (bi-idhnillah).", type: 'options', field: 'agreeCommit', options: ['Yes, we commit','Not sure yet'] },
     { bot: "May we send you SMS from +1 (515) 357-0454 and emails from aidris@edai.fun about the waitlist and onboarding?", type: 'options', field: 'agreeComms', options: ['Yes, you may contact me','No, email only'] }
 ];
 
@@ -521,7 +521,7 @@ function completeApplication() {
         }
         
         const finishingLine = chatState.mode === 'waitlist' 
-            ? "Barakallahu feekum! I have what I need to add you to the February 2026 waitlist. Submitting now..."
+            ? "Barakallahu feekum! I have what I need to add you to the December 2025 waitlist. Submitting now..."
             : "Barakallahu feekum! Application submitted. Please watch your email (aidris@edai.fun) for an interview invite. We will also text you from 515-357-0454.";
         addBotMessage(finishingLine);
         
@@ -590,7 +590,7 @@ function openWaitlistChat() {
     modal.classList.add('show');
     document.body.style.overflow = 'hidden';
 
-    if (headerTitle) headerTitle.textContent = 'Waitlist Application — February 2026';
+    if (headerTitle) headerTitle.textContent = 'Waitlist Application — December 2025';
     if (headerSubtitle) headerSubtitle.textContent = 'Priority consideration comes from the waitlist.';
 
     setTimeout(() => {

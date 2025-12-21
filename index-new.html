@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EdAI Accelerator - December 2025 Cohort</title>
+    <meta name="description" content="Join EdAI Accelerator December 2025 - Transform Muslim teens into AI founders. 8 weeks at MAPS Redmond. Apply now!">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --accent-orange: #f97316;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --background: #ffffff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-primary);
+            background: #0a0e27;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(37, 99, 235, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 50%, rgba(249, 115, 22, 0.15) 0%, transparent 50%);
+            animation: pulse 4s ease-in-out infinite alternate;
+        }
+        
+        /* Header with Hamburger Menu */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e5e7eb;
+            z-index: 1000;
+            padding: 1rem 1.5rem;
+        }
+        
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .logo-image {
+            height: 36px;
+            width: auto;
+        }
+        
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--accent-orange);
+        }
+        
+        .hamburger {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        .hamburger span {
+            width: 24px;
+            height: 3px;
+            background: var(--text-primary);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -6px);
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu {
+            position: fixed;
+            top: 73px;
+            right: -100%;
+            width: 280px;
+            height: calc(100vh - 73px);
+            background: white;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease;
+            z-index: 999;
+            padding: 2rem;
+        }
+        
+        .mobile-menu.active {
+            right: 0;
+        }
+        
+        .mobile-menu a {
+            display: block;
+            padding: 1rem 0;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .mobile-menu a:hover {
+            color: var(--primary-blue);
+        }
+        
+        /* Main Content - No Scroll, Centered */
+        .main-content {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: transparent;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-container {
+            max-width: 1000px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 4rem 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 30px 100px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+        }
+        
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(59, 130, 246, 0.2));
+            color: #60a5fa;
+            padding: 0.75rem 2rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            box-shadow: 0 0 30px rgba(37, 99, 235, 0.4),
+                        inset 0 0 20px rgba(96, 165, 250, 0.1);
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 20px rgba(37, 99, 235, 0.3), inset 0 0 20px rgba(96, 165, 250, 0.1); }
+            to { box-shadow: 0 0 40px rgba(37, 99, 235, 0.6), inset 0 0 30px rgba(96, 165, 250, 0.2); }
+        }
+        
+        .hero-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+            text-shadow: 0 0 40px rgba(96, 165, 250, 0.5);
+            letter-spacing: -0.02em;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #60a5fa 0%, #fb923c 50%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200% 200%;
+            animation: gradient-shift 3s ease infinite;
+            position: relative;
+            display: inline-block;
+        }
+        
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .hero-subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            font-weight: 400;
+        }
+        
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin: 2.5rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-number {
+            display: block;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, #60a5fa, #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Outfit', sans-serif;
+            text-shadow: 0 0 30px rgba(96, 165, 250, 0.3);
+        }
+        
+        .stat-label {
+            display: block;
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #f97316, #fb923c);
+            color: white;
+            padding: 1.5rem 3.5rem;
+            font-size: 1.25rem;
+            font-weight: 800;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 0 60px rgba(249, 115, 22, 0.5),
+                        0 20px 40px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .cta-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 0 80px rgba(249, 115, 22, 0.7),
+                        0 30px 60px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.4);
+        }
+        
+        .partnership-badge {
+            margin-top: 3rem;
+            padding: 1.25rem 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            line-height: 1.8;
+        }
+        
+        .partnership-badge strong {
+            color: #60a5fa;
+            font-weight: 700;
+        }
+        
+        .partnership-badge a {
+            color: #fb923c;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .partnership-badge a:hover {
+            color: #fbbf24;
+            text-shadow: 0 0 20px rgba(251, 146, 60, 0.5);
+        }
+        
+        /* Chat Modal */
+        .chat-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chat-modal.active {
+            display: flex;
+        }
+        
+        .chat-container {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, var(--primary-blue), #3b82f6);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        
+        .chat-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            max-height: 50vh;
+        }
+        
+        .chat-message {
+            margin-bottom: 1rem;
+        }
+        
+        .chat-message.bot {
+            background: #f3f4f6;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-right: 3rem;
+        }
+        
+        .chat-message.user {
+            background: var(--primary-blue);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-left: 3rem;
+            text-align: right;
+        }
+        
+        .chat-input-container {
+            padding: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .chat-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .chat-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .chat-option {
+            padding: 0.75rem 1rem;
+            background: white;
+            border: 2px solid var(--primary-blue);
+            border-radius: 8px;
+            color: var(--primary-blue);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .chat-option:hover {
+            background: var(--primary-blue);
+            color: white;
+        }
+        
+        .chat-send-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-stats {
+                gap: 1.5rem;
+            }
+            
+            .cta-button {
+                padding: 1rem 2rem;
+                font-size: 1.1rem;
+            }
+            
+            .chat-container {
+                width: 95%;
+                max-height: 90vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Hamburger Menu -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <img src="assets/edai-logo.png" alt="EdAI Accelerator" class="logo-image">
+                <span class="logo-text">Accelerator</span>
+            </div>
+            <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+    
+        <!-- Mobile Menu -->
+        <nav class="mobile-menu" id="mobileMenu">
+            <a href="#" onclick="openInfoModal('program'); return false;">Program</a>
+            <a href="#" onclick="document.getElementById('applyBtn').click(); closeMenu(); return false;">Apply</a>
+            <a href="#" onclick="openInfoModal('details'); return false;">Program Details</a>
+            <a href="#" onclick="openInfoModal('faq'); return false;">FAQ</a>
+            <a href="#" onclick="openInfoModal('contact'); return false;">Contact</a>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 1rem 0;">
+            <a href="mailto:aidris@edai.fun">📧 aidris@edai.fun</a>
+            <a href="tel:+15153570454">📞 515-357-0454</a>
+            <a href="https://mapsredmond.org" target="_blank">🕌 MAPS Redmond</a>
+        </nav>
+    
+    <!-- Main Content - No Scroll, Centered -->
+    <main class="main-content">
+        <div class="hero-container">
+            <span class="badge">🚀 December 2025 Cohort - Apply Now</span>
+            
+            <h1 class="hero-title">
+                Empowering Muslim Teen <span class="gradient-text">AI Innovators</span>
+            </h1>
+            
+            <p class="hero-subtitle">
+                Where Muslim youth create, test, and deploy real-world value through AI. 
+                From passive learners to entrepreneurial builders. In partnership with MAPS Redmond.
+            </p>
+            
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">Dec 2025</span>
+                    <span class="stat-label">Start Date</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">8 Weeks</span>
+                    <span class="stat-label">Intensive Program</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">15 Spots</span>
+                    <span class="stat-label">Limited Seats</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">$800</span>
+                    <span class="stat-label">Investment</span>
+                </div>
+            </div>
+            
+            <button class="cta-button" id="applyBtn">Apply Now - Dec 2025</button>
+            
+            <div class="partnership-badge">
+                🕌 <strong>Proudly partnered with MAPS Redmond</strong> • Washington's Largest Islamic Center<br>
+                📧 <a href="mailto:aidris@edai.fun" style="color: var(--primary-blue); text-decoration: none; font-weight: 600;">aidris@edai.fun</a> • 
+                📞 <a href="tel:+15153570454" style="color: var(--primary-blue); text-decoration: none; font-weight: 600;">515-357-0454</a>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Chat Modal -->
+    <div class="chat-modal" id="chatModal">
+        <div class="chat-container" id="chatApplicationModal">
+            <div class="chat-header">
+                <div>
+                    <div class="chat-title">EdAI Accelerator Application</div>
+                    <div style="font-size: 0.875rem; opacity: 0.9; margin-top: 0.25rem;">Assalamu Alaikum, welcome!</div>
+                </div>
+                <button class="chat-close" id="chatCloseBtn">&times;</button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be populated by JavaScript -->
+            </div>
+            <div class="chat-input-container" id="chatInputContainer">
+                <!-- Input will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Success Modal -->
+    <div class="modal" id="successModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: white; border-radius: 16px; width: 90%; max-width: 500px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-blue), #3b82f6); color: white; padding: 1.5rem; border-radius: 16px 16px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;">Application Submitted! 🎉</h3>
+                <button class="modal-close" id="modalClose" style="background: none; border: none; color: white; font-size: 2rem; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 2rem; text-align: center;">
+                <p style="margin-bottom: 1rem; line-height: 1.6;">Barakallahu feekum! Thank you for applying to EdAI Accelerator. We've received your application and will review it within 48 hours.</p>
+                <p style="margin-bottom: 1.5rem; line-height: 1.6;">You'll hear from us soon via email with next steps, insha'Allah.</p>
+            </div>
+            <div class="modal-footer" style="padding: 0 2rem 2rem; text-align: center;">
+                <button class="btn btn-primary" id="modalOk" style="padding: 0.75rem 2rem; background: var(--primary-blue); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem;">Jazakallahu Khairan!</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 3000; align-items: center; justify-content: center;">
+        <div style="text-align: center; color: white;">
+            <div style="border: 4px solid rgba(255, 255, 255, 0.3); border-top: 4px solid white; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+            <p style="font-size: 1.125rem; font-weight: 600;">Submitting your application...</p>
+        </div>
+    </div>
+    
+    <!-- Info Modal -->
+    <div class="modal" id="infoModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 2000; align-items: center; justify-content: center; overflow-y: auto;">
+        <div class="modal-content" style="background: white; border-radius: 20px; width: 90%; max-width: 900px; max-height: 90vh; overflow: hidden; box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4); margin: 2rem auto;">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-blue) 0%, #3b82f6 50%, var(--accent-orange) 100%); color: white; padding: 2rem; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
+                <h3 id="infoModalTitle" style="margin: 0; font-size: 1.75rem; font-weight: 800; font-family: 'Outfit', sans-serif;">Information</h3>
+                <button class="modal-close" id="infoModalClose" style="background: rgba(255, 255, 255, 0.2); border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0.5rem 0.75rem; line-height: 1; border-radius: 8px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">&times;</button>
+            </div>
+            <div id="infoModalBody" style="padding: 3rem 2.5rem; line-height: 1.8; color: var(--text-primary); overflow-y: auto; max-height: calc(90vh - 180px);">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+            <div class="modal-footer" style="padding: 1.5rem 2.5rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; background: #f9fafb; border-radius: 0 0 20px 20px;">
+                <button id="modalPrevBtn" onclick="navigateModal(-1)" style="padding: 0.75rem 1.5rem; background: white; color: var(--primary-blue); border: 2px solid var(--primary-blue); border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem;" onmouseover="this.style.background='var(--primary-blue)'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='var(--primary-blue)';"><span>&larr;</span> Previous</button>
+                <span id="modalPageIndicator" style="color: var(--text-secondary); font-weight: 600;"></span>
+                <button id="modalNextBtn" onclick="navigateModal(1)" style="padding: 0.75rem 1.5rem; background: var(--primary-blue); color: white; border: 2px solid var(--primary-blue); border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem;" onmouseover="this.style.background='var(--primary-blue-dark)';" onmouseout="this.style.background='var(--primary-blue)';">Next <span>&rarr;</span></button>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+        
+        #infoModalBody h2 {
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.2;
+            animation: fadeInUp 0.6s ease-out;
+            position: relative;
+        }
+        
+        #infoModalBody h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-orange));
+            border-radius: 2px;
+            animation: slideInLeft 0.8s ease-out 0.2s both;
+        }
+        
+        #infoModalBody h3 {
+            color: var(--primary-blue);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideInLeft 0.6s ease-out;
+            padding-left: 1rem;
+            border-left: 4px solid var(--accent-orange);
+            transition: all 0.3s;
+        }
+        
+        #infoModalBody h3:hover {
+            padding-left: 1.5rem;
+            border-left-width: 6px;
+        }
+        
+        #infoModalBody h3:first-of-type {
+            margin-top: 0;
+        }
+        
+        #infoModalBody p {
+            margin-bottom: 1.25rem;
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            line-height: 1.8;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        #infoModalBody ul {
+            margin: 1.5rem 0;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+            animation: fadeInUp 0.6s ease-out 0.1s both;
+        }
+        
+        #infoModalBody li {
+            margin-bottom: 0.75rem;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            position: relative;
+            padding-left: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        #infoModalBody li::before {
+            content: '→';
+            position: absolute;
+            left: -1.5rem;
+            color: var(--accent-orange);
+            font-weight: 700;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        
+        #infoModalBody li:hover {
+            padding-left: 1rem;
+            color: var(--primary-blue);
+        }
+        
+        #infoModalBody li:hover::before {
+            opacity: 1;
+            left: -1.2rem;
+        }
+        
+        #infoModalBody strong {
+            color: var(--primary-blue);
+            font-weight: 700;
+        }
+        
+        #infoModalBody a {
+            color: var(--primary-blue);
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            position: relative;
+            display: inline-block;
+        }
+        
+        #infoModalBody a::after {
+            content: '→';
+            margin-left: 0.25rem;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s;
+        }
+        
+        #infoModalBody a:hover {
+            border-bottom-color: var(--primary-blue);
+            color: var(--accent-orange);
+            padding-left: 0.25rem;
+        }
+        
+        #infoModalBody a:hover::after {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .info-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+            animation: scaleIn 0.6s ease-out 0.2s both;
+        }
+        
+        .info-card-item {
+            background: linear-gradient(135deg, #f0f9ff 0%, #fef3c7 100%);
+            padding: 2rem 1.5rem;
+            border-radius: 16px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .info-card-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .info-card-item:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.2);
+            border-color: var(--primary-blue);
+        }
+        
+        .info-card-item:hover::before {
+            left: 100%;
+        }
+        
+        .info-card-item .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        
+        .info-card-item:hover .icon {
+            transform: scale(1.15) rotate(5deg);
+            animation: pulse 0.6s ease-in-out;
+        }
+        
+        .info-card-item h3 {
+            margin: 0.75rem 0 0.5rem;
+            font-size: 1.25rem;
+            color: var(--primary-blue);
+            font-weight: 700;
+        }
+        
+        .info-card-item p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+    </style>
+    
+    <script src="js/main.js"></script>
+    <script>
+        // Hamburger menu toggle
+        const hamburger = document.getElementById('hamburgerBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!hamburger.contains(e.target) && !mobileMenu.contains(e.target)) {
+                hamburger.classList.remove('active');
+                mobileMenu.classList.remove('active');
+            }
+        });
+        
+        // Apply button opens chat modal
+        const applyBtn = document.getElementById('applyBtn');
+        const chatModal = document.getElementById('chatModal');
+        const chatCloseBtn = document.getElementById('chatCloseBtn');
+        
+        applyBtn.addEventListener('click', () => {
+            chatModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            openChatApplication();
+        });
+        
+        chatCloseBtn.addEventListener('click', () => {
+            chatModal.classList.remove('active');
+            document.body.style.overflow = 'hidden'; // Keep overflow hidden for main page
+        });
+        
+        // Close modal when clicking outside
+        chatModal.addEventListener('click', (e) => {
+            if (e.target === chatModal) {
+                chatModal.classList.remove('active');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+        
+        // Close menu function
+        function closeMenu() {
+            hamburger.classList.remove('active');
+            mobileMenu.classList.remove('active');
+        }
+        
+        // Modal navigation state
+        const modalPages = ['program', 'details', 'faq', 'contact'];
+        let currentModalPage = 0;
+        
+        // Navigate between modal pages
+        function navigateModal(direction) {
+            currentModalPage += direction;
+            if (currentModalPage < 0) currentModalPage = modalPages.length - 1;
+            if (currentModalPage >= modalPages.length) currentModalPage = 0;
+            openInfoModal(modalPages[currentModalPage]);
+        }
+        
+        // Info Modal Functions
+        function openInfoModal(type) {
+            currentModalPage = modalPages.indexOf(type);
+            const modal = document.getElementById('infoModal');
+            const title = document.getElementById('infoModalTitle');
+            const body = document.getElementById('infoModalBody');
+            
+            closeMenu(); // Close hamburger menu
+            
+            let content = '';
+            
+            if (type === 'program') {
+                title.textContent = 'Program Overview';
+                content = `
+                    <h2>🎯 Beyond Learning. Creating Real Value.</h2>
+                    <p>Has your teen ever asked when learning will matter? At EdAI, we turn knowledge into action—helping teens transform their learning into real-world products, ventures, and innovations that impact communities and economies.</p>
+                    
+                    <div class="info-card-grid">
+                        <div class="info-card-item">
+                            <div class="icon">🤖</div>
+                            <h3>Deploy AI Products</h3>
+                            <p>Launch working AI apps with real users</p>
+                        </div>
+                        <div class="info-card-item">
+                            <div class="icon">🌍</div>
+                            <h3>Real-World Skills</h3>
+                            <p>Coding, business, marketing & more</p>
+                        </div>
+                        <div class="info-card-item">
+                            <div class="icon">📚</div>
+                            <h3>Islamic Values</h3>
+                            <p>Build with Amanah & Ihsan</p>
+                        </div>
+                    </div>
+                    
+                    <h2>📅 8-Week AI Builder Journey</h2>
+                    <p><strong>Starts December 2025 (or earlier) • At MAPS Redmond</strong></p>
+                    
+                    <h3>Week 1-2: Foundation & Discovery</h3>
+                    <p>Muslim builder identity, AI literacy, problem discovery, and user interviews</p>
+                    
+                    <h3>Week 3-4: Build & Launch</h3>
+                    <p>Prototyping, MVP development, landing pages, and first product launches</p>
+                    
+                    <h3>Week 5-6: Test & Refine</h3>
+                    <p>User testing, feedback integration, value proposition refinement, and iteration</p>
+                    
+                    <h3>Week 7-8: Scale & Present</h3>
+                    <p>Growth experiments, financial planning, pitch preparation, and public Demo Day</p>
+                `;
+            } else if (type === 'details') {
+                title.textContent = 'Program Details';
+                content = `
+                    <h2>🎯 Ready to Secure 1 of 15 Exclusive Spots?</h2>
+                    <p>Only 15 exceptional Muslim middle and high school students will be selected for our premier AI accelerator program.</p>
+                    
+                    <div class="info-card-grid">
+                        <div class="info-card-item">
+                            <div class="icon">📅</div>
+                            <h3>Program Details</h3>
+                            <p>Dec 2025 (or earlier)<br><strong>At MAPS Redmond</strong><br>Laptop Required</p>
+                        </div>
+                        <div class="info-card-item">
+                            <div class="icon">💰</div>
+                            <h3>Investment</h3>
+                            <p>$800 for complete 8-week program</p>
+                        </div>
+                        <div class="info-card-item">
+                            <div class="icon">👥</div>
+                            <h3>Rolling Admissions</h3>
+                            <p>Priority review for next cohort</p>
+                        </div>
+                    </div>
+                    
+                    <h2>Application Process</h2>
+                    <p><strong>Competitive selection • Only 15 exceptional students will be chosen</strong></p>
+                    
+                    <h3>1. Submit Application</h3>
+                    <p>Complete the form with detailed information about your teen's interests and goals.</p>
+                    
+                    <h3>2. Interview Process</h3>
+                    <p>Selected candidates will be invited for a personal interview to assess fit and commitment.</p>
+                    
+                    <h3>3. Selection & Enrollment</h3>
+                    <p>Only 15 students will be accepted. Successful candidates secure their spot with program investment.</p>
+                `;
+            } else if (type === 'faq') {
+                title.textContent = 'Frequently Asked Questions';
+                content = `
+                    <h2>❓ Quick answers about the cohort and schedule</h2>
+                    
+                    <h3>🧑‍🎓 Who is this for?</h3>
+                    <p>Middle (Grade 5+) and High School students. We explicitly welcome late elementary students (5th grade) who are ready to build.</p>
+                    
+                    <h3>🔀 Will there be separate batches for Middle and High School?</h3>
+                    <p><strong>Possibly.</strong> If we receive enough interest from both groups, we'll create separate batches for Middle School and High School.</p>
+                    
+                    <h3>⏰ What are the weekly hours?</h3>
+                    <p><strong>First Cohort - Nov 2025:</strong></p>
+                    <ul>
+                        <li>Saturdays <strong>9 AM – 12 PM</strong> at MAPS Redmond</li>
+                        <li>Total of <strong>24 hours</strong> across 8 weeks</li>
+                    </ul>
+                    <p><strong>Dec 2025 Cohort:</strong> Schedule to be decided based on demand and parent preferences.</p>
+                    
+                    <h3>📅 When does the program start?</h3>
+                    <p><strong>December 2025</strong> (Tentative). If spots fill up and demand is high, we may launch an earlier cohort. We are accepting rolling admissions now.</p>
+                    
+                    <h3>💸 How much does it cost?</h3>
+                    <p><strong>$800 total</strong> for the full 8-week accelerator. <strong>Students must bring their own laptop.</strong></p>
+                `;
+            } else if (type === 'contact') {
+                title.textContent = 'Contact Us';
+                content = `
+                    <h2>📧 Get in Touch</h2>
+                    <p>Questions about the program? We're here to help!</p>
+                    
+                    <div class="info-card-grid">
+                        <div class="info-card-item">
+                            <div class="icon">📧</div>
+                            <h3>Email</h3>
+                            <p><a href="mailto:aidris@edai.fun">aidris@edai.fun</a></p>
+                        </div>
+                        <div class="info-card-item">
+                            <div class="icon">📞</div>
+                            <h3>Phone</h3>
+                            <p><a href="tel:+15153570454">+1 (515) 357-0454</a></p>
+                        </div>
+                        <div class="info-card-item">
+                            <div class="icon">🌐</div>
+                            <h3>Website</h3>
+                            <p><a href="https://edai.fun" target="_blank">edai.fun</a></p>
+                        </div>
+                    </div>
+                    
+                    <h2>🕌 Partnership</h2>
+                    <p><strong>Proudly Partnered with MAPS Redmond</strong> • Washington's Largest Islamic Center</p>
+                    <p>Program hosted at MAPS Redmond:<br>17550 NE 67th Ct, Redmond, WA 98052</p>
+                    <p><a href="https://mapsredmond.org" target="_blank">Learn More About MAPS →</a></p>
+                    
+                    <h2>👥 About EdAI Accelerator</h2>
+                    <p>Empowering Muslim teen founders and creators to build products that matter. In partnership with MAPS Redmond.</p>
+                `;
+            }
+            
+            body.innerHTML = content;
+            modal.style.display = 'flex';
+            
+            // Update page indicator
+            const pageIndicator = document.getElementById('modalPageIndicator');
+            pageIndicator.textContent = `${currentModalPage + 1} of ${modalPages.length}`;
+            
+            // Scroll modal body to top
+            body.scrollTop = 0;
+        }
+        
+        function closeInfoModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+        
+        // Modal close handlers
+        document.addEventListener('DOMContentLoaded', () => {
+            // Success modal
+            const modalClose = document.getElementById('modalClose');
+            const modalOk = document.getElementById('modalOk');
+            
+            if (modalClose) {
+                modalClose.addEventListener('click', () => {
+                    document.getElementById('successModal').style.display = 'none';
+                    document.body.style.overflow = 'hidden';
+                });
+            }
+            
+            if (modalOk) {
+                modalOk.addEventListener('click', () => {
+                    document.getElementById('successModal').style.display = 'none';
+                    document.body.style.overflow = 'hidden';
+                });
+            }
+            
+            // Info modal
+            const infoModalClose = document.getElementById('infoModalClose');
+            if (infoModalClose) {
+                infoModalClose.addEventListener('click', closeInfoModal);
+            }
+            
+            // Close info modal when clicking outside
+            document.getElementById('infoModal').addEventListener('click', (e) => {
+                if (e.target.id === 'infoModal') {
+                    closeInfoModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

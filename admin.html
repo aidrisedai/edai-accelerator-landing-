@@ -17,7 +17,7 @@
         }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
             background: #f3f4f6;
             color: #1f2937;
             line-height: 1.6;
@@ -409,6 +409,131 @@
             color: #1f2937;
         }
         
+        .btn-schedule {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #f97316, #fb923c);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 1rem;
+        }
+        
+        .btn-schedule:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(249, 115, 22, 0.3);
+        }
+        
+        .interview-section {
+            background: #f0fdf4;
+            border: 2px solid #86efac;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+        }
+        
+        .interview-section h4 {
+            color: #15803d;
+            margin-bottom: 1rem;
+            font-family: 'Outfit', sans-serif;
+        }
+        
+        .interview-form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .interview-form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .interview-form-group input,
+        .interview-form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+        }
+        
+        .interview-form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .time-slot {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+            align-items: center;
+        }
+        
+        .btn-add-time {
+            padding: 0.5rem 1rem;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .btn-remove-time {
+            padding: 0.5rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .btn-send-invite {
+            padding: 0.875rem 2rem;
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-send-invite:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+        
+        .interview-status {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .interview-status.not_scheduled {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .interview-status.pending {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .interview-status.confirmed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .interview-status.completed {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+        
         @media (max-width: 768px) {
             .dashboard-header-content {
                 flex-direction: column;
@@ -487,6 +612,10 @@
                     <div class="stat-label">This Week</div>
                     <div class="stat-value" id="weekCount">-</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-label">Interviews Scheduled</div>
+                    <div class="stat-value" id="interviewCount">-</div>
+                </div>
             </div>
             
             <!-- Filters -->
@@ -498,6 +627,16 @@
                         <option value="pending">Pending</option>
                         <option value="waitlist">Waitlist</option>
                         <option value="approved">Approved</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Interview Status</label>
+                    <select id="filterInterview" onchange="loadApplicants()">
+                        <option value="">All Interviews</option>
+                        <option value="not_scheduled">Not Scheduled</option>
+                        <option value="pending">Pending Response</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -597,14 +736,17 @@
                     '<div class="empty-state">Failed to load applicants. Please refresh the page.</div>';
             }
         }
+        }
         
         function filterApplicants(applications) {
             const status = document.getElementById('filterStatus').value;
+            const interviewStatus = document.getElementById('filterInterview').value;
             const search = document.getElementById('filterSearch').value.toLowerCase();
             const grade = document.getElementById('filterGrade').value;
             
             return applications.filter(app => {
                 if (status && app.application_status !== status) return false;
+                if (interviewStatus && (app.interview_status || 'not_scheduled') !== interviewStatus) return false;
                 if (search && !app.parent_name.toLowerCase().includes(search) && 
                     !app.parent_email.toLowerCase().includes(search)) return false;
                 if (grade && app.teen_grade.toString() !== grade) return false;
@@ -621,10 +763,16 @@
             oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
             const thisWeek = applications.filter(a => new Date(a.submitted_at) > oneWeekAgo).length;
             
+            const interviewScheduled = applications.filter(a => 
+                a.interview_status === 'pending' || 
+                a.interview_status === 'confirmed'
+            ).length;
+            
             document.getElementById('totalCount').textContent = total;
             document.getElementById('pendingCount').textContent = pending;
             document.getElementById('waitlistCount').textContent = waitlist;
             document.getElementById('weekCount').textContent = thisWeek;
+            document.getElementById('interviewCount').textContent = interviewScheduled;
         }
         
         function displayApplicants(applications) {
@@ -645,6 +793,7 @@
                             <th>Grade</th>
                             <th>Email</th>
                             <th>Status</th>
+                            <th>Interview</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -657,6 +806,7 @@
                                 <td>${app.teen_grade}th</td>
                                 <td>${app.parent_email}</td>
                                 <td><span class="status-badge status-${app.application_status}">${app.application_status}</span></td>
+                                <td><span class="interview-status ${app.interview_status || 'not_scheduled'}">${app.interview_status ? app.interview_status.replace('_', ' ') : 'not scheduled'}</span></td>
                                 <td><button class="btn-view" onclick='viewApplicant(${JSON.stringify(app).replace(/'/g, "&#39;")})'>View</button></td>
                             </tr>
                         `).join('')}
@@ -723,9 +873,189 @@
                         <div class="detail-value">${new Date(applicant.submitted_at).toLocaleString()}</div>
                     </div>
                 </div>
+                
+                <div id="interviewSection-${applicant.id}">
+                    ${getInterviewSection(applicant)}
+                </div>
             `;
             
             document.getElementById('applicantModal').classList.add('active');
+        }
+        
+        function getInterviewSection(applicant) {
+            const interviewStatus = applicant.interview_status || 'not_scheduled';
+            
+            if (interviewStatus === 'not_scheduled') {
+                return `
+                    <button class="btn-schedule" onclick="showInterviewForm(${applicant.id})">📅 Schedule Interview</button>
+                `;
+            } else if (interviewStatus === 'pending') {
+                const proposedTimes = applicant.proposed_interview_times ? JSON.parse(applicant.proposed_interview_times) : [];
+                return `
+                    <div class="interview-section">
+                        <h4>⏳ Interview Invitation Sent</h4>
+                        <div class="detail-row">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value"><span class="interview-status pending">Pending Parent Response</span></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Proposed Times</div>
+                            <div class="detail-value">
+                                ${proposedTimes.map(t => new Date(t).toLocaleString()).join('<br>')}
+                            </div>
+                        </div>
+                        ${applicant.parent_response ? `
+                            <div class="detail-row">
+                                <div class="detail-label">Parent Response</div>
+                                <div class="detail-value">${applicant.parent_response}</div>
+                            </div>
+                        ` : ''}
+                        <button class="btn-schedule" onclick="showInterviewForm(${applicant.id})">✏️ Update Times</button>
+                    </div>
+                `;
+            } else if (interviewStatus === 'confirmed') {
+                return `
+                    <div class="interview-section">
+                        <h4>✅ Interview Confirmed</h4>
+                        <div class="detail-row">
+                            <div class="detail-label">Interview Date</div>
+                            <div class="detail-value"><strong>${new Date(applicant.confirmed_interview_date).toLocaleString()}</strong></div>
+                        </div>
+                        ${applicant.interview_notes ? `
+                            <div class="detail-row">
+                                <div class="detail-label">Notes</div>
+                                <div class="detail-value">${applicant.interview_notes}</div>
+                            </div>
+                        ` : ''}
+                        <button class="btn-schedule" onclick="markInterviewCompleted(${applicant.id})">✓ Mark as Completed</button>
+                    </div>
+                `;
+            } else if (interviewStatus === 'completed') {
+                return `
+                    <div class="interview-section" style="background: #ede9fe; border-color: #c4b5fd;">
+                        <h4 style="color: #5b21b6;">🎉 Interview Completed</h4>
+                        <div class="detail-row">
+                            <div class="detail-label">Interview Date</div>
+                            <div class="detail-value">${new Date(applicant.confirmed_interview_date).toLocaleString()}</div>
+                        </div>
+                        ${applicant.interview_notes ? `
+                            <div class="detail-row">
+                                <div class="detail-label">Notes</div>
+                                <div class="detail-value">${applicant.interview_notes}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+        }
+        
+        function showInterviewForm(applicantId) {
+            const section = document.getElementById(`interviewSection-${applicantId}`);
+            section.innerHTML = `
+                <div class="interview-section">
+                    <h4>📅 Schedule Interview</h4>
+                    <div class="interview-form-group">
+                        <label>Proposed Interview Times (Add at least 2-3 options)</label>
+                        <div id="timeSlotsContainer">
+                            <div class="time-slot">
+                                <input type="datetime-local" class="interview-time" required>
+                                <button type="button" class="btn-remove-time" onclick="removeTimeSlot(this)">✕</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-add-time" onclick="addTimeSlot()">+ Add Another Time</button>
+                    </div>
+                    <div class="interview-form-group">
+                        <label>Message to Parent (optional)</label>
+                        <textarea id="interviewMessage" placeholder="Add a personal message for the parent..."></textarea>
+                    </div>
+                    <button class="btn-send-invite" onclick="sendInterviewInvite(${applicantId})">📧 Send Interview Invitation</button>
+                </div>
+            `;
+        }
+        
+        function addTimeSlot() {
+            const container = document.getElementById('timeSlotsContainer');
+            const newSlot = document.createElement('div');
+            newSlot.className = 'time-slot';
+            newSlot.innerHTML = `
+                <input type="datetime-local" class="interview-time" required>
+                <button type="button" class="btn-remove-time" onclick="removeTimeSlot(this)">✕</button>
+            `;
+            container.appendChild(newSlot);
+        }
+        
+        function removeTimeSlot(btn) {
+            const container = document.getElementById('timeSlotsContainer');
+            if (container.children.length > 1) {
+                btn.parentElement.remove();
+            } else {
+                alert('You must have at least one time slot');
+            }
+        }
+        
+        async function sendInterviewInvite(applicantId) {
+            const timeInputs = document.querySelectorAll('.interview-time');
+            const times = Array.from(timeInputs).map(input => input.value).filter(v => v);
+            
+            if (times.length === 0) {
+                alert('Please add at least one interview time');
+                return;
+            }
+            
+            const message = document.getElementById('interviewMessage').value;
+            
+            try {
+                const response = await fetch('/api/send-interview-invite', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        applicantId,
+                        proposedTimes: times,
+                        message
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Interview invitation sent successfully!');
+                    closeModal();
+                    loadApplicants();
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to send invitation. Please try again.');
+            }
+        }
+        
+        async function markInterviewCompleted(applicantId) {
+            if (!confirm('Mark this interview as completed?')) return;
+            
+            try {
+                const response = await fetch('/api/update-interview-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        applicantId,
+                        status: 'completed'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Interview marked as completed!');
+                    closeModal();
+                    loadApplicants();
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to update status. Please try again.');
+            }
         }
         
         function closeModal() {

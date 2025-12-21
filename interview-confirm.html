@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Interview - EdAI Accelerator</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .container {
+            background: white;
+            max-width: 600px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .logo h1 {
+            color: #2563eb;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .logo p {
+            color: #6b7280;
+        }
+        
+        .content {
+            margin-bottom: 2rem;
+        }
+        
+        .content h2 {
+            color: #1f2937;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .applicant-info {
+            background: #f0f9ff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        
+        .applicant-info p {
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .applicant-info strong {
+            color: #2563eb;
+        }
+        
+        .time-options {
+            margin-bottom: 2rem;
+        }
+        
+        .time-option {
+            background: white;
+            border: 2px solid #e5e7eb;
+            padding: 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .time-option:hover {
+            border-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+        }
+        
+        .time-option.selected {
+            background: #eff6ff;
+            border-color: #2563eb;
+            border-width: 3px;
+        }
+        
+        .time-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .time-option label {
+            flex: 1;
+            cursor: pointer;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .alternative-section {
+            background: #fef3c7;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        
+        .alternative-section h3 {
+            color: #92400e;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f97316;
+            color: white;
+            margin-top: 1rem;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(249, 115, 22, 0.3);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        
+        .error {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+        
+        .success {
+            text-align: center;
+        }
+        
+        .success h2 {
+            color: #10b981;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .success p {
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 640px) {
+            .container {
+                padding: 2rem 1.5rem;
+            }
+            
+            .logo h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>🎓 EdAI Accelerator</h1>
+            <p>Interview Confirmation</p>
+        </div>
+        
+        <div id="mainContent">
+            <div class="loading">
+                Loading interview details...
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        if (!token) {
+            document.getElementById('mainContent').innerHTML = `
+                <div class="error">
+                    Invalid confirmation link. Please check your email and try again.
+                </div>
+            `;
+        } else {
+            loadInterviewDetails();
+        }
+        
+        async function loadInterviewDetails() {
+            try {
+                const response = await fetch(`/api/get-interview-details?token=${token}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    document.getElementById('mainContent').innerHTML = `
+                        <div class="error">
+                            ${data.error || 'Failed to load interview details'}
+                        </div>
+                    `;
+                    return;
+                }
+                
+                renderConfirmationForm(data);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="error">
+                        Failed to load interview details. Please try again later.
+                    </div>
+                `;
+            }
+        }
+        
+        function renderConfirmationForm(data) {
+            const { applicant, proposedTimes } = data;
+            
+            document.getElementById('mainContent').innerHTML = `
+                <div class="content">
+                    <h2>Assalamu Alaikum ${applicant.parent_name}!</h2>
+                    
+                    <div class="applicant-info">
+                        <p><strong>Student:</strong> ${applicant.teen_name}</p>
+                        <p><strong>Grade:</strong> ${applicant.teen_grade}th</p>
+                    </div>
+                    
+                    <p style="margin-bottom: 1.5rem; color: #6b7280;">
+                        Thank you for your interest in the EdAI Accelerator program! 
+                        Please select one of the proposed interview times below, or let us know alternative times that work better for you.
+                    </p>
+                    
+                    <div class="time-options">
+                        <h3 style="margin-bottom: 1rem; color: #1f2937;">Select Interview Time:</h3>
+                        ${proposedTimes.map((time, index) => `
+                            <div class="time-option" onclick="selectTime(${index})">
+                                <input type="radio" name="interviewTime" value="${time}" id="time-${index}">
+                                <label for="time-${index}">${new Date(time).toLocaleString('en-US', { 
+                                    weekday: 'long', 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric', 
+                                    hour: 'numeric', 
+                                    minute: '2-digit', 
+                                    timeZoneName: 'short' 
+                                })}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="confirmSelection()">
+                        ✓ Confirm Selected Time
+                    </button>
+                    
+                    <div class="alternative-section" style="margin-top: 2rem;">
+                        <h3>None of these times work?</h3>
+                        <div class="form-group">
+                            <label>Please suggest alternative times that work better for you:</label>
+                            <textarea id="alternativeTimes" placeholder="Example: I'm available on Saturday Dec 28th after 2 PM, or Sunday Dec 29th anytime between 10 AM - 4 PM"></textarea>
+                        </div>
+                        <button class="btn btn-secondary" onclick="requestAlternative()">
+                            📧 Request Alternative Times
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function selectTime(index) {
+            // Remove previous selection
+            document.querySelectorAll('.time-option').forEach(el => el.classList.remove('selected'));
+            // Add selection to clicked option
+            document.querySelectorAll('.time-option')[index].classList.add('selected');
+            document.getElementById(`time-${index}`).checked = true;
+        }
+        
+        async function confirmSelection() {
+            const selected = document.querySelector('input[name="interviewTime"]:checked');
+            
+            if (!selected) {
+                alert('Please select an interview time');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/confirm-interview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token,
+                        confirmedTime: selected.value,
+                        responseType: 'confirmed'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess();
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to confirm interview. Please try again.');
+            }
+        }
+        
+        async function requestAlternative() {
+            const alternativeTimes = document.getElementById('alternativeTimes').value;
+            
+            if (!alternativeTimes.trim()) {
+                alert('Please provide alternative times that work for you');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/confirm-interview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token,
+                        alternativeTimes,
+                        responseType: 'alternative'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(true);
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to send request. Please try again.');
+            }
+        }
+        
+        function showSuccess(isAlternative = false) {
+            document.getElementById('mainContent').innerHTML = `
+                <div class="success">
+                    <h2>✓ Success!</h2>
+                    ${isAlternative 
+                        ? '<p>Thank you for letting us know your availability. We will review your suggested times and get back to you shortly via email.</p>'
+                        : '<p>Your interview has been confirmed! You will receive a confirmation email shortly with the interview details.</p>'
+                    }
+                    <p style="margin-top: 2rem;">
+                        If you have any questions, please contact us at 
+                        <strong>contact@edaiaccelerator.com</strong>
+                    </p>
+                    <p style="margin-top: 1rem; font-size: 0.875rem; color: #9ca3af;">
+                        You can close this window now.
+                    </p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

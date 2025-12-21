@@ -258,6 +258,34 @@ app.post('/api/submit-application', async (req, res) => {
     }
 });
 
+// API endpoint to run database migrations (admin only - call once after deployment)
+app.post('/api/migrate-database', async (req, res) => {
+    try {
+        // Add interview scheduling fields
+        await pool.query(`
+            ALTER TABLE applications
+            ADD COLUMN IF NOT EXISTS interview_status VARCHAR(50) DEFAULT 'not_scheduled',
+            ADD COLUMN IF NOT EXISTS proposed_interview_times TEXT,
+            ADD COLUMN IF NOT EXISTS confirmed_interview_date TIMESTAMP,
+            ADD COLUMN IF NOT EXISTS interview_notes TEXT,
+            ADD COLUMN IF NOT EXISTS parent_response TEXT,
+            ADD COLUMN IF NOT EXISTS parent_response_date TIMESTAMP,
+            ADD COLUMN IF NOT EXISTS interview_link TEXT;
+        `);
+        
+        res.status(200).json({
+            success: true,
+            message: 'Database migration completed successfully'
+        });
+    } catch (error) {
+        console.error('Migration error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 // API endpoint to get all applications
 app.get('/api/get-applications', async (req, res) => {
     try {
@@ -297,6 +325,265 @@ app.get('/api/get-applications', async (req, res) => {
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
+// API endpoint to send interview invitation
+app.post('/api/send-interview-invite', async (req, res) => {
+    try {
+        const { applicantId, proposedTimes, message } = req.body;
+        
+        // Get applicant details
+        const applicant = await pool.query(
+            'SELECT * FROM applications WHERE id = $1',
+            [applicantId]
+        );
+        
+        if (applicant.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Applicant not found'
+            });
+        }
+        
+        const app = applicant.rows[0];
+        
+        // Generate unique confirmation link
+        const confirmationToken = Buffer.from(`${applicantId}-${Date.now()}`).toString('base64');
+        const confirmationLink = `${req.protocol}://${req.get('host')}/interview-confirm?token=${confirmationToken}`;
+        
+        // Update database with proposed times and link
+        await pool.query(`
+            UPDATE applications 
+            SET interview_status = 'pending',
+                proposed_interview_times = $1,
+                interview_link = $2
+            WHERE id = $3
+        `, [JSON.stringify(proposedTimes), confirmationToken, applicantId]);
+        
+        // Send email using Resend
+        const { Resend } = require('resend');
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        
+        const emailHtml = `
+            <h2>Interview Invitation - EdAI Accelerator</h2>
+            <p>Assalamu Alaikum ${app.parent_name},</p>
+            <p>We're excited to move forward with ${app.teen_name}'s application to the EdAI Accelerator program!</p>
+            
+            ${message ? `<p><em>${message}</em></p>` : ''}
+            
+            <h3>Proposed Interview Times:</h3>
+            <ul>
+                ${proposedTimes.map(time => `<li>${new Date(time).toLocaleString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric', 
+                    hour: 'numeric', 
+                    minute: '2-digit', 
+                    timeZoneName: 'short' 
+                })}</li>`).join('')}
+            </ul>
+            
+            <p><strong>Please click the link below to confirm one of these times or request an alternative:</strong></p>
+            <p><a href="${confirmationLink}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Confirm Interview Time</a></p>
+            
+            <p>If you have any questions, please don't hesitate to reach out to us.</p>
+            
+            <p>Jazakallahu Khairan,<br>
+            EdAI Accelerator Team</p>
+        `;
+        
+        await resend.emails.send({
+            from: 'EdAI Accelerator <noreply@edaiaccelerator.com>',
+            to: app.parent_email,
+            subject: `Interview Invitation for ${app.teen_name} - EdAI Accelerator`,
+            html: emailHtml
+        });
+        
+        res.status(200).json({
+            success: true,
+            message: 'Interview invitation sent successfully'
+        });
+        
+    } catch (error) {
+        console.error('Error sending interview invite:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to send invitation'
+        });
+    }
+});
+
+// API endpoint to get interview details for confirmation page
+app.get('/api/get-interview-details', async (req, res) => {
+    try {
+        const { token } = req.query;
+        
+        if (!token) {
+            return res.status(400).json({
+                success: false,
+                error: 'Token is required'
+            });
+        }
+        
+        // Get applicant by interview link token
+        const result = await pool.query(
+            'SELECT * FROM applications WHERE interview_link = $1',
+            [token]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Invalid or expired confirmation link'
+            });
+        }
+        
+        const applicant = result.rows[0];
+        const proposedTimes = JSON.parse(applicant.proposed_interview_times || '[]');
+        
+        res.status(200).json({
+            success: true,
+            applicant: {
+                parent_name: applicant.parent_name,
+                teen_name: applicant.teen_name,
+                teen_grade: applicant.teen_grade
+            },
+            proposedTimes
+        });
+        
+    } catch (error) {
+        console.error('Error getting interview details:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to load interview details'
+        });
+    }
+});
+
+// API endpoint to confirm interview or request alternative
+app.post('/api/confirm-interview', async (req, res) => {
+    try {
+        const { token, confirmedTime, alternativeTimes, responseType } = req.body;
+        
+        // Get applicant by token
+        const result = await pool.query(
+            'SELECT * FROM applications WHERE interview_link = $1',
+            [token]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Invalid confirmation link'
+            });
+        }
+        
+        const applicant = result.rows[0];
+        
+        if (responseType === 'confirmed') {
+            // Parent confirmed one of the proposed times
+            await pool.query(`
+                UPDATE applications 
+                SET interview_status = 'confirmed',
+                    confirmed_interview_date = $1,
+                    parent_response = 'Confirmed',
+                    parent_response_date = NOW()
+                WHERE id = $2
+            `, [confirmedTime, applicant.id]);
+            
+            // Send confirmation email to parent
+            const { Resend } = require('resend');
+            const resend = new Resend(process.env.RESEND_API_KEY);
+            
+            await resend.emails.send({
+                from: 'EdAI Accelerator <noreply@edaiaccelerator.com>',
+                to: applicant.parent_email,
+                subject: `Interview Confirmed for ${applicant.teen_name} - EdAI Accelerator`,
+                html: `
+                    <h2>Interview Confirmed!</h2>
+                    <p>Assalamu Alaikum ${applicant.parent_name},</p>
+                    <p>Thank you for confirming the interview time for ${applicant.teen_name}.</p>
+                    <h3>Interview Details:</h3>
+                    <p><strong>Date & Time:</strong> ${new Date(confirmedTime).toLocaleString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        timeZoneName: 'short'
+                    })}</p>
+                    <p>We will send you the meeting link closer to the interview date.</p>
+                    <p>If you need to reschedule, please contact us at contact@edaiaccelerator.com</p>
+                    <p>Jazakallahu Khairan,<br>EdAI Accelerator Team</p>
+                `
+            });
+            
+        } else if (responseType === 'alternative') {
+            // Parent requested alternative times
+            await pool.query(`
+                UPDATE applications 
+                SET parent_response = $1,
+                    parent_response_date = NOW()
+                WHERE id = $2
+            `, [alternativeTimes, applicant.id]);
+            
+            // Notify admin via email
+            const { Resend } = require('resend');
+            const resend = new Resend(process.env.RESEND_API_KEY);
+            
+            await resend.emails.send({
+                from: 'EdAI Accelerator <noreply@edaiaccelerator.com>',
+                to: 'contact@edaiaccelerator.com',
+                subject: `Alternative Interview Times Requested - ${applicant.teen_name}`,
+                html: `
+                    <h2>Alternative Interview Times Requested</h2>
+                    <p><strong>Student:</strong> ${applicant.teen_name}</p>
+                    <p><strong>Parent:</strong> ${applicant.parent_name} (${applicant.parent_email})</p>
+                    <h3>Parent's Response:</h3>
+                    <p>${alternativeTimes}</p>
+                    <p>Please review and send new proposed times via the admin dashboard.</p>
+                `
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Response recorded successfully'
+        });
+        
+    } catch (error) {
+        console.error('Error confirming interview:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to process response'
+        });
+    }
+});
+
+// API endpoint to update interview status
+app.post('/api/update-interview-status', async (req, res) => {
+    try {
+        const { applicantId, status } = req.body;
+        
+        await pool.query(
+            'UPDATE applications SET interview_status = $1 WHERE id = $2',
+            [status, applicantId]
+        );
+        
+        res.status(200).json({
+            success: true,
+            message: 'Interview status updated successfully'
+        });
+        
+    } catch (error) {
+        console.error('Error updating interview status:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update status'
+        });
+    }
 });
 
 // Start server

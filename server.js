@@ -23,6 +23,11 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Serve admin page
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
 // API endpoint for form submission
 app.post('/api/submit-application', async (req, res) => {
     try {
@@ -249,6 +254,42 @@ app.post('/api/submit-application', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Internal server error. Please try again later.'
+        });
+    }
+});
+
+// API endpoint to get all applications
+app.get('/api/get-applications', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                id,
+                parent_name,
+                parent_email,
+                parent_phone,
+                teen_name,
+                teen_age,
+                teen_grade,
+                teen_interests,
+                parent_expectations,
+                agrees_terms,
+                agrees_contact,
+                application_status,
+                submitted_at
+            FROM applications
+            ORDER BY submitted_at DESC
+        `);
+
+        res.status(200).json({
+            success: true,
+            count: result.rows.length,
+            applications: result.rows
+        });
+    } catch (error) {
+        console.error('Database error fetching applications:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve applications. Please try again later.'
         });
     }
 });

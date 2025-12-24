@@ -226,6 +226,11 @@
     <div class="container">
         <div id="alertMessage" class="alert"></div>
         
+        <div id="migrationNotice" class="info-box" style="display: none; background: #fee2e2; border-left-color: #ef4444;">
+            <strong>⚠️ Database Setup Required:</strong> The settings table doesn't exist yet. 
+            <button onclick="runMigration()" style="margin-left: 1rem; padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Run Migration Now</button>
+        </div>
+        
         <div class="settings-section">
             <h2>🔑 API Configuration</h2>
             
@@ -373,14 +378,44 @@
                     document.getElementById('interviewInviteBody').value = s.interview_invite_body || '';
                     document.getElementById('interviewConfirmedSubject').value = s.interview_confirmed_subject || '';
                     document.getElementById('interviewConfirmedBody').value = s.interview_confirmed_body || '';
+                } else {
+                    // Settings table might not exist
+                    document.getElementById('migrationNotice').style.display = 'block';
+                    showAlert('Settings table not found. Please run migration.', 'error');
                 }
             } catch (error) {
                 console.error('Error loading settings:', error);
-                showAlert('Failed to load settings', 'error');
+                document.getElementById('migrationNotice').style.display = 'block';
+                showAlert('Failed to load settings. Database may need migration.', 'error');
+            }
+        }
+        
+        async function runMigration() {
+            try {
+                showAlert('Running database migration...', 'success');
+                const response = await fetch('/api/migrate-database', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('✓ Migration completed! Reloading settings...', 'success');
+                    document.getElementById('migrationNotice').style.display = 'none';
+                    setTimeout(() => {
+                        loadSettings();
+                    }, 1000);
+                } else {
+                    showAlert('Migration failed: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Migration error:', error);
+                showAlert('Failed to run migration: ' + error.message, 'error');
             }
         }
         
         async function saveSettings() {
+            showAlert('Saving settings...', 'success');
+            
             const settings = {
                 resend_api_key: document.getElementById('resendApiKey').value,
                 email_from_address: document.getElementById('emailFromAddress').value,
@@ -394,6 +429,8 @@
                 interview_confirmed_body: document.getElementById('interviewConfirmedBody').value
             };
             
+            console.log('Saving settings:', settings);
+            
             try {
                 const response = await fetch('/api/update-settings', {
                     method: 'POST',
@@ -401,7 +438,9 @@
                     body: JSON.stringify({ settings })
                 });
                 
+                console.log('Response status:', response.status);
                 const data = await response.json();
+                console.log('Response data:', data);
                 
                 if (data.success) {
                     showAlert('✓ Settings saved successfully!', 'success');
@@ -413,7 +452,7 @@
                 }
             } catch (error) {
                 console.error('Error saving settings:', error);
-                showAlert('Failed to save settings. Please try again.', 'error');
+                showAlert('Failed to save settings: ' + error.message, 'error');
             }
         }
         

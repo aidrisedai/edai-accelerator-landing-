@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - EdAI Accelerator Admin</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f3f4f6;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dashboard-header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .dashboard-header h1 {
+            font-size: 1.75rem;
+        }
+        
+        .btn-back {
+            padding: 0.5rem 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .settings-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+        
+        .settings-section h2 {
+            color: #2563eb;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 0.25rem;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        
+        .form-group textarea {
+            min-height: 200px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+        
+        .template-vars {
+            background: #f0f9ff;
+            border: 2px solid #3b82f6;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+        }
+        
+        .template-vars h4 {
+            color: #1e40af;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .template-vars code {
+            display: inline-block;
+            background: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            margin: 0.25rem;
+            font-size: 0.75rem;
+            color: #2563eb;
+        }
+        
+        .btn-save {
+            padding: 0.875rem 2rem;
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+        
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-test {
+            padding: 0.875rem 2rem;
+            background: linear-gradient(135deg, #f97316, #fb923c);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            margin-left: 1rem;
+        }
+        
+        .btn-test:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(249, 115, 22, 0.3);
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+        
+        .alert.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+        
+        .alert.error {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 2px solid #ef4444;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        
+        .info-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+        }
+        
+        .info-box strong {
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <div class="dashboard-header-content">
+            <h1>⚙️ Settings</h1>
+            <a href="/admin" class="btn-back">← Back to Dashboard</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div id="alertMessage" class="alert"></div>
+        
+        <div class="settings-section">
+            <h2>🔑 API Configuration</h2>
+            
+            <div class="info-box">
+                <strong>⚠️ Important:</strong> Your Resend API key is required to send emails. Get your key at <a href="https://resend.com/api-keys" target="_blank" style="color: #2563eb;">resend.com/api-keys</a>
+            </div>
+            
+            <div class="form-group">
+                <label for="resendApiKey">Resend API Key</label>
+                <input type="password" id="resendApiKey" placeholder="re_xxxxxxxxxxxxx">
+                <small>Your API key will be stored securely in the database</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="emailFromAddress">Email From Address</label>
+                <input type="text" id="emailFromAddress" placeholder="EdAI Accelerator <noreply@edaiaccelerator.com>">
+                <small>Format: Name &lt;email@domain.com&gt;</small>
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <h2>📧 Welcome Email (Regular Applications)</h2>
+            
+            <div class="form-group">
+                <label for="welcomeSubject">Email Subject</label>
+                <input type="text" id="welcomeSubject" placeholder="Application Received - Thank You! | EdAI Accelerator">
+            </div>
+            
+            <div class="form-group">
+                <label for="welcomeBody">Email Body (HTML)</label>
+                <textarea id="welcomeBody" placeholder="Leave empty to use default template..."></textarea>
+                <small>Leave empty to use the default professional template. Or paste your custom HTML.</small>
+                
+                <div class="template-vars">
+                    <h4>Available Variables:</h4>
+                    <code>{{parent_name}}</code>
+                    <code>{{children_list}}</code>
+                    <code>{{total_children}}</code>
+                    <code>{{application_id}}</code>
+                    <code>{{submitted_date}}</code>
+                    <code>{{parent_email}}</code>
+                </div>
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <h2>⏰ Waitlist Email (2026 Applications)</h2>
+            
+            <div class="form-group">
+                <label for="waitlistSubject">Email Subject</label>
+                <input type="text" id="waitlistSubject" placeholder="Application Received - 2026 Waitlist | EdAI Accelerator">
+            </div>
+            
+            <div class="form-group">
+                <label for="waitlistBody">Email Body (HTML)</label>
+                <textarea id="waitlistBody" placeholder="Leave empty to use default template..."></textarea>
+                <small>Leave empty to use the default professional template. Or paste your custom HTML.</small>
+                
+                <div class="template-vars">
+                    <h4>Available Variables:</h4>
+                    <code>{{parent_name}}</code>
+                    <code>{{children_list}}</code>
+                    <code>{{total_children}}</code>
+                    <code>{{application_id}}</code>
+                    <code>{{submitted_date}}</code>
+                    <code>{{parent_email}}</code>
+                </div>
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <h2>📅 Interview Invitation Email</h2>
+            
+            <div class="form-group">
+                <label for="interviewInviteSubject">Email Subject</label>
+                <input type="text" id="interviewInviteSubject" placeholder="Interview Invitation for {{student_name}} - EdAI Accelerator">
+            </div>
+            
+            <div class="form-group">
+                <label for="interviewInviteBody">Email Body (HTML)</label>
+                <textarea id="interviewInviteBody" placeholder="Leave empty to use default template..."></textarea>
+                <small>Leave empty to use the default template. Or paste your custom HTML.</small>
+                
+                <div class="template-vars">
+                    <h4>Available Variables:</h4>
+                    <code>{{parent_name}}</code>
+                    <code>{{student_name}}</code>
+                    <code>{{proposed_times_list}}</code>
+                    <code>{{confirmation_link}}</code>
+                    <code>{{custom_message}}</code>
+                </div>
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <h2>✅ Interview Confirmed Email</h2>
+            
+            <div class="form-group">
+                <label for="interviewConfirmedSubject">Email Subject</label>
+                <input type="text" id="interviewConfirmedSubject" placeholder="Interview Confirmed for {{student_name}} - EdAI Accelerator">
+            </div>
+            
+            <div class="form-group">
+                <label for="interviewConfirmedBody">Email Body (HTML)</label>
+                <textarea id="interviewConfirmedBody" placeholder="Leave empty to use default template..."></textarea>
+                <small>Leave empty to use the default template. Or paste your custom HTML.</small>
+                
+                <div class="template-vars">
+                    <h4>Available Variables:</h4>
+                    <code>{{parent_name}}</code>
+                    <code>{{student_name}}</code>
+                    <code>{{confirmed_date_time}}</code>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <button class="btn-save" onclick="saveSettings()">💾 Save All Settings</button>
+        </div>
+    </div>
+    
+    <script>
+        // Check authentication
+        if (sessionStorage.getItem('adminAuth') !== 'true') {
+            window.location.href = '/admin';
+        }
+        
+        // Load settings on page load
+        loadSettings();
+        
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/get-settings');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const s = data.settings;
+                    document.getElementById('resendApiKey').value = s.resend_api_key || '';
+                    document.getElementById('emailFromAddress').value = s.email_from_address || '';
+                    document.getElementById('welcomeSubject').value = s.welcome_email_subject || '';
+                    document.getElementById('welcomeBody').value = s.welcome_email_body || '';
+                    document.getElementById('waitlistSubject').value = s.waitlist_email_subject || '';
+                    document.getElementById('waitlistBody').value = s.waitlist_email_body || '';
+                    document.getElementById('interviewInviteSubject').value = s.interview_invite_subject || '';
+                    document.getElementById('interviewInviteBody').value = s.interview_invite_body || '';
+                    document.getElementById('interviewConfirmedSubject').value = s.interview_confirmed_subject || '';
+                    document.getElementById('interviewConfirmedBody').value = s.interview_confirmed_body || '';
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                showAlert('Failed to load settings', 'error');
+            }
+        }
+        
+        async function saveSettings() {
+            const settings = {
+                resend_api_key: document.getElementById('resendApiKey').value,
+                email_from_address: document.getElementById('emailFromAddress').value,
+                welcome_email_subject: document.getElementById('welcomeSubject').value,
+                welcome_email_body: document.getElementById('welcomeBody').value,
+                waitlist_email_subject: document.getElementById('waitlistSubject').value,
+                waitlist_email_body: document.getElementById('waitlistBody').value,
+                interview_invite_subject: document.getElementById('interviewInviteSubject').value,
+                interview_invite_body: document.getElementById('interviewInviteBody').value,
+                interview_confirmed_subject: document.getElementById('interviewConfirmedSubject').value,
+                interview_confirmed_body: document.getElementById('interviewConfirmedBody').value
+            };
+            
+            try {
+                const response = await fetch('/api/update-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ settings })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('✓ Settings saved successfully!', 'success');
+                    setTimeout(() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 100);
+                } else {
+                    showAlert('Error: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showAlert('Failed to save settings. Please try again.', 'error');
+            }
+        }
+        
+        function showAlert(message, type) {
+            const alert = document.getElementById('alertMessage');
+            alert.textContent = message;
+            alert.className = `alert ${type}`;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

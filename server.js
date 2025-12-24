@@ -18,6 +18,38 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
+// Helper function to get settings from database
+async function getSettings() {
+    try {
+        const result = await pool.query('SELECT setting_key, setting_value FROM settings');
+        const settings = {};
+        result.rows.forEach(row => {
+            settings[row.setting_key] = row.setting_value;
+        });
+        return settings;
+    } catch (error) {
+        console.error('Error loading settings:', error);
+        // Return defaults if settings table doesn't exist yet
+        return {
+            resend_api_key: process.env.RESEND_API_KEY || '',
+            email_from_address: 'EdAI Accelerator <noreply@edaiaccelerator.com>',
+            welcome_email_subject: 'Application Received - Thank You! | EdAI Accelerator',
+            waitlist_email_subject: 'Application Received - 2026 Waitlist | EdAI Accelerator',
+            welcome_email_body: '',
+            waitlist_email_body: ''
+        };
+    }
+}
+
+// Helper function to replace template variables
+function replaceTemplateVars(template, vars) {
+    let result = template;
+    for (const [key, value] of Object.entries(vars)) {
+        result = result.replace(new RegExp(`{{${key}}}`, 'g'), value);
+    }
+    return result;
+}
+
 // Serve the main page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
@@ -26,6 +58,11 @@ app.get('/', (req, res) => {
 // Serve admin page
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+// Serve settings page
+app.get('/settings', (req, res) => {
+    res.sendFile(path.join(__dirname, 'settings.html'));
 });
 
 // API endpoint for form submission
@@ -220,8 +257,9 @@ app.post('/api/submit-application', async (req, res) => {
 
         // Send welcome email to parent
         try {
+            const settings = await getSettings();
             const { Resend } = require('resend');
-            const resend = new Resend(process.env.RESEND_API_KEY);
+            const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
             
             const childrenList = insertedApplications.map(app => 
                 `${app.childName} (${app.childGrade}th Grade)`
@@ -229,13 +267,31 @@ app.post('/api/submit-application', async (req, res) => {
             
             const isWaitlist = applicationStatus === 'waitlist';
             
-            await resend.emails.send({
-                from: 'EdAI Accelerator <noreply@edaiaccelerator.com>',
-                to: parentEmail.trim().toLowerCase(),
-                subject: isWaitlist 
-                    ? 'Application Received - 2026 Waitlist | EdAI Accelerator'
-                    : 'Application Received - Thank You! | EdAI Accelerator',
-                html: `
+            // Template variables
+            const templateVars = {
+                parent_name: parentName,
+                children_list: childrenList,
+                total_children: totalChildren,
+                application_id: insertedApplications[0].id,
+                submitted_date: new Date(insertedApplications[0].submittedAt).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }),
+                parent_email: parentEmail.trim().toLowerCase()
+            };
+            
+            // Get custom email body or use default
+            const customEmailBody = isWaitlist ? settings.waitlist_email_body : settings.welcome_email_body;
+            let emailHtml;
+            
+            if (customEmailBody && customEmailBody.trim()) {
+                // Use custom email template
+                emailHtml = replaceTemplateVars(customEmailBody, templateVars);
+            } else {
+                // Use default template
+                emailHtml = `
                     <!DOCTYPE html>
                     <html>
                     <head>
@@ -359,7 +415,17 @@ app.post('/api/submit-application', async (req, res) => {
                         </div>
                     </body>
                     </html>
-                `
+                `;
+            }
+            
+            await resend.emails.send({
+                from: settings.email_from_address || 'EdAI Accelerator <noreply@edaiaccelerator.com>',
+                to: parentEmail.trim().toLowerCase(),
+                subject: replaceTemplateVars(
+                    isWaitlist ? settings.waitlist_email_subject : settings.welcome_email_subject,
+                    templateVars
+                ),
+                html: emailHtml
             });
             
             console.log(`Welcome email sent to ${parentEmail}`);
@@ -424,6 +490,32 @@ app.post('/api/migrate-database', async (req, res) => {
             ADD COLUMN IF NOT EXISTS interview_link TEXT;
         `);
         
+        // Create settings table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS settings (
+                id SERIAL PRIMARY KEY,
+                setting_key VARCHAR(255) UNIQUE NOT NULL,
+                setting_value TEXT,
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+        `);
+        
+        // Insert default settings
+        await pool.query(`
+            INSERT INTO settings (setting_key, setting_value) VALUES
+            ('resend_api_key', ''),
+            ('email_from_address', 'EdAI Accelerator <noreply@edaiaccelerator.com>'),
+            ('welcome_email_subject', 'Application Received - Thank You! | EdAI Accelerator'),
+            ('welcome_email_body', ''),
+            ('waitlist_email_subject', 'Application Received - 2026 Waitlist | EdAI Accelerator'),
+            ('waitlist_email_body', ''),
+            ('interview_invite_subject', 'Interview Invitation for {{student_name}} - EdAI Accelerator'),
+            ('interview_invite_body', ''),
+            ('interview_confirmed_subject', 'Interview Confirmed for {{student_name}} - EdAI Accelerator'),
+            ('interview_confirmed_body', '')
+            ON CONFLICT (setting_key) DO NOTHING;
+        `);
+        
         res.status(200).json({
             success: true,
             message: 'Database migration completed successfully'
@@ -433,6 +525,55 @@ app.post('/api/migrate-database', async (req, res) => {
         res.status(500).json({
             success: false,
             error: error.message
+        });
+    }
+});
+
+// API endpoint to get all settings
+app.get('/api/get-settings', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT setting_key, setting_value FROM settings ORDER BY setting_key');
+        
+        const settings = {};
+        result.rows.forEach(row => {
+            settings[row.setting_key] = row.setting_value;
+        });
+        
+        res.status(200).json({
+            success: true,
+            settings
+        });
+    } catch (error) {
+        console.error('Error getting settings:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to load settings'
+        });
+    }
+});
+
+// API endpoint to update settings
+app.post('/api/update-settings', async (req, res) => {
+    try {
+        const { settings } = req.body;
+        
+        // Update each setting
+        for (const [key, value] of Object.entries(settings)) {
+            await pool.query(
+                'UPDATE settings SET setting_value = $1, updated_at = NOW() WHERE setting_key = $2',
+                [value, key]
+            );
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Settings updated successfully'
+        });
+    } catch (error) {
+        console.error('Error updating settings:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update settings'
         });
     }
 });

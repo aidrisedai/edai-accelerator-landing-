@@ -263,6 +263,129 @@
             font-weight: 600;
             margin-top: 0.5rem;
         }
+        
+        .btn-preview-email {
+            padding: 0.5rem 1rem;
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-left: 0.5rem;
+        }
+        
+        .btn-preview-email:hover {
+            background: #7c3aed;
+        }
+        
+        .btn-ai-improve {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #ec4899, #f472b6);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-left: 0.5rem;
+        }
+        
+        .btn-ai-improve:hover {
+            background: linear-gradient(135deg, #db2777, #ec4899);
+        }
+        
+        .email-preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .email-preview-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .email-preview-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .email-preview-header {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .email-preview-body {
+            padding: 2rem;
+            background: #f9fafb;
+        }
+        
+        .email-preview-iframe {
+            width: 100%;
+            min-height: 500px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .ai-prompt-section {
+            background: #fdf4ff;
+            border: 2px solid #e879f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .ai-prompt-section.active {
+            display: block;
+        }
+        
+        .ai-prompt-section textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 0.75rem;
+            border: 2px solid #e879f9;
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            margin-top: 0.5rem;
+        }
+        
+        .btn-close-modal {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-close-modal:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -291,7 +414,13 @@
             <div class="form-group">
                 <label for="resendApiKey">Resend API Key</label>
                 <input type="password" id="resendApiKey" placeholder="re_xxxxxxxxxxxxx">
-                <small>Your API key will be stored securely in the database</small>
+                <small>Your API key will be stored securely in the database. Get it at <a href="https://resend.com/api-keys" target="_blank" style="color: #2563eb;">resend.com/api-keys</a></small>
+            </div>
+            
+            <div class="form-group">
+                <label for="openaiApiKey">OpenAI API Key (for AI email improvements)</label>
+                <input type="password" id="openaiApiKey" placeholder="sk-xxxxxxxxxxxxx">
+                <small>Required for AI email improvements. Get it at <a href="https://platform.openai.com/api-keys" target="_blank" style="color: #2563eb;">platform.openai.com/api-keys</a></small>
             </div>
             
             <div class="form-group">
@@ -313,9 +442,17 @@
                 <label for="welcomeBody">
                     Email Body (HTML)
                     <button type="button" class="btn-preview" onclick="toggleTemplate('welcomeTemplate')">👁️ View Default Template</button>
+                    <button type="button" class="btn-preview-email" onclick="previewEmail('welcome')">📬 Preview Email</button>
+                    <button type="button" class="btn-ai-improve" onclick="toggleAIPrompt('welcomeAI')">✨ AI Improve</button>
                 </label>
                 <textarea id="welcomeBody" placeholder="Leave empty to use default template..."></textarea>
                 <small>Leave empty to use the default professional template. Or paste your custom HTML.</small>
+                
+                <div id="welcomeAI" class="ai-prompt-section">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #a855f7;">✨ AI Email Improvement</h4>
+                    <textarea id="welcomeAIPrompt" placeholder="Example: Make the email more welcoming and add a section about program benefits"></textarea>
+                    <button class="btn-ai-improve" onclick="improveEmailWithAI('welcome')" style="margin-top: 0.5rem;">✨ Improve with AI</button>
+                </div>
                 
                 <div id="welcomeTemplate" class="template-preview">
                     <button class="btn-copy-template" onclick="copyTemplate('welcome')">📋 Copy Template to Editor</button>
@@ -346,9 +483,17 @@
                 <label for="waitlistBody">
                     Email Body (HTML)
                     <button type="button" class="btn-preview" onclick="toggleTemplate('waitlistTemplate')">👁️ View Default Template</button>
+                    <button type="button" class="btn-preview-email" onclick="previewEmail('waitlist')">📬 Preview Email</button>
+                    <button type="button" class="btn-ai-improve" onclick="toggleAIPrompt('waitlistAI')">✨ AI Improve</button>
                 </label>
                 <textarea id="waitlistBody" placeholder="Leave empty to use default template..."></textarea>
                 <small>Leave empty to use the default professional template. Or paste your custom HTML.</small>
+                
+                <div id="waitlistAI" class="ai-prompt-section">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #a855f7;">✨ AI Email Improvement</h4>
+                    <textarea id="waitlistAIPrompt" placeholder="Example: Make it sound more encouraging for waitlist parents"></textarea>
+                    <button class="btn-ai-improve" onclick="improveEmailWithAI('waitlist')" style="margin-top: 0.5rem;">✨ Improve with AI</button>
+                </div>
                 
                 <div id="waitlistTemplate" class="template-preview">
                     <button class="btn-copy-template" onclick="copyTemplate('waitlist')">📋 Copy Template to Editor</button>
@@ -418,6 +563,19 @@
         </div>
     </div>
     
+    <!-- Email Preview Modal -->
+    <div id="emailPreviewModal" class="email-preview-modal">
+        <div class="email-preview-content">
+            <div class="email-preview-header">
+                <h2 style="margin: 0;">📬 Email Preview</h2>
+                <button class="btn-close-modal" onclick="closePreviewModal()">&times;</button>
+            </div>
+            <div class="email-preview-body">
+                <iframe id="emailPreviewFrame" class="email-preview-iframe"></iframe>
+            </div>
+        </div>
+    </div>
+    
     <script>
         // Check authentication
         if (sessionStorage.getItem('adminAuth') !== 'true') {
@@ -435,6 +593,7 @@
                 if (data.success) {
                     const s = data.settings;
                     document.getElementById('resendApiKey').value = s.resend_api_key || '';
+                    document.getElementById('openaiApiKey').value = s.openai_api_key || '';
                     document.getElementById('emailFromAddress').value = s.email_from_address || '';
                     document.getElementById('welcomeSubject').value = s.welcome_email_subject || '';
                     document.getElementById('welcomeBody').value = s.welcome_email_body || '';
@@ -484,6 +643,7 @@
             
             const settings = {
                 resend_api_key: document.getElementById('resendApiKey').value,
+                openai_api_key: document.getElementById('openaiApiKey').value,
                 email_from_address: document.getElementById('emailFromAddress').value,
                 welcome_email_subject: document.getElementById('welcomeSubject').value,
                 welcome_email_body: document.getElementById('welcomeBody').value,
@@ -689,6 +849,97 @@
 </body>
 </html>`;
         }
+    </script>
+        
+        function toggleAIPrompt(promptId) {
+            const section = document.getElementById(promptId);
+            section.classList.toggle('active');
+        }
+        
+        function previewEmail(type) {
+            let html;
+            const welcomeBody = document.getElementById('welcomeBody').value;
+            const waitlistBody = document.getElementById('waitlistBody').value;
+            
+            if (type === 'welcome') {
+                html = welcomeBody || getWelcomeTemplate(false);
+            } else if (type === 'waitlist') {
+                html = waitlistBody || getWelcomeTemplate(true);
+            }
+            
+            // Replace variables with sample data
+            const sampleData = {
+                parent_name: 'Ahmed',
+                children_list: 'Sara (8th Grade), Ibrahim (10th Grade)',
+                total_children: 2,
+                application_id: 12345,
+                submitted_date: 'Tuesday, December 24, 2025',
+                parent_email: 'parent@example.com'
+            };
+            
+            Object.keys(sampleData).forEach(key => {
+                html = html.replace(new RegExp(`{{${key}}}`, 'g'), sampleData[key]);
+            });
+            
+            // Show in modal
+            const modal = document.getElementById('emailPreviewModal');
+            const iframe = document.getElementById('emailPreviewFrame');
+            
+            modal.classList.add('active');
+            iframe.srcdoc = html;
+        }
+        
+        function closePreviewModal() {
+            document.getElementById('emailPreviewModal').classList.remove('active');
+        }
+        
+        async function improveEmailWithAI(type) {
+            const promptTextarea = document.getElementById(type + 'AIPrompt');
+            const emailTextarea = document.getElementById(type + 'Body');
+            const userPrompt = promptTextarea.value;
+            
+            if (!userPrompt.trim()) {
+                showAlert('Please enter instructions for AI improvement', 'error');
+                return;
+            }
+            
+            showAlert('AI is improving your email template... ✨', 'success');
+            
+            try {
+                const currentTemplate = emailTextarea.value || getWelcomeTemplate(type === 'waitlist');
+                
+                const response = await fetch('/api/improve-email-with-ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        emailTemplate: currentTemplate,
+                        userPrompt: userPrompt,
+                        emailType: type
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    emailTextarea.value = data.improvedTemplate;
+                    showAlert('✓ Email improved by AI! Review and save your changes.', 'success');
+                    promptTextarea.value = '';
+                    document.getElementById(type + 'AI').classList.remove('active');
+                } else {
+                    showAlert('AI improvement failed: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('AI improvement error:', error);
+                showAlert('Failed to improve email: ' + error.message, 'error');
+            }
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('emailPreviewModal').addEventListener('click', (e) => {
+            if (e.target.id === 'emailPreviewModal') {
+                closePreviewModal();
+            }
+        });
     </script>
 </body>
 </html>

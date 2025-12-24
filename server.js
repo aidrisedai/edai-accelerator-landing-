@@ -504,6 +504,7 @@ app.post('/api/migrate-database', async (req, res) => {
         await pool.query(`
             INSERT INTO settings (setting_key, setting_value) VALUES
             ('resend_api_key', ''),
+            ('openai_api_key', ''),
             ('email_from_address', 'EdAI Accelerator <noreply@edaiaccelerator.com>'),
             ('welcome_email_subject', 'Application Received - Thank You! | EdAI Accelerator'),
             ('welcome_email_body', ''),
@@ -610,6 +611,61 @@ app.get('/api/get-applications', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to retrieve applications. Please try again later.'
+        });
+    }
+});
+
+// API endpoint to improve email with AI
+app.post('/api/improve-email-with-ai', async (req, res) => {
+    try {
+        const { emailTemplate, userPrompt, emailType } = req.body;
+        
+        // Get OpenAI API key from settings
+        const settings = await getSettings();
+        const apiKey = settings.openai_api_key || process.env.OPENAI_API_KEY;
+        
+        if (!apiKey) {
+            return res.status(400).json({
+                success: false,
+                error: 'OpenAI API key not configured. Please add it in settings.'
+            });
+        }
+        
+        const OpenAI = require('openai');
+        const openai = new OpenAI({ apiKey });
+        
+        const systemPrompt = `You are an expert email copywriter specializing in educational programs for Muslim youth. 
+Your task is to improve HTML email templates while:
+1. Maintaining all {{template_variables}} exactly as they are
+2. Keeping the HTML structure and styling intact
+3. Using professional, warm, and Islamic-friendly language
+4. Including Islamic greetings (Assalamu Alaikum, Jazakallahu Khairan, in shaa Allah)
+5. Making the email clear, concise, and engaging
+
+Email Type: ${emailType === 'waitlist' ? 'Waitlist notification for 2026 cohort' : 'Welcome email for accepted applicants'}`;
+        
+        const completion = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: `Current email template:\n${emailTemplate}\n\nImprovement instructions: ${userPrompt}` }
+            ],
+            temperature: 0.7,
+            max_tokens: 2000
+        });
+        
+        const improvedTemplate = completion.choices[0].message.content;
+        
+        res.status(200).json({
+            success: true,
+            improvedTemplate: improvedTemplate
+        });
+        
+    } catch (error) {
+        console.error('AI improvement error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to improve email with AI'
         });
     }
 });

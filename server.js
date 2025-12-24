@@ -213,8 +213,159 @@ app.post('/api/submit-application', async (req, res) => {
             insertedApplications.push({
                 id: result.rows[0].id,
                 submittedAt: result.rows[0].submitted_at,
-                childName: child.name.trim()
+                childName: child.name.trim(),
+                childGrade: grade
             });
+        }
+
+        // Send welcome email to parent
+        try {
+            const { Resend } = require('resend');
+            const resend = new Resend(process.env.RESEND_API_KEY);
+            
+            const childrenList = insertedApplications.map(app => 
+                `${app.childName} (${app.childGrade}th Grade)`
+            ).join(', ');
+            
+            const isWaitlist = applicationStatus === 'waitlist';
+            
+            await resend.emails.send({
+                from: 'EdAI Accelerator <noreply@edaiaccelerator.com>',
+                to: parentEmail.trim().toLowerCase(),
+                subject: isWaitlist 
+                    ? 'Application Received - 2026 Waitlist | EdAI Accelerator'
+                    : 'Application Received - Thank You! | EdAI Accelerator',
+                html: `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body {
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                line-height: 1.6;
+                                color: #333;
+                                max-width: 600px;
+                                margin: 0 auto;
+                                padding: 20px;
+                            }
+                            .header {
+                                background: linear-gradient(135deg, #2563eb, #3b82f6);
+                                color: white;
+                                padding: 30px;
+                                border-radius: 12px 12px 0 0;
+                                text-align: center;
+                            }
+                            .content {
+                                background: #f9fafb;
+                                padding: 30px;
+                                border-radius: 0 0 12px 12px;
+                            }
+                            .info-box {
+                                background: white;
+                                border-left: 4px solid #2563eb;
+                                padding: 20px;
+                                margin: 20px 0;
+                                border-radius: 8px;
+                            }
+                            .child-name {
+                                color: #2563eb;
+                                font-weight: bold;
+                                font-size: 18px;
+                            }
+                            .next-steps {
+                                background: #eff6ff;
+                                border: 2px solid #3b82f6;
+                                padding: 20px;
+                                margin: 20px 0;
+                                border-radius: 8px;
+                            }
+                            .next-steps h3 {
+                                color: #1e40af;
+                                margin-top: 0;
+                            }
+                            .next-steps ul {
+                                margin: 10px 0;
+                                padding-left: 20px;
+                            }
+                            .next-steps li {
+                                margin: 8px 0;
+                            }
+                            .footer {
+                                text-align: center;
+                                padding: 20px;
+                                color: #6b7280;
+                                font-size: 14px;
+                            }
+                            .badge {
+                                display: inline-block;
+                                padding: 6px 12px;
+                                background: #fbbf24;
+                                color: #92400e;
+                                border-radius: 6px;
+                                font-weight: bold;
+                                font-size: 14px;
+                                margin: 10px 0;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>🎓 EdAI Accelerator</h1>
+                            <p style="margin: 0; font-size: 18px;">${isWaitlist ? '2026 Waitlist Application Received' : 'Application Received!'}</p>
+                        </div>
+                        
+                        <div class="content">
+                            <p style="font-size: 16px;"><strong>Assalamu Alaikum ${parentName},</strong></p>
+                            
+                            <p>Jazakallahu Khairan for your interest in the EdAI Accelerator program! We have successfully received your application${totalChildren > 1 ? 's' : ''} for:</p>
+                            
+                            <div class="info-box">
+                                <p class="child-name">${childrenList}</p>
+                            </div>
+                            
+                            ${isWaitlist ? `
+                                <div class="badge">⏰ 2026 Waitlist</div>
+                                <p>Since the December 2025 cohort has closed, your application has been added to our 2026 waitlist. We will contact you early next year with program details, dates, and pricing, in shaa Allah.</p>
+                            ` : `
+                                <div class="next-steps">
+                                    <h3>📋 What Happens Next?</h3>
+                                    <ul>
+                                        <li><strong>Review Period:</strong> Our team will carefully review ${totalChildren > 1 ? 'the applications' : 'the application'} within 3-5 business days</li>
+                                        <li><strong>Interview Invitation:</strong> If selected, you'll receive an email with available interview times</li>
+                                        <li><strong>Program Details:</strong> We'll share more information about the curriculum, schedule, and next steps</li>
+                                    </ul>
+                                </div>
+                            `}
+                            
+                            <div class="info-box">
+                                <p><strong>📧 Application ID:</strong> #${insertedApplications[0].id}</p>
+                                <p><strong>📅 Submitted:</strong> ${new Date(insertedApplications[0].submittedAt).toLocaleDateString('en-US', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                })}</p>
+                            </div>
+                            
+                            <p>If you have any questions in the meantime, please don't hesitate to reach out to us at <a href="mailto:contact@edaiaccelerator.com" style="color: #2563eb;">contact@edaiaccelerator.com</a></p>
+                            
+                            <p style="margin-top: 30px;">Jazakallahu Khairan,<br>
+                            <strong>The EdAI Accelerator Team</strong></p>
+                        </div>
+                        
+                        <div class="footer">
+                            <p>© 2025 EdAI Accelerator | Empowering Muslim youth through product innovation</p>
+                            <p style="font-size: 12px; color: #9ca3af;">This email was sent to ${parentEmail.trim().toLowerCase()} because you submitted an application to EdAI Accelerator.</p>
+                        </div>
+                    </body>
+                    </html>
+                `
+            });
+            
+            console.log(`Welcome email sent to ${parentEmail}`);
+        } catch (emailError) {
+            // Log error but don't fail the application submission
+            console.error('Failed to send welcome email:', emailError);
         }
 
         // Return success response

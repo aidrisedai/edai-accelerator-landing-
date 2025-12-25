@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Email Features</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            margin: 10px 0;
+            padding: 10px;
+        }
+        #console {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            min-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            margin-top: 20px;
+        }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .info { color: #00f; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Email Features Test Page</h1>
+    
+    <div>
+        <h2>1. Test Email Preview</h2>
+        <button onclick="testPreview()">📬 Test Preview</button>
+        <p>This will test if the preview modal works</p>
+    </div>
+    
+    <div>
+        <h2>2. Test AI Improvement</h2>
+        <label>Email Template:</label>
+        <textarea id="testTemplate"><h1>Test Email</h1><p>Hello {{parent_name}},</p><p>This is a test email.</p></textarea>
+        
+        <label>Improvement Instructions:</label>
+        <textarea id="testPrompt">Make it more professional and add a greeting</textarea>
+        
+        <button onclick="testAI()">✨ Test AI Improvement</button>
+        
+        <label>AI Response:</label>
+        <textarea id="aiResponse" readonly></textarea>
+    </div>
+    
+    <div>
+        <h2>Console Output:</h2>
+        <div id="console"></div>
+        <button onclick="clearConsole()">Clear Console</button>
+    </div>
+    
+    <!-- Preview Modal -->
+    <div id="previewModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000;">
+        <div style="background:white; max-width:800px; margin:50px auto; padding:20px; border-radius:10px; max-height:80vh; overflow-y:auto;">
+            <button onclick="closePreview()" style="float:right;">✕ Close</button>
+            <h2>Email Preview</h2>
+            <iframe id="previewFrame" style="width:100%; min-height:500px; border:1px solid #ccc;"></iframe>
+        </div>
+    </div>
+    
+    <script>
+        const consoleDiv = document.getElementById('console');
+        
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            consoleDiv.innerHTML += `<div class="${color}">[${time}] ${message}</div>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            console.log(`[${type}]`, message);
+        }
+        
+        function clearConsole() {
+            consoleDiv.innerHTML = '';
+        }
+        
+        function testPreview() {
+            log('Testing email preview...', 'info');
+            
+            try {
+                const html = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body { font-family: Arial; padding: 20px; }
+                            .header { background: #2563eb; color: white; padding: 20px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>🎓 EdAI Accelerator</h1>
+                        </div>
+                        <p>Assalamu Alaikum Ahmed,</p>
+                        <p>This is a test email with sample data:</p>
+                        <ul>
+                            <li>Student: Sara (8th Grade)</li>
+                            <li>Application ID: #12345</li>
+                        </ul>
+                    </body>
+                    </html>
+                `;
+                
+                const modal = document.getElementById('previewModal');
+                const iframe = document.getElementById('previewFrame');
+                
+                modal.style.display = 'block';
+                iframe.srcdoc = html;
+                
+                log('✅ Preview opened successfully!', 'success');
+            } catch (error) {
+                log(`❌ Preview error: ${error.message}`, 'error');
+                log(`Stack: ${error.stack}`, 'error');
+            }
+        }
+        
+        function closePreview() {
+            document.getElementById('previewModal').style.display = 'none';
+            log('Preview closed', 'info');
+        }
+        
+        async function testAI() {
+            log('Starting AI improvement test...', 'info');
+            
+            const template = document.getElementById('testTemplate').value;
+            const prompt = document.getElementById('testPrompt').value;
+            const responseArea = document.getElementById('aiResponse');
+            
+            if (!template || !prompt) {
+                log('❌ Please fill in both template and prompt', 'error');
+                return;
+            }
+            
+            log(`Template length: ${template.length}`, 'info');
+            log(`Prompt: "${prompt}"`, 'info');
+            
+            try {
+                log('Sending request to /api/improve-email-with-ai...', 'info');
+                
+                const response = await fetch('/api/improve-email-with-ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        emailTemplate: template,
+                        userPrompt: prompt,
+                        emailType: 'welcome'
+                    })
+                });
+                
+                log(`Response status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                const data = await response.json();
+                log(`Response received: ${JSON.stringify(data).substring(0, 100)}...`, 'info');
+                
+                if (data.success) {
+                    responseArea.value = data.improvedTemplate;
+                    log(`✅ AI improvement successful! Result length: ${data.improvedTemplate.length}`, 'success');
+                } else {
+                    responseArea.value = `ERROR: ${data.error}`;
+                    log(`❌ AI improvement failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Network/fetch error: ${error.message}`, 'error');
+                log(`Stack: ${error.stack}`, 'error');
+                responseArea.value = `ERROR: ${error.message}`;
+            }
+        }
+        
+        // Log initial load
+        log('Test page loaded successfully', 'success');
+        log('Click buttons above to test features', 'info');
+    </script>
+</body>
+</html>

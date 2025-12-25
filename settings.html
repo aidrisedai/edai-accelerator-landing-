@@ -1086,33 +1086,14 @@
                         throw new Error('No improved template in response');
                     }
                     
-                    // Store the improved template temporarily
-                    window.aiTempData = {
-                        type: type,
-                        improvedTemplate: data.improvedTemplate
-                    };
+                    // Directly update the email template
+                    emailTextarea.value = data.improvedTemplate;
                     
-                    // Show preview modal with sample data
-                    const sampleData = {
-                        parent_name: 'Ahmed',
-                        children_list: 'Sara (8th Grade), Ibrahim (10th Grade)',
-                        total_children: 2,
-                        application_id: 12345,
-                        submitted_date: 'Tuesday, December 24, 2025',
-                        parent_email: 'parent@example.com'
-                    };
+                    // Clear the prompt and hide AI section
+                    promptTextarea.value = '';
+                    document.getElementById(type + 'AI').classList.remove('active');
                     
-                    let previewHtml = data.improvedTemplate;
-                    Object.keys(sampleData).forEach(key => {
-                        previewHtml = previewHtml.replace(new RegExp(`{{${key}}}`, 'g'), sampleData[key]);
-                    });
-                    
-                    const aiModal = document.getElementById('aiPreviewModal');
-                    const aiIframe = document.getElementById('aiPreviewFrame');
-                    aiIframe.srcdoc = previewHtml;
-                    aiModal.classList.add('active');
-                    
-                    showAlert('✓ AI improvement ready! Review the preview and accept or reject.', 'success');
+                    showAlert('✓ Email improved by AI! Review and save your settings.', 'success');
                 } else {
                     console.error('✗ AI improvement failed');
                     console.error('Error from server:', data.error);

@@ -680,15 +680,29 @@ Email Type: ${emailType === 'waitlist' ? 'Waitlist notification for 2026 cohort'
         console.log('User prompt length:', userPrompt.length);
         console.log('Template length:', emailTemplate.length);
         
-        const completion = await openai.chat.completions.create({
+        // Create a promise with timeout
+        const timeoutMs = 30000; // 30 seconds timeout
+        const startTime = Date.now();
+        
+        const completionPromise = openai.chat.completions.create({
             model: 'gpt-4o-mini',
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: `Current email template:\n${emailTemplate}\n\nImprovement instructions: ${userPrompt}\n\nIMPORTANT: Return ONLY the improved HTML code. Do NOT wrap it in markdown code blocks or backticks.` }
             ],
             temperature: 0.7,
-            max_tokens: 2000
+            max_tokens: 4096  // Increased from 2000 to allow full email templates
         });
+        
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('OpenAI API request timed out after 30 seconds')), timeoutMs);
+        });
+        
+        console.log('Waiting for OpenAI response (30s timeout)...');
+        const completion = await Promise.race([completionPromise, timeoutPromise]);
+        
+        const elapsedTime = Date.now() - startTime;
+        console.log(`OpenAI API responded in ${elapsedTime}ms (${(elapsedTime/1000).toFixed(2)}s)`);
         
         console.log('OpenAI API response received successfully');
         console.log('Response choices:', completion.choices?.length || 0);

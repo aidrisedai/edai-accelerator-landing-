@@ -936,7 +936,12 @@
             const originalButtonText = event.target.textContent;
             event.target.disabled = true;
             event.target.textContent = '⏳ Improving...';
-            showAlert('AI is improving your email template... ✨', 'success');
+            showAlert('AI is improving your email template... This may take 10-30 seconds. ✨', 'success');
+            
+            // Add a secondary message after 10 seconds
+            const slowWarningTimeout = setTimeout(() => {
+                showAlert('AI is still working... Please be patient. ⏳', 'success');
+            }, 10000);
             
             try {
                 const currentTemplate = emailTextarea.value || getWelcomeTemplate(type === 'waitlist');
@@ -954,11 +959,18 @@
                     emailType: requestBody.emailType
                 });
                 
+                // Fetch with timeout
+                const controller = new AbortController();
+                const fetchTimeout = setTimeout(() => controller.abort(), 35000); // 35 second timeout
+                
                 const response = await fetch('/api/improve-email-with-ai', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify(requestBody),
+                    signal: controller.signal
                 });
+                
+                clearTimeout(fetchTimeout);
                 
                 console.log('Response received:');
                 console.log('- Status:', response.status);
@@ -1001,14 +1013,21 @@
                 console.error('Error stack:', error.stack);
                 
                 let errorMessage = 'Failed to improve email';
-                if (error.message.includes('fetch')) {
+                if (error.name === 'AbortError') {
+                    errorMessage = 'Request timed out. The AI took too long to respond. Please try again with a simpler prompt.';
+                } else if (error.message.includes('fetch')) {
                     errorMessage = 'Network error. Please check your connection.';
+                } else if (error.message.includes('timeout')) {
+                    errorMessage = 'Request timed out. Please try again.';
                 } else if (error.message) {
                     errorMessage += ': ' + error.message;
                 }
                 
                 showAlert(errorMessage, 'error');
             } finally {
+                // Clear the slow warning timeout
+                clearTimeout(slowWarningTimeout);
+                
                 // Restore button state
                 if (event && event.target) {
                     event.target.disabled = false;

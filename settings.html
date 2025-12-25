@@ -849,23 +849,36 @@
 </body>
 </html>`;
         }
-    </script>
         
         function toggleAIPrompt(promptId) {
+            console.log('toggleAIPrompt called with:', promptId);
             const section = document.getElementById(promptId);
+            if (!section) {
+                console.error('Section not found:', promptId);
+                return;
+            }
             section.classList.toggle('active');
         }
         
         function previewEmail(type) {
+            console.log('previewEmail called with type:', type);
             let html;
-            const welcomeBody = document.getElementById('welcomeBody').value;
-            const waitlistBody = document.getElementById('waitlistBody').value;
+            const welcomeBody = document.getElementById('welcomeBody');
+            const waitlistBody = document.getElementById('waitlistBody');
+            
+            if (!welcomeBody || !waitlistBody) {
+                console.error('Email body textareas not found');
+                showAlert('Error: Email fields not found', 'error');
+                return;
+            }
             
             if (type === 'welcome') {
-                html = welcomeBody || getWelcomeTemplate(false);
+                html = welcomeBody.value || getWelcomeTemplate(false);
             } else if (type === 'waitlist') {
-                html = waitlistBody || getWelcomeTemplate(true);
+                html = waitlistBody.value || getWelcomeTemplate(true);
             }
+            
+            console.log('HTML length:', html.length);
             
             // Replace variables with sample data
             const sampleData = {
@@ -894,9 +907,18 @@
         }
         
         async function improveEmailWithAI(type) {
+            console.log('improveEmailWithAI called with type:', type);
             const promptTextarea = document.getElementById(type + 'AIPrompt');
             const emailTextarea = document.getElementById(type + 'Body');
+            
+            if (!promptTextarea || !emailTextarea) {
+                console.error('Required elements not found');
+                showAlert('Error: Required fields not found', 'error');
+                return;
+            }
+            
             const userPrompt = promptTextarea.value;
+            console.log('User prompt:', userPrompt);
             
             if (!userPrompt.trim()) {
                 showAlert('Please enter instructions for AI improvement', 'error');

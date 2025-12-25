@@ -576,6 +576,26 @@
         </div>
     </div>
     
+    <!-- AI Improvement Preview Modal -->
+    <div id="aiPreviewModal" class="email-preview-modal">
+        <div class="email-preview-content">
+            <div class="email-preview-header" style="background: linear-gradient(135deg, #ec4899, #f472b6);">
+                <h2 style="margin: 0;">✨ AI Improved Email Preview</h2>
+                <button class="btn-close-modal" onclick="closeAIPreviewModal()">&times;</button>
+            </div>
+            <div class="email-preview-body">
+                <div style="background: #fdf4ff; border: 2px solid #e879f9; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <p style="margin: 0; color: #a855f7; font-weight: 600;">ℹ️ Review the AI-improved email below. Click "Accept Changes" to apply it to your template, or "Reject" to discard.</p>
+                </div>
+                <iframe id="aiPreviewFrame" class="email-preview-iframe"></iframe>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem; justify-content: center;">
+                    <button onclick="acceptAIImprovement()" style="padding: 0.875rem 2rem; background: linear-gradient(135deg, #10b981, #34d399); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem;">✓ Accept Changes</button>
+                    <button onclick="rejectAIImprovement()" style="padding: 0.875rem 2rem; background: linear-gradient(135deg, #ef4444, #f87171); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem;">✗ Reject</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script>
         // Check authentication
         if (sessionStorage.getItem('adminAuth') !== 'true') {
@@ -939,6 +959,42 @@
             document.getElementById('emailPreviewModal').classList.remove('active');
         }
         
+        function closeAIPreviewModal() {
+            document.getElementById('aiPreviewModal').classList.remove('active');
+            // Clear the temp data
+            window.aiTempData = null;
+        }
+        
+        function acceptAIImprovement() {
+            if (!window.aiTempData) {
+                console.error('No AI improvement data to accept');
+                return;
+            }
+            
+            console.log('Accepting AI improvement for type:', window.aiTempData.type);
+            const emailTextarea = document.getElementById(window.aiTempData.type + 'Body');
+            emailTextarea.value = window.aiTempData.improvedTemplate;
+            
+            closeAIPreviewModal();
+            showAlert('✓ AI improvements applied! Don\'t forget to save your settings.', 'success');
+            
+            // Clear the AI prompt section
+            const promptTextarea = document.getElementById(window.aiTempData.type + 'AIPrompt');
+            if (promptTextarea) {
+                promptTextarea.value = '';
+            }
+            document.getElementById(window.aiTempData.type + 'AI').classList.remove('active');
+            
+            window.aiTempData = null;
+        }
+        
+        function rejectAIImprovement() {
+            console.log('Rejecting AI improvement');
+            closeAIPreviewModal();
+            showAlert('AI improvements discarded.', 'success');
+            window.aiTempData = null;
+        }
+        
         async function improveEmailWithAI(type) {
             console.log('=== CLIENT: improveEmailWithAI called ===');
             console.log('Type:', type);
@@ -1030,10 +1086,33 @@
                         throw new Error('No improved template in response');
                     }
                     
-                    emailTextarea.value = data.improvedTemplate;
-                    showAlert('✓ Email improved by AI! Review and save your changes.', 'success');
-                    promptTextarea.value = '';
-                    document.getElementById(type + 'AI').classList.remove('active');
+                    // Store the improved template temporarily
+                    window.aiTempData = {
+                        type: type,
+                        improvedTemplate: data.improvedTemplate
+                    };
+                    
+                    // Show preview modal with sample data
+                    const sampleData = {
+                        parent_name: 'Ahmed',
+                        children_list: 'Sara (8th Grade), Ibrahim (10th Grade)',
+                        total_children: 2,
+                        application_id: 12345,
+                        submitted_date: 'Tuesday, December 24, 2025',
+                        parent_email: 'parent@example.com'
+                    };
+                    
+                    let previewHtml = data.improvedTemplate;
+                    Object.keys(sampleData).forEach(key => {
+                        previewHtml = previewHtml.replace(new RegExp(`{{${key}}}`, 'g'), sampleData[key]);
+                    });
+                    
+                    const aiModal = document.getElementById('aiPreviewModal');
+                    const aiIframe = document.getElementById('aiPreviewFrame');
+                    aiIframe.srcdoc = previewHtml;
+                    aiModal.classList.add('active');
+                    
+                    showAlert('✓ AI improvement ready! Review the preview and accept or reject.', 'success');
                 } else {
                     console.error('✗ AI improvement failed');
                     console.error('Error from server:', data.error);
@@ -1073,6 +1152,12 @@
         document.getElementById('emailPreviewModal').addEventListener('click', (e) => {
             if (e.target.id === 'emailPreviewModal') {
                 closePreviewModal();
+            }
+        });
+        
+        document.getElementById('aiPreviewModal').addEventListener('click', (e) => {
+            if (e.target.id === 'aiPreviewModal') {
+                closeAIPreviewModal();
             }
         });
     </script>

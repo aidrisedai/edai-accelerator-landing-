@@ -644,17 +644,25 @@ Your task is to improve HTML email templates while:
 
 Email Type: ${emailType === 'waitlist' ? 'Waitlist notification for 2026 cohort' : 'Welcome email for accepted applicants'}`;
         
+        console.log('Calling OpenAI API with prompt length:', userPrompt.length);
+        
         const completion = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
             messages: [
                 { role: 'system', content: systemPrompt },
-                { role: 'user', content: `Current email template:\n${emailTemplate}\n\nImprovement instructions: ${userPrompt}` }
+                { role: 'user', content: `Current email template:\n${emailTemplate}\n\nImprovement instructions: ${userPrompt}\n\nIMPORTANT: Return ONLY the improved HTML code. Do NOT wrap it in markdown code blocks or backticks.` }
             ],
             temperature: 0.7,
             max_tokens: 2000
         });
         
-        const improvedTemplate = completion.choices[0].message.content;
+        console.log('OpenAI response received');
+        let improvedTemplate = completion.choices[0].message.content;
+        
+        // Strip markdown code blocks if present
+        improvedTemplate = improvedTemplate.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+        
+        console.log('Improved template length:', improvedTemplate.length);
         
         res.status(200).json({
             success: true,

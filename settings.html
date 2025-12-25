@@ -929,6 +929,8 @@
             
             try {
                 const currentTemplate = emailTextarea.value || getWelcomeTemplate(type === 'waitlist');
+                console.log('Current template length:', currentTemplate.length);
+                console.log('Sending request to /api/improve-email-with-ai');
                 
                 const response = await fetch('/api/improve-email-with-ai', {
                     method: 'POST',
@@ -940,18 +942,25 @@
                     })
                 });
                 
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
                 const data = await response.json();
+                console.log('Response data:', data);
                 
                 if (data.success) {
+                    console.log('AI improved template length:', data.improvedTemplate.length);
                     emailTextarea.value = data.improvedTemplate;
                     showAlert('✓ Email improved by AI! Review and save your changes.', 'success');
                     promptTextarea.value = '';
                     document.getElementById(type + 'AI').classList.remove('active');
                 } else {
+                    console.error('AI improvement failed:', data.error);
                     showAlert('AI improvement failed: ' + data.error, 'error');
                 }
             } catch (error) {
                 console.error('AI improvement error:', error);
+                console.error('Error stack:', error.stack);
                 showAlert('Failed to improve email: ' + error.message, 'error');
             }
         }

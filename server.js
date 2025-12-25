@@ -556,15 +556,36 @@ app.get('/api/get-settings', async (req, res) => {
 // API endpoint to update settings
 app.post('/api/update-settings', async (req, res) => {
     try {
+        console.log('=== UPDATE SETTINGS REQUEST ===');
         const { settings } = req.body;
+        console.log('Settings to update:', Object.keys(settings));
         
-        // Update each setting
+        // Use UPSERT (INSERT ON CONFLICT UPDATE) to ensure settings are saved even if row doesn't exist
         for (const [key, value] of Object.entries(settings)) {
-            await pool.query(
-                'UPDATE settings SET setting_value = $1, updated_at = NOW() WHERE setting_key = $2',
-                [value, key]
+            console.log(`Upserting ${key}: ${value ? (value.substring(0, 20) + '...') : 'empty'}`);
+            
+            const result = await pool.query(
+                `INSERT INTO settings (setting_key, setting_value, updated_at) 
+                 VALUES ($1, $2, NOW()) 
+                 ON CONFLICT (setting_key) 
+                 DO UPDATE SET setting_value = $2, updated_at = NOW()
+                 RETURNING setting_key, setting_value`,
+                [key, value]
             );
+            
+            console.log(`✓ Upserted ${key}:`, result.rows[0] ? 'success' : 'no rows returned');
         }
+        
+        // Verify the save by reading back
+        const verification = await pool.query(
+            'SELECT setting_key, setting_value FROM settings WHERE setting_key = $1',
+            ['openai_api_key']
+        );
+        console.log('OpenAI key verification after save:', {
+            found: verification.rows.length > 0,
+            valueLength: verification.rows[0]?.setting_value?.length || 0,
+            valuePrefix: verification.rows[0]?.setting_value?.substring(0, 7) || 'none'
+        });
         
         res.status(200).json({
             success: true,
@@ -572,9 +593,10 @@ app.post('/api/update-settings', async (req, res) => {
         });
     } catch (error) {
         console.error('Error updating settings:', error);
+        console.error('Error details:', error.stack);
         res.status(500).json({
             success: false,
-            error: 'Failed to update settings'
+            error: 'Failed to update settings: ' + error.message
         });
     }
 });

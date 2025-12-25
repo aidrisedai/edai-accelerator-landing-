@@ -586,12 +586,22 @@
         loadSettings();
         
         async function loadSettings() {
+            console.log('=== LOAD SETTINGS CALLED ===');
             try {
                 const response = await fetch('/api/get-settings');
+                console.log('Load settings response status:', response.status);
+                
                 const data = await response.json();
+                console.log('Load settings response data:', data);
                 
                 if (data.success) {
                     const s = data.settings;
+                    console.log('Settings loaded from database:');
+                    console.log('- resend_api_key length:', s.resend_api_key?.length || 0);
+                    console.log('- openai_api_key length:', s.openai_api_key?.length || 0);
+                    console.log('- openai_api_key prefix:', s.openai_api_key?.substring(0, 7) || 'none');
+                    console.log('- email_from_address:', s.email_from_address);
+                    
                     document.getElementById('resendApiKey').value = s.resend_api_key || '';
                     document.getElementById('openaiApiKey').value = s.openai_api_key || '';
                     document.getElementById('emailFromAddress').value = s.email_from_address || '';
@@ -603,13 +613,17 @@
                     document.getElementById('interviewInviteBody').value = s.interview_invite_body || '';
                     document.getElementById('interviewConfirmedSubject').value = s.interview_confirmed_subject || '';
                     document.getElementById('interviewConfirmedBody').value = s.interview_confirmed_body || '';
+                    
+                    console.log('✓ Settings loaded into form fields');
                 } else {
+                    console.error('Failed to load settings:', data.error);
                     // Settings table might not exist
                     document.getElementById('migrationNotice').style.display = 'block';
                     showAlert('Settings table not found. Please run migration.', 'error');
                 }
             } catch (error) {
                 console.error('Error loading settings:', error);
+                console.error('Error stack:', error.stack);
                 document.getElementById('migrationNotice').style.display = 'block';
                 showAlert('Failed to load settings. Database may need migration.', 'error');
             }
@@ -639,6 +653,7 @@
         }
         
         async function saveSettings() {
+            console.log('=== SAVE SETTINGS CALLED ===');
             showAlert('Saving settings...', 'success');
             
             const settings = {
@@ -655,29 +670,47 @@
                 interview_confirmed_body: document.getElementById('interviewConfirmedBody').value
             };
             
-            console.log('Saving settings:', settings);
+            console.log('Settings object created:');
+            console.log('- resend_api_key length:', settings.resend_api_key?.length || 0);
+            console.log('- openai_api_key length:', settings.openai_api_key?.length || 0);
+            console.log('- openai_api_key prefix:', settings.openai_api_key?.substring(0, 7) || 'none');
+            console.log('- email_from_address:', settings.email_from_address);
+            console.log('Full settings object:', settings);
             
             try {
+                const requestBody = { settings };
+                console.log('Sending POST to /api/update-settings');
+                console.log('Request body:', requestBody);
+                
                 const response = await fetch('/api/update-settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ settings })
+                    body: JSON.stringify(requestBody)
                 });
                 
-                console.log('Response status:', response.status);
+                console.log('Response received:');
+                console.log('- Status:', response.status);
+                console.log('- Status Text:', response.statusText);
+                
                 const data = await response.json();
                 console.log('Response data:', data);
                 
                 if (data.success) {
                     showAlert('✓ Settings saved successfully!', 'success');
-                    setTimeout(() => {
+                    
+                    // Reload settings to verify they were saved
+                    console.log('Reloading settings to verify save...');
+                    setTimeout(async () => {
+                        await loadSettings();
                         window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }, 100);
+                    }, 500);
                 } else {
+                    console.error('Save failed:', data.error);
                     showAlert('Error: ' + data.error, 'error');
                 }
             } catch (error) {
                 console.error('Error saving settings:', error);
+                console.error('Error stack:', error.stack);
                 showAlert('Failed to save settings: ' + error.message, 'error');
             }
         }

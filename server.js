@@ -618,19 +618,50 @@ app.get('/api/get-applications', async (req, res) => {
 // API endpoint to improve email with AI
 app.post('/api/improve-email-with-ai', async (req, res) => {
     try {
+        console.log('=== AI IMPROVE EMAIL REQUEST ===');
         const { emailTemplate, userPrompt, emailType } = req.body;
+        
+        console.log('Request body received:', {
+            emailTemplateLength: emailTemplate?.length || 0,
+            userPromptLength: userPrompt?.length || 0,
+            emailType
+        });
+        
+        if (!emailTemplate || !userPrompt) {
+            console.error('Missing required fields');
+            return res.status(400).json({
+                success: false,
+                error: 'Email template and user prompt are required'
+            });
+        }
         
         // Get OpenAI API key from settings
         const settings = await getSettings();
         const apiKey = settings.openai_api_key || process.env.OPENAI_API_KEY;
         
+        console.log('API key check:', {
+            hasApiKeyInSettings: !!settings.openai_api_key,
+            hasApiKeyInEnv: !!process.env.OPENAI_API_KEY,
+            apiKeyPrefix: apiKey ? apiKey.substring(0, 7) : 'none'
+        });
+        
         if (!apiKey) {
+            console.error('No OpenAI API key found');
             return res.status(400).json({
                 success: false,
                 error: 'OpenAI API key not configured. Please add it in settings.'
             });
         }
         
+        if (!apiKey.startsWith('sk-')) {
+            console.error('Invalid OpenAI API key format');
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid OpenAI API key format. Key should start with "sk-"'
+            });
+        }
+        
+        console.log('Initializing OpenAI client...');
         const OpenAI = require('openai');
         const openai = new OpenAI({ apiKey });
         
@@ -644,7 +675,10 @@ Your task is to improve HTML email templates while:
 
 Email Type: ${emailType === 'waitlist' ? 'Waitlist notification for 2026 cohort' : 'Welcome email for accepted applicants'}`;
         
-        console.log('Calling OpenAI API with prompt length:', userPrompt.length);
+        console.log('Calling OpenAI API...');
+        console.log('System prompt length:', systemPrompt.length);
+        console.log('User prompt length:', userPrompt.length);
+        console.log('Template length:', emailTemplate.length);
         
         const completion = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
@@ -656,13 +690,19 @@ Email Type: ${emailType === 'waitlist' ? 'Waitlist notification for 2026 cohort'
             max_tokens: 2000
         });
         
-        console.log('OpenAI response received');
+        console.log('OpenAI API response received successfully');
+        console.log('Response choices:', completion.choices?.length || 0);
+        
+        if (!completion.choices || completion.choices.length === 0) {
+            throw new Error('No response from OpenAI API');
+        }
+        
         let improvedTemplate = completion.choices[0].message.content;
+        console.log('Raw improved template length:', improvedTemplate.length);
         
         // Strip markdown code blocks if present
         improvedTemplate = improvedTemplate.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
-        
-        console.log('Improved template length:', improvedTemplate.length);
+        console.log('Cleaned improved template length:', improvedTemplate.length);
         
         res.status(200).json({
             success: true,
@@ -670,10 +710,25 @@ Email Type: ${emailType === 'waitlist' ? 'Waitlist notification for 2026 cohort'
         });
         
     } catch (error) {
-        console.error('AI improvement error:', error);
-        res.status(500).json({
+        console.error('=== AI IMPROVEMENT ERROR ===');
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        
+        // Check for specific OpenAI errors
+        let errorMessage = error.message || 'Failed to improve email with AI';
+        
+        if (error.status === 401) {
+            errorMessage = 'Invalid OpenAI API key. Please check your API key in settings.';
+        } else if (error.status === 429) {
+            errorMessage = 'OpenAI API rate limit exceeded. Please try again later.';
+        } else if (error.status === 500) {
+            errorMessage = 'OpenAI API error. Please try again later.';
+        }
+        
+        res.status(error.status || 500).json({
             success: false,
-            error: error.message || 'Failed to improve email with AI'
+            error: errorMessage
         });
     }
 });

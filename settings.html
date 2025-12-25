@@ -907,9 +907,14 @@
         }
         
         async function improveEmailWithAI(type) {
-            console.log('improveEmailWithAI called with type:', type);
+            console.log('=== CLIENT: improveEmailWithAI called ===');
+            console.log('Type:', type);
+            
             const promptTextarea = document.getElementById(type + 'AIPrompt');
             const emailTextarea = document.getElementById(type + 'Body');
+            
+            console.log('Prompt textarea found:', !!promptTextarea);
+            console.log('Email textarea found:', !!emailTextarea);
             
             if (!promptTextarea || !emailTextarea) {
                 console.error('Required elements not found');
@@ -917,51 +922,98 @@
                 return;
             }
             
-            const userPrompt = promptTextarea.value;
+            const userPrompt = promptTextarea.value.trim();
+            console.log('User prompt length:', userPrompt.length);
             console.log('User prompt:', userPrompt);
             
-            if (!userPrompt.trim()) {
+            if (!userPrompt) {
+                console.warn('Empty prompt provided');
                 showAlert('Please enter instructions for AI improvement', 'error');
                 return;
             }
             
+            // Show loading state
+            const originalButtonText = event.target.textContent;
+            event.target.disabled = true;
+            event.target.textContent = '⏳ Improving...';
             showAlert('AI is improving your email template... ✨', 'success');
             
             try {
                 const currentTemplate = emailTextarea.value || getWelcomeTemplate(type === 'waitlist');
                 console.log('Current template length:', currentTemplate.length);
-                console.log('Sending request to /api/improve-email-with-ai');
+                console.log('Sending POST request to /api/improve-email-with-ai');
+                
+                const requestBody = {
+                    emailTemplate: currentTemplate,
+                    userPrompt: userPrompt,
+                    emailType: type
+                };
+                console.log('Request body:', {
+                    emailTemplateLength: requestBody.emailTemplate.length,
+                    userPromptLength: requestBody.userPrompt.length,
+                    emailType: requestBody.emailType
+                });
                 
                 const response = await fetch('/api/improve-email-with-ai', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        emailTemplate: currentTemplate,
-                        userPrompt: userPrompt,
-                        emailType: type
-                    })
+                    body: JSON.stringify(requestBody)
                 });
                 
-                console.log('Response status:', response.status);
-                console.log('Response ok:', response.ok);
+                console.log('Response received:');
+                console.log('- Status:', response.status);
+                console.log('- Status Text:', response.statusText);
+                console.log('- OK:', response.ok);
+                console.log('- Headers:', Object.fromEntries(response.headers.entries()));
                 
-                const data = await response.json();
-                console.log('Response data:', data);
+                let data;
+                try {
+                    const responseText = await response.text();
+                    console.log('Raw response text:', responseText);
+                    data = JSON.parse(responseText);
+                    console.log('Parsed response data:', data);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    throw new Error('Invalid response from server');
+                }
                 
                 if (data.success) {
-                    console.log('AI improved template length:', data.improvedTemplate.length);
+                    console.log('✓ AI improvement successful');
+                    console.log('Improved template length:', data.improvedTemplate?.length || 0);
+                    
+                    if (!data.improvedTemplate) {
+                        throw new Error('No improved template in response');
+                    }
+                    
                     emailTextarea.value = data.improvedTemplate;
                     showAlert('✓ Email improved by AI! Review and save your changes.', 'success');
                     promptTextarea.value = '';
                     document.getElementById(type + 'AI').classList.remove('active');
                 } else {
-                    console.error('AI improvement failed:', data.error);
-                    showAlert('AI improvement failed: ' + data.error, 'error');
+                    console.error('✗ AI improvement failed');
+                    console.error('Error from server:', data.error);
+                    showAlert('AI improvement failed: ' + (data.error || 'Unknown error'), 'error');
                 }
             } catch (error) {
-                console.error('AI improvement error:', error);
+                console.error('=== CLIENT ERROR ===');
+                console.error('Error type:', error.constructor.name);
+                console.error('Error message:', error.message);
                 console.error('Error stack:', error.stack);
-                showAlert('Failed to improve email: ' + error.message, 'error');
+                
+                let errorMessage = 'Failed to improve email';
+                if (error.message.includes('fetch')) {
+                    errorMessage = 'Network error. Please check your connection.';
+                } else if (error.message) {
+                    errorMessage += ': ' + error.message;
+                }
+                
+                showAlert(errorMessage, 'error');
+            } finally {
+                // Restore button state
+                if (event && event.target) {
+                    event.target.disabled = false;
+                    event.target.textContent = originalButtonText;
+                }
             }
         }
         

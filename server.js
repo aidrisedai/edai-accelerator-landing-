@@ -965,12 +965,15 @@ app.post('/api/confirm-interview', async (req, res) => {
                 WHERE id = $2
             `, [confirmedTime, applicant.id]);
             
+            // Get settings for email
+            const settings = await getSettings();
+            
             // Send confirmation email to parent
             const { Resend } = require('resend');
-            const resend = new Resend(process.env.RESEND_API_KEY);
+            const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
             
             await resend.emails.send({
-                from: 'EdAI Accelerator <noreply@edaiaccelerator.com>',
+                from: settings.email_from_address || 'EdAI Accelerator <noreply@edaiaccelerator.com>',
                 to: applicant.parent_email,
                 subject: `Interview Confirmed for ${applicant.teen_name} - EdAI Accelerator`,
                 html: `
@@ -1002,12 +1005,15 @@ app.post('/api/confirm-interview', async (req, res) => {
                 WHERE id = $2
             `, [alternativeTimes, applicant.id]);
             
+            // Get settings for email
+            const settings = await getSettings();
+            
             // Notify admin via email
             const { Resend } = require('resend');
-            const resend = new Resend(process.env.RESEND_API_KEY);
+            const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
             
             await resend.emails.send({
-                from: 'EdAI Accelerator <noreply@edaiaccelerator.com>',
+                from: settings.email_from_address || 'EdAI Accelerator <noreply@edaiaccelerator.com>',
                 to: 'contact@edaiaccelerator.com',
                 subject: `Alternative Interview Times Requested - ${applicant.teen_name}`,
                 html: `

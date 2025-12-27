@@ -814,9 +814,12 @@ app.post('/api/send-interview-invite', async (req, res) => {
             WHERE id = $3
         `, [JSON.stringify(proposedTimes), confirmationToken, applicantId]);
         
+        // Get settings for email
+        const settings = await getSettings();
+        
         // Send email using Resend
         const { Resend } = require('resend');
-        const resend = new Resend(process.env.RESEND_API_KEY);
+        const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
         
         const emailHtml = `
             <h2>Interview Invitation - EdAI Accelerator</h2>

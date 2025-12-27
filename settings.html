@@ -558,6 +558,50 @@
             </div>
         </div>
         
+        <div class="settings-section">
+            <h2>🎉 Acceptance Email</h2>
+            
+            <div class="form-group">
+                <label for="acceptanceSubject">Email Subject</label>
+                <input type="text" id="acceptanceSubject" placeholder="Congratulations! You're Accepted to EdAI Accelerator">
+            </div>
+            
+            <div class="form-group">
+                <label for="acceptanceBody">Email Body (HTML)</label>
+                <textarea id="acceptanceBody" placeholder="Leave empty to use default template..."></textarea>
+                <small>Leave empty to use the default template. Or paste your custom HTML.</small>
+                
+                <div class="template-vars">
+                    <h4>Available Variables:</h4>
+                    <code>{{parent_name}}</code>
+                    <code>{{student_name}}</code>
+                    <code>{{program_start_date}}</code>
+                </div>
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <h2>📋 Rejection Email</h2>
+            
+            <div class="form-group">
+                <label for="rejectionSubject">Email Subject</label>
+                <input type="text" id="rejectionSubject" placeholder="Update on Your EdAI Accelerator Application">
+            </div>
+            
+            <div class="form-group">
+                <label for="rejectionBody">Email Body (HTML)</label>
+                <textarea id="rejectionBody" placeholder="Leave empty to use default template..."></textarea>
+                <small>Leave empty to use the default template. Or paste your custom HTML.</small>
+                
+                <div class="template-vars">
+                    <h4>Available Variables:</h4>
+                    <code>{{parent_name}}</code>
+                    <code>{{student_name}}</code>
+                    <code>{{rejection_reason}}</code>
+                </div>
+            </div>
+        </div>
+        
         <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
             <button class="btn-save" onclick="saveSettings()">💾 Save All Settings</button>
         </div>
@@ -633,6 +677,10 @@
                     document.getElementById('interviewInviteBody').value = s.interview_invite_body || '';
                     document.getElementById('interviewConfirmedSubject').value = s.interview_confirmed_subject || '';
                     document.getElementById('interviewConfirmedBody').value = s.interview_confirmed_body || '';
+                    document.getElementById('acceptanceSubject').value = s.acceptance_email_subject || '';
+                    document.getElementById('acceptanceBody').value = s.acceptance_email_body || '';
+                    document.getElementById('rejectionSubject').value = s.rejection_email_subject || '';
+                    document.getElementById('rejectionBody').value = s.rejection_email_body || '';
                     
                     console.log('✓ Settings loaded into form fields');
                 } else {
@@ -687,7 +735,11 @@
                 interview_invite_subject: document.getElementById('interviewInviteSubject').value,
                 interview_invite_body: document.getElementById('interviewInviteBody').value,
                 interview_confirmed_subject: document.getElementById('interviewConfirmedSubject').value,
-                interview_confirmed_body: document.getElementById('interviewConfirmedBody').value
+                interview_confirmed_body: document.getElementById('interviewConfirmedBody').value,
+                acceptance_email_subject: document.getElementById('acceptanceSubject').value,
+                acceptance_email_body: document.getElementById('acceptanceBody').value,
+                rejection_email_subject: document.getElementById('rejectionSubject').value,
+                rejection_email_body: document.getElementById('rejectionBody').value
             };
             
             console.log('Settings object created:');

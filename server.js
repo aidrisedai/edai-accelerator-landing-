@@ -478,7 +478,7 @@ app.post('/api/submit-application', async (req, res) => {
 // API endpoint to run database migrations (admin only - call once after deployment)
 app.post('/api/migrate-database', async (req, res) => {
     try {
-        // Add interview scheduling fields
+        // Add interview scheduling and pipeline fields
         await pool.query(`
             ALTER TABLE applications
             ADD COLUMN IF NOT EXISTS interview_status VARCHAR(50) DEFAULT 'not_scheduled',
@@ -487,7 +487,10 @@ app.post('/api/migrate-database', async (req, res) => {
             ADD COLUMN IF NOT EXISTS interview_notes TEXT,
             ADD COLUMN IF NOT EXISTS parent_response TEXT,
             ADD COLUMN IF NOT EXISTS parent_response_date TIMESTAMP,
-            ADD COLUMN IF NOT EXISTS interview_link TEXT;
+            ADD COLUMN IF NOT EXISTS interview_link TEXT,
+            ADD COLUMN IF NOT EXISTS rejection_reason TEXT,
+            ADD COLUMN IF NOT EXISTS program_start_date DATE,
+            ADD COLUMN IF NOT EXISTS decision_date TIMESTAMP;
         `);
         
         // Create settings table
@@ -513,7 +516,11 @@ app.post('/api/migrate-database', async (req, res) => {
             ('interview_invite_subject', 'Interview Invitation for {{student_name}} - EdAI Accelerator'),
             ('interview_invite_body', ''),
             ('interview_confirmed_subject', 'Interview Confirmed for {{student_name}} - EdAI Accelerator'),
-            ('interview_confirmed_body', '')
+            ('interview_confirmed_body', ''),
+            ('acceptance_email_subject', 'Congratulations! You''re Accepted to EdAI Accelerator'),
+            ('acceptance_email_body', ''),
+            ('rejection_email_subject', 'Update on Your EdAI Accelerator Application'),
+            ('rejection_email_body', '')
             ON CONFLICT (setting_key) DO NOTHING;
         `);
         

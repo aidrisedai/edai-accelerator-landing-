@@ -142,19 +142,69 @@
             color: #374151;
         }
         
-        .form-group textarea {
+        .form-group textarea,
+        .form-group input[type="datetime-local"],
+        .form-group input[type="text"] {
             width: 100%;
             padding: 0.75rem;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
             font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+        }
+        
+        .form-group textarea {
             min-height: 100px;
             resize: vertical;
         }
         
-        .form-group textarea:focus {
+        .form-group textarea:focus,
+        .form-group input[type="datetime-local"]:focus,
+        .form-group input[type="text"]:focus {
             outline: none;
             border-color: #2563eb;
+        }
+        
+        .time-slot-input {
+            background: white;
+            border: 2px solid #e5e7eb;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .time-slot-input:last-child {
+            margin-bottom: 0;
+        }
+        
+        .remove-slot {
+            display: inline-block;
+            margin-top: 0.5rem;
+            color: #dc2626;
+            cursor: pointer;
+            font-size: 0.875rem;
+            text-decoration: underline;
+        }
+        
+        .remove-slot:hover {
+            color: #991b1b;
+        }
+        
+        .add-slot {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #f3f4f6;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        
+        .add-slot:hover {
+            background: #e5e7eb;
         }
         
         .btn {
@@ -283,6 +333,9 @@
             }
         }
         
+        let timeSlotCount = 0;
+        const MAX_TIME_SLOTS = 3;
+        
         function renderConfirmationForm(data) {
             const { applicant, proposedTimes } = data;
             
@@ -324,16 +377,101 @@
                     
                     <div class="alternative-section" style="margin-top: 2rem;">
                         <h3>None of these times work?</h3>
-                        <div class="form-group">
-                            <label>Please suggest alternative times that work better for you:</label>
-                            <textarea id="alternativeTimes" placeholder="Example: I'm available on Saturday Dec 28th after 2 PM, or Sunday Dec 29th anytime between 10 AM - 4 PM"></textarea>
-                        </div>
+                        <p style="color: #92400e; font-size: 0.9rem; margin-bottom: 1rem;">
+                            Suggest up to 3 alternative dates and times that work better for you:
+                        </p>
+                        <div id="alternativeTimesContainer"></div>
+                        <button class="add-slot" onclick="addTimeSlot()" style="display: none;">
+                            + Add Another Time Slot
+                        </button>
                         <button class="btn btn-secondary" onclick="requestAlternative()">
                             📧 Request Alternative Times
                         </button>
                     </div>
                 </div>
             `;
+            
+            // Initialize with one time slot
+            addTimeSlot();
+        }
+        
+        function addTimeSlot() {
+            if (timeSlotCount >= MAX_TIME_SLOTS) {
+                return;
+            }
+            
+            timeSlotCount++;
+            const container = document.getElementById('alternativeTimesContainer');
+            
+            const slotDiv = document.createElement('div');
+            slotDiv.className = 'time-slot-input';
+            slotDiv.id = `slot-${timeSlotCount}`;
+            
+            // Get minimum datetime (now + 1 day)
+            const minDate = new Date();
+            minDate.setDate(minDate.getDate() + 1);
+            const minDateStr = minDate.toISOString().slice(0, 16);
+            
+            slotDiv.innerHTML = `
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Alternative Time ${timeSlotCount}:</label>
+                    <input type="datetime-local" 
+                           id="datetime-${timeSlotCount}" 
+                           min="${minDateStr}"
+                           class="datetime-input">
+                    ${timeSlotCount > 1 ? `<span class="remove-slot" onclick="removeTimeSlot(${timeSlotCount})">Remove this time slot</span>` : ''}
+                </div>
+            `;
+            
+            container.appendChild(slotDiv);
+            
+            // Show/hide add button
+            const addButton = document.querySelector('.add-slot');
+            if (timeSlotCount < MAX_TIME_SLOTS) {
+                addButton.style.display = 'inline-block';
+            } else {
+                addButton.style.display = 'none';
+            }
+        }
+        
+        function removeTimeSlot(slotId) {
+            const slot = document.getElementById(`slot-${slotId}`);
+            if (slot) {
+                slot.remove();
+                timeSlotCount--;
+                
+                // Renumber remaining slots
+                const container = document.getElementById('alternativeTimesContainer');
+                const slots = container.querySelectorAll('.time-slot-input');
+                timeSlotCount = 0;
+                
+                slots.forEach((slot, index) => {
+                    timeSlotCount++;
+                    slot.id = `slot-${timeSlotCount}`;
+                    const label = slot.querySelector('label');
+                    if (label) {
+                        label.textContent = `Alternative Time ${timeSlotCount}:`;
+                    }
+                    const input = slot.querySelector('input[type="datetime-local"]');
+                    if (input) {
+                        input.id = `datetime-${timeSlotCount}`;
+                    }
+                    const removeBtn = slot.querySelector('.remove-slot');
+                    if (removeBtn) {
+                        if (timeSlotCount === 1) {
+                            removeBtn.remove();
+                        } else {
+                            removeBtn.setAttribute('onclick', `removeTimeSlot(${timeSlotCount})`);
+                        }
+                    }
+                });
+                
+                // Show add button if under limit
+                const addButton = document.querySelector('.add-slot');
+                if (timeSlotCount < MAX_TIME_SLOTS) {
+                    addButton.style.display = 'inline-block';
+                }
+            }
         }
         
         function selectTime(index) {
@@ -377,12 +515,33 @@
         }
         
         async function requestAlternative() {
-            const alternativeTimes = document.getElementById('alternativeTimes').value;
+            // Collect all datetime inputs
+            const datetimeInputs = document.querySelectorAll('.datetime-input');
+            const alternativeTimes = [];
             
-            if (!alternativeTimes.trim()) {
-                alert('Please provide alternative times that work for you');
+            datetimeInputs.forEach((input, index) => {
+                if (input.value) {
+                    const date = new Date(input.value);
+                    alternativeTimes.push(date.toLocaleString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        timeZoneName: 'short'
+                    }));
+                }
+            });
+            
+            if (alternativeTimes.length === 0) {
+                alert('Please provide at least one alternative time that works for you');
                 return;
             }
+            
+            const alternativeTimesText = alternativeTimes.map((time, index) => 
+                `${index + 1}. ${time}`
+            ).join('\n');
             
             try {
                 const response = await fetch('/api/confirm-interview', {
@@ -390,7 +549,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         token,
-                        alternativeTimes,
+                        alternativeTimes: alternativeTimesText,
                         responseType: 'alternative'
                     })
                 });

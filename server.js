@@ -631,7 +631,18 @@ app.get('/api/get-applications', async (req, res) => {
                 agrees_terms,
                 agrees_contact,
                 application_status,
-                submitted_at
+                submitted_at,
+                interview_status,
+                proposed_interview_times,
+                confirmed_interview_date,
+                interview_notes,
+                parent_response,
+                parent_response_date,
+                interview_link,
+                interview_meeting_link,
+                rejection_reason,
+                program_start_date,
+                decision_date
             FROM applications
             ORDER BY submitted_at DESC
         `);
@@ -956,15 +967,20 @@ app.post('/api/confirm-interview', async (req, res) => {
         const applicant = result.rows[0];
         
         if (responseType === 'confirmed') {
+            // Generate unique Jitsi meeting link
+            const meetingId = `edai-interview-${applicant.id}-${Date.now()}`;
+            const jitsiLink = `https://meet.jit.si/${meetingId}`;
+            
             // Parent confirmed one of the proposed times
             await pool.query(`
                 UPDATE applications 
                 SET interview_status = 'confirmed',
                     confirmed_interview_date = $1,
                     parent_response = 'Confirmed',
-                    parent_response_date = NOW()
+                    parent_response_date = NOW(),
+                    interview_meeting_link = $3
                 WHERE id = $2
-            `, [confirmedTime, applicant.id]);
+            `, [confirmedTime, applicant.id, jitsiLink]);
             
             // Get settings for email
             const settings = await getSettings();
@@ -978,22 +994,109 @@ app.post('/api/confirm-interview', async (req, res) => {
                 to: applicant.parent_email,
                 subject: `Interview Confirmed for ${applicant.teen_name} - EdAI Accelerator`,
                 html: `
-                    <h2>Interview Confirmed!</h2>
-                    <p>Assalamu Alaikum ${applicant.parent_name},</p>
-                    <p>Thank you for confirming the interview time for ${applicant.teen_name}.</p>
-                    <h3>Interview Details:</h3>
-                    <p><strong>Date & Time:</strong> ${new Date(confirmedTime).toLocaleString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        timeZoneName: 'short'
-                    })}</p>
-                    <p>We will send you the meeting link closer to the interview date.</p>
-                    <p>If you need to reschedule, please contact us at contact@edaiaccelerator.com</p>
-                    <p>Jazakallahu Khairan,<br>EdAI Accelerator Team</p>
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <link rel="preconnect" href="https://fonts.googleapis.com">
+                        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+                        <style>
+                            body {
+                                font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+                                line-height: 1.6;
+                                max-width: 600px;
+                                margin: 0 auto;
+                                padding: 20px;
+                            }
+                            .header {
+                                background: linear-gradient(135deg, #10b981, #34d399);
+                                color: white;
+                                padding: 30px;
+                                border-radius: 12px 12px 0 0;
+                                text-align: center;
+                            }
+                            .content {
+                                background: #f9fafb;
+                                padding: 30px;
+                                border-radius: 0 0 12px 12px;
+                            }
+                            .meeting-box {
+                                background: white;
+                                border: 3px solid #10b981;
+                                padding: 20px;
+                                border-radius: 12px;
+                                margin: 20px 0;
+                                text-align: center;
+                            }
+                            .meeting-link {
+                                display: inline-block;
+                                padding: 15px 30px;
+                                background: linear-gradient(135deg, #2563eb, #3b82f6);
+                                color: white;
+                                text-decoration: none;
+                                border-radius: 8px;
+                                font-weight: bold;
+                                font-size: 16px;
+                                margin-top: 10px;
+                            }
+                            .info-box {
+                                background: #dbeafe;
+                                border-left: 4px solid #2563eb;
+                                padding: 15px;
+                                margin: 15px 0;
+                                border-radius: 8px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1 style="margin: 0; font-size: 2rem;">✅ Interview Confirmed!</h1>
+                        </div>
+                        <div class="content">
+                            <p style="font-size: 16px;"><strong>Assalamu Alaikum ${applicant.parent_name},</strong></p>
+                            <p>Jazakallahu Khairan! Your interview time for <strong>${applicant.teen_name}</strong> has been confirmed.</p>
+                            
+                            <div class="info-box">
+                                <p style="margin: 0;"><strong>📅 Date & Time:</strong></p>
+                                <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: bold; color: #1e40af;">
+                                    ${new Date(confirmedTime).toLocaleString('en-US', {
+                                        weekday: 'long',
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: 'numeric',
+                                        minute: '2-digit',
+                                        timeZoneName: 'short'
+                                    })}
+                                </p>
+                            </div>
+                            
+                            <div class="meeting-box">
+                                <p style="margin: 0 0 10px 0; font-size: 18px; font-weight: bold; color: #1f2937;">🎥 Join Your Interview</p>
+                                <p style="margin: 0 0 15px 0; color: #6b7280; font-size: 14px;">Click the button below at your scheduled time:</p>
+                                <a href="${jitsiLink}" class="meeting-link">Join Video Interview</a>
+                                <p style="margin: 15px 0 0 0; font-size: 12px; color: #6b7280;">
+                                    Meeting Link: <a href="${jitsiLink}" style="color: #2563eb;">${jitsiLink}</a>
+                                </p>
+                            </div>
+                            
+                            <div class="info-box">
+                                <p style="margin: 0;"><strong>💡 Tips for Your Interview:</strong></p>
+                                <ul style="margin: 10px 0 0 20px; padding: 0;">
+                                    <li>Test your camera and microphone beforehand</li>
+                                    <li>Find a quiet space with good lighting</li>
+                                    <li>Join 5 minutes early</li>
+                                    <li>Have a pen and paper ready for notes</li>
+                                </ul>
+                            </div>
+                            
+                            <p>If you need to reschedule, please contact us at <a href="mailto:contact@edaiaccelerator.com" style="color: #2563eb;">contact@edaiaccelerator.com</a> as soon as possible.</p>
+                            
+                            <p style="margin-top: 30px;">We look forward to meeting you, in shaa Allah!</p>
+                            <p style="margin-top: 20px;">Jazakallahu Khairan,<br><strong>The EdAI Accelerator Team</strong></p>
+                        </div>
+                    </body>
+                    </html>
                 `
             });
             

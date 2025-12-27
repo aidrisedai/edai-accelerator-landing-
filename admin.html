@@ -879,9 +879,76 @@
                 <div id="interviewSection-${applicant.id}">
                     ${getInterviewSection(applicant)}
                 </div>
+                
+                ${getDecisionSection(applicant)}
             `;
             
             document.getElementById('applicantModal').classList.add('active');
+        }
+        
+        function getDecisionSection(applicant) {
+            const status = applicant.application_status;
+            
+            // Show notes textarea after interview is completed
+            if (applicant.interview_status === 'confirmed' || applicant.interview_status === 'completed' || status === 'interview_completed') {
+                const notesSection = `
+                    <div class="detail-section" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
+                        <h3>📝 Interview Notes</h3>
+                        <textarea id="interviewNotes-${applicant.id}" style="width: 100%; min-height: 120px; padding: 0.75rem; border: 2px solid #f59e0b; border-radius: 8px; font-family: 'Outfit', sans-serif;" placeholder="Add notes from the interview...">${applicant.interview_notes || ''}</textarea>
+                        <button class="btn-send-invite" onclick="saveInterviewNotes(${applicant.id})" style="margin-top: 0.5rem;">💾 Save Notes</button>
+                    </div>
+                `;
+                
+                // Show Accept/Reject buttons if not already decided
+                if (status !== 'accepted' && status !== 'rejected') {
+                    return notesSection + `
+                        <div class="detail-section" style="background: #f0f9ff;">
+                            <h3>🎯 Decision</h3>
+                            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                                <button class="btn-send-invite" onclick="showAcceptModal(${applicant.id}, '${applicant.teen_name}', '${applicant.parent_email}')" style="background: linear-gradient(135deg, #10b981, #34d399); flex: 1;">✅ Accept Applicant</button>
+                                <button class="btn-send-invite" onclick="showRejectModal(${applicant.id}, '${applicant.teen_name}', '${applicant.parent_email}')" style="background: linear-gradient(135deg, #ef4444, #f87171); flex: 1;">❌ Reject Applicant</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                return notesSection;
+            }
+            
+            // Show decision result if already decided
+            if (status === 'accepted') {
+                return `
+                    <div class="detail-section" style="background: #d1fae5; border-left: 4px solid #10b981;">
+                        <h3 style="color: #065f46;">🎉 Accepted</h3>
+                        <div class="detail-row">
+                            <div class="detail-label">Program Start Date</div>
+                            <div class="detail-value"><strong>${applicant.program_start_date ? new Date(applicant.program_start_date).toLocaleDateString() : 'Not set'}</strong></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Decision Date</div>
+                            <div class="detail-value">${applicant.decision_date ? new Date(applicant.decision_date).toLocaleString() : 'N/A'}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (status === 'rejected') {
+                return `
+                    <div class="detail-section" style="background: #fee2e2; border-left: 4px solid #ef4444;">
+                        <h3 style="color: #991b1b;">❌ Rejected</h3>
+                        <div class="detail-row">
+                            <div class="detail-label">Rejection Reason</div>
+                            <div class="detail-value">${applicant.rejection_reason || 'No reason provided'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Decision Date</div>
+                            <div class="detail-value">${applicant.decision_date ? new Date(applicant.decision_date).toLocaleString() : 'N/A'}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return '';
         }
         
         function getInterviewSection(applicant) {
@@ -1057,6 +1124,101 @@
             } catch (error) {
                 console.error('Error:', error);
                 alert('Failed to update status. Please try again.');
+            }
+        }
+        
+        async function saveInterviewNotes(applicantId) {
+            const notes = document.getElementById(`interviewNotes-${applicantId}`).value;
+            
+            if (!notes.trim()) {
+                alert('Please enter interview notes');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/save-interview-notes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ applicantId, notes })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Interview notes saved successfully!');
+                    loadApplicants();
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to save notes. Please try again.');
+            }
+        }
+        
+        function showAcceptModal(applicantId, teenName, parentEmail) {
+            const startDate = prompt(`Accept ${teenName} to the program.\n\nEnter program start date (YYYY-MM-DD):`, new Date().toISOString().split('T')[0]);
+            
+            if (!startDate) return;
+            
+            if (confirm(`Confirm acceptance of ${teenName}?\n\nProgram Start Date: ${startDate}\n\nAn acceptance email will be sent to ${parentEmail}`)) {
+                acceptApplicant(applicantId, startDate);
+            }
+        }
+        
+        async function acceptApplicant(applicantId, programStartDate) {
+            try {
+                const response = await fetch('/api/accept-applicant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ applicantId, programStartDate })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Applicant accepted and email sent!');
+                    closeModal();
+                    loadApplicants();
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to accept applicant. Please try again.');
+            }
+        }
+        
+        function showRejectModal(applicantId, teenName, parentEmail) {
+            const reason = prompt(`Reject ${teenName} from the program.\n\nEnter rejection reason (this will be sent to the parent):`, '');
+            
+            if (!reason || !reason.trim()) return;
+            
+            if (confirm(`Confirm rejection of ${teenName}?\n\nReason: ${reason}\n\nA rejection email will be sent to ${parentEmail}`)) {
+                rejectApplicant(applicantId, reason);
+            }
+        }
+        
+        async function rejectApplicant(applicantId, rejectionReason) {
+            try {
+                const response = await fetch('/api/reject-applicant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ applicantId, rejectionReason })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Applicant rejected and email sent!');
+                    closeModal();
+                    loadApplicants();
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to reject applicant. Please try again.');
             }
         }
         

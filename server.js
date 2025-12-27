@@ -493,6 +493,7 @@ app.post('/api/migrate-database', async (req, res) => {
             ADD COLUMN IF NOT EXISTS parent_response TEXT,
             ADD COLUMN IF NOT EXISTS parent_response_date TIMESTAMP,
             ADD COLUMN IF NOT EXISTS interview_link TEXT,
+            ADD COLUMN IF NOT EXISTS interview_meeting_link TEXT,
             ADD COLUMN IF NOT EXISTS rejection_reason TEXT,
             ADD COLUMN IF NOT EXISTS program_start_date DATE,
             ADD COLUMN IF NOT EXISTS decision_date TIMESTAMP;
@@ -1061,6 +1062,37 @@ app.post('/api/update-interview-status', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to update status'
+        });
+    }
+});
+
+// API endpoint to save interview meeting link
+app.post('/api/save-meeting-link', async (req, res) => {
+    try {
+        const { applicantId, meetingLink } = req.body;
+        
+        if (!applicantId || !meetingLink) {
+            return res.status(400).json({
+                success: false,
+                error: 'Applicant ID and meeting link are required'
+            });
+        }
+        
+        await pool.query(
+            'UPDATE applications SET interview_meeting_link = $1 WHERE id = $2',
+            [meetingLink, applicantId]
+        );
+        
+        res.status(200).json({
+            success: true,
+            message: 'Meeting link saved successfully'
+        });
+        
+    } catch (error) {
+        console.error('Error saving meeting link:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to save meeting link'
         });
     }
 });

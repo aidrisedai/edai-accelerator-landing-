@@ -987,8 +987,42 @@
                     <div class="interview-section">
                         <h4>✅ Interview Confirmed</h4>
                         <div class="detail-row">
-                            <div class="detail-label">Interview Date</div>
-                            <div class="detail-value"><strong>${new Date(applicant.confirmed_interview_date).toLocaleString()}</strong></div>
+                            <div class="detail-label">Interview Date & Time</div>
+                            <div class="detail-value"><strong>${new Date(applicant.confirmed_interview_date).toLocaleString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                timeZoneName: 'short'
+                            })}</strong></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Meeting Link</div>
+                            <div class="detail-value">
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input 
+                                        type="url" 
+                                        id="meetingLink-${applicant.id}" 
+                                        value="${applicant.interview_meeting_link || ''}" 
+                                        placeholder="https://zoom.us/j/123456789 or Google Meet link"
+                                        style="flex: 1; padding: 8px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
+                                    />
+                                    <button 
+                                        class="btn-schedule" 
+                                        onclick="saveMeetingLink(${applicant.id})"
+                                        style="padding: 8px 16px; white-space: nowrap;"
+                                    >
+                                        💾 Save Link
+                                    </button>
+                                </div>
+                                ${applicant.interview_meeting_link ? `
+                                    <div style="margin-top: 8px;">
+                                        <a href="${applicant.interview_meeting_link}" target="_blank" style="color: #2563eb; text-decoration: underline;">🔗 Open Meeting Link</a>
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
                         ${applicant.interview_notes ? `
                             <div class="detail-row">
@@ -1096,6 +1130,43 @@
             } catch (error) {
                 console.error('Error:', error);
                 alert('Failed to send invitation. Please try again.');
+            }
+        }
+        
+        async function saveMeetingLink(applicantId) {
+            const meetingLink = document.getElementById(`meetingLink-${applicantId}`).value;
+            
+            if (!meetingLink.trim()) {
+                alert('Please enter a meeting link');
+                return;
+            }
+            
+            // Basic URL validation
+            try {
+                new URL(meetingLink);
+            } catch (e) {
+                alert('Please enter a valid URL (e.g., https://zoom.us/j/123456789)');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/save-meeting-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ applicantId, meetingLink })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Meeting link saved successfully!');
+                    loadApplicants();
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to save meeting link. Please try again.');
             }
         }
         

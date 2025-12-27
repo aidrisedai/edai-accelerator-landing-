@@ -65,6 +65,11 @@ app.get('/settings', (req, res) => {
     res.sendFile(path.join(__dirname, 'settings.html'));
 });
 
+// Serve interview confirmation page
+app.get('/interview-confirm', (req, res) => {
+    res.sendFile(path.join(__dirname, 'interview-confirm.html'));
+});
+
 // API endpoint for form submission
 app.post('/api/submit-application', async (req, res) => {
     try {

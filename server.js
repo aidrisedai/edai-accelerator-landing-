@@ -817,6 +817,12 @@ app.post('/api/send-interview-invite', async (req, res) => {
         // Get settings for email
         const settings = await getSettings();
         
+        console.log('=== INTERVIEW INVITE EMAIL DEBUG ===');
+        console.log('Resend API key available:', !!settings.resend_api_key);
+        console.log('Resend API key prefix:', settings.resend_api_key ? settings.resend_api_key.substring(0, 7) : 'none');
+        console.log('Parent email:', app.parent_email);
+        console.log('Student name:', app.teen_name);
+        
         // Send email using Resend
         const { Resend } = require('resend');
         const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
@@ -850,16 +856,21 @@ app.post('/api/send-interview-invite', async (req, res) => {
             EdAI Accelerator Team</p>
         `;
         
-        await resend.emails.send({
-            from: 'EdAI Accelerator <noreply@edaiaccelerator.com>',
+        console.log('Attempting to send email via Resend...');
+        const emailResult = await resend.emails.send({
+            from: settings.email_from_address || 'EdAI Accelerator <noreply@edaiaccelerator.com>',
             to: app.parent_email,
             subject: `Interview Invitation for ${app.teen_name} - EdAI Accelerator`,
             html: emailHtml
         });
         
+        console.log('Email sent successfully:', emailResult);
+        console.log('Email ID:', emailResult.id);
+        
         res.status(200).json({
             success: true,
-            message: 'Interview invitation sent successfully'
+            message: 'Interview invitation sent successfully',
+            emailId: emailResult.id
         });
         
     } catch (error) {

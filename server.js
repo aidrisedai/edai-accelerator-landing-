@@ -70,6 +70,11 @@ app.get('/interview-confirm', (req, res) => {
     res.sendFile(path.join(__dirname, 'interview-confirm.html'));
 });
 
+// Serve programs page
+app.get('/programs', (req, res) => {
+    res.sendFile(path.join(__dirname, 'programs.html'));
+});
+
 // API endpoint for form submission
 app.post('/api/submit-application', async (req, res) => {
     try {
@@ -497,6 +502,23 @@ app.post('/api/migrate-database', async (req, res) => {
             ADD COLUMN IF NOT EXISTS rejection_reason TEXT,
             ADD COLUMN IF NOT EXISTS program_start_date DATE,
             ADD COLUMN IF NOT EXISTS decision_date TIMESTAMP;
+        `);
+        
+        // Create programs table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS programs (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                program_type VARCHAR(100),
+                description TEXT,
+                start_date DATE,
+                end_date DATE,
+                schedule_info TEXT,
+                status VARCHAR(50) DEFAULT 'upcoming',
+                max_students INTEGER,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
         `);
         
         // Create settings table
@@ -1500,6 +1522,214 @@ app.post('/api/reject-applicant', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to reject applicant: ' + error.message
+        });
+    }
+});
+
+// ============= PROGRAMS MANAGEMENT API ENDPOINTS =============
+
+// API endpoint to create a new program
+app.post('/api/create-program', async (req, res) => {
+    try {
+        const {
+            name,
+            programType,
+            description,
+            startDate,
+            endDate,
+            scheduleInfo,
+            maxStudents
+        } = req.body;
+        
+        // Validation
+        if (!name || !programType || !startDate) {
+            return res.status(400).json({
+                success: false,
+                error: 'Program name, type, and start date are required'
+            });
+        }
+        
+        const result = await pool.query(`
+            INSERT INTO programs (
+                name,
+                program_type,
+                description,
+                start_date,
+                end_date,
+                schedule_info,
+                max_students,
+                status
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING *
+        `, [
+            name,
+            programType,
+            description,
+            startDate,
+            endDate,
+            scheduleInfo,
+            maxStudents,
+            new Date(startDate) > new Date() ? 'upcoming' : 'active'
+        ]);
+        
+        res.status(201).json({
+            success: true,
+            message: 'Program created successfully',
+            program: result.rows[0]
+        });
+        
+    } catch (error) {
+        console.error('Error creating program:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to create program: ' + error.message
+        });
+    }
+});
+
+// API endpoint to get all programs
+app.get('/api/get-programs', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT * FROM programs
+            ORDER BY created_at DESC
+        `);
+        
+        res.status(200).json({
+            success: true,
+            count: result.rows.length,
+            programs: result.rows
+        });
+        
+    } catch (error) {
+        console.error('Error getting programs:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve programs'
+        });
+    }
+});
+
+// API endpoint to get a single program by ID
+app.get('/api/get-program/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await pool.query(
+            'SELECT * FROM programs WHERE id = $1',
+            [id]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Program not found'
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            program: result.rows[0]
+        });
+        
+    } catch (error) {
+        console.error('Error getting program:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve program'
+        });
+    }
+});
+
+// API endpoint to update a program
+app.put('/api/update-program/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            name,
+            programType,
+            description,
+            startDate,
+            endDate,
+            scheduleInfo,
+            maxStudents,
+            status
+        } = req.body;
+        
+        const result = await pool.query(`
+            UPDATE programs
+            SET name = $1,
+                program_type = $2,
+                description = $3,
+                start_date = $4,
+                end_date = $5,
+                schedule_info = $6,
+                max_students = $7,
+                status = $8,
+                updated_at = NOW()
+            WHERE id = $9
+            RETURNING *
+        `, [
+            name,
+            programType,
+            description,
+            startDate,
+            endDate,
+            scheduleInfo,
+            maxStudents,
+            status,
+            id
+        ]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Program not found'
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Program updated successfully',
+            program: result.rows[0]
+        });
+        
+    } catch (error) {
+        console.error('Error updating program:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update program: ' + error.message
+        });
+    }
+});
+
+// API endpoint to delete a program
+app.delete('/api/delete-program/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await pool.query(
+            'DELETE FROM programs WHERE id = $1 RETURNING *',
+            [id]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Program not found'
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Program deleted successfully'
+        });
+        
+    } catch (error) {
+        console.error('Error deleting program:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to delete program: ' + error.message
         });
     }
 });

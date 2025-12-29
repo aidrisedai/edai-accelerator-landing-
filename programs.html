@@ -718,19 +718,30 @@
                 const programResponse = await fetch(`/api/get-program/${programId}`);
                 const programData = await programResponse.json();
                 
+                console.log('Program response:', programData);
+                
+                if (!programData.success) {
+                    alert(`Error loading program: ${programData.error}`);
+                    return;
+                }
+                
                 // Fetch students in program
                 const studentsResponse = await fetch(`/api/get-program-students/${programId}`);
                 const studentsData = await studentsResponse.json();
                 
-                if (programData.success && studentsData.success) {
-                    currentProgramStudents = studentsData.students;
-                    displayProgramDetail(programData.program, studentsData.students);
-                } else {
-                    alert('Error loading program details');
+                console.log('Students response:', studentsData);
+                
+                if (!studentsData.success) {
+                    alert(`Error loading students: ${studentsData.error}`);
+                    return;
                 }
+                
+                currentProgramStudents = studentsData.students;
+                displayProgramDetail(programData.program, studentsData.students);
+                
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to load program details');
+                alert('Failed to load program details. Check console for details.');
             }
         }
         

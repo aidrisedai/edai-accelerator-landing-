@@ -418,6 +418,64 @@
         </div>
     </div>
     
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Student to Program</h3>
+                <button class="close-btn" onclick="closeAddStudentModal()">&times;</button>
+            </div>
+            
+            <form id="addStudentForm" onsubmit="saveStudent(event)">
+                <h4 style="margin-bottom: 1rem; color: #1f2937;">Student Information</h4>
+                
+                <div class="form-group">
+                    <label>Student Name *</label>
+                    <input type="text" id="studentName" required placeholder="e.g., Sarah Ahmed">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" id="studentAge" min="10" max="18" placeholder="e.g., 14">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Grade</label>
+                        <input type="number" id="studentGrade" min="5" max="12" placeholder="e.g., 8">
+                    </div>
+                </div>
+                
+                <h4 style="margin: 1.5rem 0 1rem 0; color: #1f2937;">Parent Information</h4>
+                
+                <div class="form-group">
+                    <label>Parent Name *</label>
+                    <input type="text" id="parentName" required placeholder="e.g., Ahmed Ali">
+                </div>
+                
+                <div class="form-group">
+                    <label>Parent Email *</label>
+                    <input type="email" id="parentEmail" required placeholder="e.g., ahmed@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label>Parent Phone</label>
+                    <input type="tel" id="parentPhone" placeholder="e.g., (555) 123-4567">
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="studentNotes" placeholder="Any additional notes about the student..."></textarea>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 2rem;">
+                    <button type="button" class="btn-secondary" onclick="closeAddStudentModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <!-- Create/Edit Program Modal -->
     <div id="programModal" class="modal">
         <div class="modal-content">
@@ -649,15 +707,191 @@
             }
         }
         
-        function viewProgram(programId) {
-            // TODO: Implement program detail view in Phase 2
-            alert('Program detail view coming in Phase 2!');
+        let currentProgramId = null;
+        let currentProgramStudents = [];
+        
+        async function viewProgram(programId) {
+            currentProgramId = programId;
+            
+            try {
+                // Fetch program details
+                const programResponse = await fetch(`/api/get-program/${programId}`);
+                const programData = await programResponse.json();
+                
+                // Fetch students in program
+                const studentsResponse = await fetch(`/api/get-program-students/${programId}`);
+                const studentsData = await studentsResponse.json();
+                
+                if (programData.success && studentsData.success) {
+                    currentProgramStudents = studentsData.students;
+                    displayProgramDetail(programData.program, studentsData.students);
+                } else {
+                    alert('Error loading program details');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load program details');
+            }
         }
         
-        // Close modal when clicking outside
+        function displayProgramDetail(program, students) {
+            const container = document.getElementById('programsContainer');
+            
+            container.innerHTML = `
+                <div style="margin-bottom: 2rem;">
+                    <button class="btn-secondary" onclick="backToPrograms()" style="margin-bottom: 1rem;">
+                        ← Back to Programs
+                    </button>
+                </div>
+                
+                <div style="background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
+                        <div>
+                            <h2 style="font-size: 2rem; color: #1f2937; margin-bottom: 0.5rem;">${program.name}</h2>
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <span class="program-type" style="text-transform: capitalize; color: #6b7280;">${program.program_type}</span>
+                                <span class="status-badge status-${program.status}">${program.status}</span>
+                            </div>
+                        </div>
+                        <button class="btn-primary" onclick="showAddStudentModal()" style="white-space: nowrap;">
+                            ➕ Add Student
+                        </button>
+                    </div>
+                    
+                    ${program.description ? `
+                        <p style="color: #6b7280; margin-bottom: 1.5rem;">${program.description}</p>
+                    ` : ''}
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+                        <div>
+                            <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.25rem;">Start Date</div>
+                            <div style="font-weight: 600; color: #1f2937;">${formatDate(program.start_date)}</div>
+                        </div>
+                        ${program.end_date ? `
+                            <div>
+                                <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.25rem;">End Date</div>
+                                <div style="font-weight: 600; color: #1f2937;">${formatDate(program.end_date)}</div>
+                            </div>
+                        ` : ''}
+                        ${program.schedule_info ? `
+                            <div>
+                                <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.25rem;">Schedule</div>
+                                <div style="font-weight: 600; color: #1f2937;">${program.schedule_info}</div>
+                            </div>
+                        ` : ''}
+                        <div>
+                            <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.25rem;">Enrolled</div>
+                            <div style="font-weight: 600; color: #2563eb;">${students.length}${program.max_students ? ' / ' + program.max_students : ''}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);">
+                    <h3 style="font-size: 1.5rem; color: #1f2937; margin-bottom: 1.5rem;">Enrolled Students (${students.length})</h3>
+                    
+                    ${students.length === 0 ? `
+                        <div class="empty-state" style="padding: 2rem;">
+                            <div class="empty-state-icon">👥</div>
+                            <p>No students enrolled yet</p>
+                            <p style="font-size: 0.875rem; color: #9ca3af;">Click "Add Student" to enroll your first student</p>
+                        </div>
+                    ` : `
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid #e5e7eb;">
+                                        <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Student Name</th>
+                                        <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Grade</th>
+                                        <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Parent Name</th>
+                                        <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Parent Email</th>
+                                        <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Enrolled</th>
+                                        <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Source</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${students.map(student => `
+                                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                                            <td style="padding: 1rem; font-weight: 600; color: #1f2937;">${student.student_name}</td>
+                                            <td style="padding: 1rem; color: #4b5563;">${student.student_grade ? student.student_grade + 'th' : '-'}</td>
+                                            <td style="padding: 1rem; color: #4b5563;">${student.parent_name}</td>
+                                            <td style="padding: 1rem; color: #4b5563;">${student.parent_email}</td>
+                                            <td style="padding: 1rem; color: #4b5563;">${formatDate(student.enrollment_date)}</td>
+                                            <td style="padding: 1rem;">
+                                                <span style="padding: 0.25rem 0.75rem; background: ${student.enrollment_source === 'application' ? '#dbeafe' : '#f3e8ff'}; color: ${student.enrollment_source === 'application' ? '#1e40af' : '#6b21a8'}; border-radius: 12px; font-size: 0.75rem; font-weight: 600; text-transform: capitalize;">
+                                                    ${student.enrollment_source}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+        
+        function backToPrograms() {
+            currentProgramId = null;
+            currentProgramStudents = [];
+            displayPrograms(allPrograms);
+        }
+        
+        function showAddStudentModal() {
+            document.getElementById('addStudentForm').reset();
+            document.getElementById('addStudentModal').classList.add('active');
+        }
+        
+        function closeAddStudentModal() {
+            document.getElementById('addStudentModal').classList.remove('active');
+        }
+        
+        async function saveStudent(event) {
+            event.preventDefault();
+            
+            const studentData = {
+                programId: currentProgramId,
+                studentName: document.getElementById('studentName').value,
+                studentAge: parseInt(document.getElementById('studentAge').value) || null,
+                studentGrade: parseInt(document.getElementById('studentGrade').value) || null,
+                parentName: document.getElementById('parentName').value,
+                parentEmail: document.getElementById('parentEmail').value,
+                parentPhone: document.getElementById('parentPhone').value,
+                notes: document.getElementById('studentNotes').value
+            };
+            
+            try {
+                const response = await fetch('/api/enroll-student', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(studentData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Student enrolled successfully!');
+                    closeAddStudentModal();
+                    viewProgram(currentProgramId); // Reload program detail
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to enroll student. Please try again.');
+            }
+        }
+        
+        // Close modals when clicking outside
         document.getElementById('programModal').addEventListener('click', (e) => {
             if (e.target.id === 'programModal') {
                 closeModal();
+            }
+        });
+        
+        document.getElementById('addStudentModal').addEventListener('click', (e) => {
+            if (e.target.id === 'addStudentModal') {
+                closeAddStudentModal();
             }
         });
     </script>

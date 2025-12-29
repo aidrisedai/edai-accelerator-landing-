@@ -487,6 +487,66 @@
         </div>
     </div>
     
+    <!-- Progress Update Modal -->
+    <div id="progressModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="progressModalTitle">Log Progress</h3>
+                <button class="close-btn" onclick="closeProgressModal()">&times;</button>
+            </div>
+            
+            <form id="progressForm" onsubmit="saveProgress(event)">
+                <input type="hidden" id="progressStudentId">
+                <input type="hidden" id="progressUpdateId">
+                
+                <div class="form-group">
+                    <label>Class Date *</label>
+                    <input type="date" id="classDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Class Topic</label>
+                    <input type="text" id="classTopic" placeholder="e.g., Introduction to Python Programming">
+                </div>
+                
+                <div class="form-group">
+                    <label>Student Progress *</label>
+                    <textarea id="studentProgress" required placeholder="Describe what the student accomplished in this class..." style="min-height: 100px;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Skills Learned</label>
+                    <textarea id="skillsLearned" placeholder="List skills the student demonstrated or learned..." style="min-height: 80px;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Instructor Notes</label>
+                    <textarea id="instructorNotes" placeholder="Any additional observations or notes..." style="min-height: 80px;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Next Steps</label>
+                    <textarea id="nextSteps" placeholder="What should the student focus on next?" style="min-height: 80px;"></textarea>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; gap: 0.5rem; margin-top: 2rem;">
+                    <button type="button" class="btn-secondary" onclick="closeProgressModal()">Cancel</button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="submit" class="btn-primary">Save Progress</button>
+                        <button type="button" id="sendToParentBtn" onclick="sendToParent()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; display: none;">
+                            📧 Send to Parent
+                        </button>
+                    </div>
+                </div>
+            </form>
+            
+            <div id="updateHistory" style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e5e7eb; display: none;">
+                <h4 style="margin-bottom: 1rem; color: #1f2937;">Previous Updates</h4>
+                <div id="historyList"></div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Create/Edit Program Modal -->
     <div id="programModal" class="modal">
         <div class="modal-content">
@@ -862,6 +922,7 @@
                                         <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Parent Email</th>
                                         <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Enrolled</th>
                                         <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Source</th>
+                                        <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -876,6 +937,11 @@
                                                 <span style="padding: 0.25rem 0.75rem; background: ${student.enrollment_source === 'application' ? '#dbeafe' : '#f3e8ff'}; color: ${student.enrollment_source === 'application' ? '#1e40af' : '#6b21a8'}; border-radius: 12px; font-size: 0.75rem; font-weight: 600; text-transform: capitalize;">
                                                     ${student.enrollment_source}
                                                 </span>
+                                            </td>
+                                            <td style="padding: 1rem;">
+                                                <button onclick="showProgressModal(${student.id}, '${student.student_name}')" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
+                                                    📝 Log Progress
+                                                </button>
                                             </td>
                                         </tr>
                                     `).join('')}
@@ -938,6 +1004,156 @@
             }
         }
         
+        let currentProgressStudentId = null;
+        let currentProgressStudentName = '';
+        let currentProgressUpdateId = null;
+        
+        async function showProgressModal(studentId, studentName) {
+            currentProgressStudentId = studentId;
+            currentProgressStudentName = studentName;
+            currentProgressUpdateId = null;
+            
+            document.getElementById('progressModalTitle').textContent = `Log Progress: ${studentName}`;
+            document.getElementById('progressForm').reset();
+            document.getElementById('progressStudentId').value = studentId;
+            document.getElementById('progressUpdateId').value = '';
+            
+            // Set today's date as default
+            document.getElementById('classDate').valueAsDate = new Date();
+            
+            // Hide send button initially
+            document.getElementById('sendToParentBtn').style.display = 'none';
+            
+            // Load update history
+            await loadUpdateHistory(studentId);
+            
+            document.getElementById('progressModal').classList.add('active');
+        }
+        
+        function closeProgressModal() {
+            document.getElementById('progressModal').classList.remove('active');
+            currentProgressStudentId = null;
+            currentProgressStudentName = '';
+            currentProgressUpdateId = null;
+        }
+        
+        async function loadUpdateHistory(studentId) {
+            try {
+                const response = await fetch(`/api/get-student-updates/${studentId}`);
+                const data = await response.json();
+                
+                if (data.success && data.updates.length > 0) {
+                    document.getElementById('updateHistory').style.display = 'block';
+                    
+                    const historyHtml = data.updates.map(update => {
+                        const date = new Date(update.class_date).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                        });
+                        const sentBadge = update.sent_to_parent 
+                            ? '<span style="padding: 0.25rem 0.5rem; background: #d1fae5; color: #065f46; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">✓ Sent</span>'
+                            : '<span style="padding: 0.25rem 0.5rem; background: #fef3c7; color: #92400e; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">Not Sent</span>';
+                        
+                        return `
+                            <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border-left: 4px solid #2563eb;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <strong style="color: #1f2937;">${date}${update.class_topic ? ' - ' + update.class_topic : ''}</strong>
+                                    ${sentBadge}
+                                </div>
+                                <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">${update.student_progress.substring(0, 100)}${update.student_progress.length > 100 ? '...' : ''}</p>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    document.getElementById('historyList').innerHTML = historyHtml;
+                } else {
+                    document.getElementById('updateHistory').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading update history:', error);
+            }
+        }
+        
+        async function saveProgress(event) {
+            event.preventDefault();
+            
+            const progressData = {
+                programId: currentProgramId,
+                studentId: currentProgressStudentId,
+                classDate: document.getElementById('classDate').value,
+                classTopic: document.getElementById('classTopic').value,
+                studentProgress: document.getElementById('studentProgress').value,
+                instructorNotes: document.getElementById('instructorNotes').value,
+                skillsLearned: document.getElementById('skillsLearned').value,
+                nextSteps: document.getElementById('nextSteps').value,
+                createdBy: 'Instructor' // You can make this dynamic later
+            };
+            
+            try {
+                const url = currentProgressUpdateId 
+                    ? `/api/update-progress/${currentProgressUpdateId}`
+                    : '/api/create-update';
+                const method = currentProgressUpdateId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(progressData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Progress logged successfully! ✅');
+                    currentProgressUpdateId = data.update.id;
+                    document.getElementById('progressUpdateId').value = data.update.id;
+                    
+                    // Show send to parent button
+                    document.getElementById('sendToParentBtn').style.display = 'block';
+                    
+                    // Reload history
+                    await loadUpdateHistory(currentProgressStudentId);
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to save progress. Please try again.');
+            }
+        }
+        
+        async function sendToParent() {
+            const updateId = document.getElementById('progressUpdateId').value || currentProgressUpdateId;
+            
+            if (!updateId) {
+                alert('Please save the progress update first.');
+                return;
+            }
+            
+            if (!confirm(`Send this progress update to ${currentProgressStudentName}'s parent?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/send-update-to-parent/${updateId}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Progress update sent to parent! 📧✅');
+                    await loadUpdateHistory(currentProgressStudentId);
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to send update. Please try again.');
+            }
+        }
+        
         // Close modals when clicking outside
         document.getElementById('programModal').addEventListener('click', (e) => {
             if (e.target.id === 'programModal') {
@@ -948,6 +1164,12 @@
         document.getElementById('addStudentModal').addEventListener('click', (e) => {
             if (e.target.id === 'addStudentModal') {
                 closeAddStudentModal();
+            }
+        });
+        
+        document.getElementById('progressModal').addEventListener('click', (e) => {
+            if (e.target.id === 'progressModal') {
+                closeProgressModal();
             }
         });
     </script>

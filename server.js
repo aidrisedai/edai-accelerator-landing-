@@ -1944,9 +1944,21 @@ app.get('/api/get-program-students/:programId', async (req, res) => {
         
     } catch (error) {
         console.error('Error getting program students:', error);
+        
+        // Check if it's a missing table error
+        if (error.message && error.message.includes('relation "enrolled_students" does not exist')) {
+            // Table doesn't exist yet - return empty array
+            return res.status(200).json({
+                success: true,
+                count: 0,
+                students: [],
+                message: 'No students enrolled yet. Run database migration if needed.'
+            });
+        }
+        
         res.status(500).json({
             success: false,
-            error: 'Failed to retrieve students'
+            error: 'Failed to retrieve students: ' + error.message
         });
     }
 });

@@ -386,6 +386,17 @@
     </div>
     
     <div class="container">
+        <div id="migrationNotice" style="display: none; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span style="font-size: 1.5rem;">⚠️</span>
+                <div style="flex: 1;">
+                    <strong style="color: #92400e;">Database Setup Required</strong>
+                    <p style="margin: 0.25rem 0 0 0; color: #78350f; font-size: 0.875rem;">Run the database migration to enable student enrollment features.</p>
+                </div>
+                <button onclick="runMigration()" style="padding: 0.5rem 1rem; background: #f59e0b; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">Run Migration</button>
+            </div>
+        </div>
+        
         <div class="page-header">
             <h2 class="page-title">Programs</h2>
             <button class="btn-primary" onclick="showCreateModal()">➕ Create Program</button>
@@ -541,9 +552,33 @@
     <script>
         let allPrograms = [];
         let editingProgramId = null;
+        let needsMigration = false;
         
         // Load programs on page load
         loadPrograms();
+        
+        async function runMigration() {
+            if (!confirm('This will create the necessary database tables. Continue?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/migrate-database', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Migration completed successfully! \u2705');
+                    document.getElementById('migrationNotice').style.display = 'none';
+                    needsMigration = false;
+                    loadPrograms();
+                } else {
+                    alert(`Migration failed: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Migration error:', error);
+                alert('Failed to run migration. Check console for details.');
+            }
+        }
         
         async function loadPrograms() {
             try {
@@ -732,12 +767,22 @@
                 console.log('Students response:', studentsData);
                 
                 if (!studentsData.success) {
-                    alert(`Error loading students: ${studentsData.error}`);
+                    // Show migration notice
+                    needsMigration = true;
+                    document.getElementById('migrationNotice').style.display = 'block';
+                    alert(`Error loading students: ${studentsData.error}\n\nClick "Run Migration" at the top of the page to set up the database.`);
+                    backToPrograms();
                     return;
                 }
                 
-                currentProgramStudents = studentsData.students;
-                displayProgramDetail(programData.program, studentsData.students);
+                // Check if migration message is present
+                if (studentsData.message && studentsData.message.includes('migration')) {
+                    needsMigration = true;
+                    document.getElementById('migrationNotice').style.display = 'block';
+                }
+                
+                currentProgramStudents = studentsData.students || [];
+                displayProgramDetail(programData.program, studentsData.students || []);
                 
             } catch (error) {
                 console.error('Error:', error);

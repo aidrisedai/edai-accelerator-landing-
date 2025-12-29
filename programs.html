@@ -1059,10 +1059,13 @@
                             : '<span style="padding: 0.25rem 0.5rem; background: #fef3c7; color: #92400e; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">Not Sent</span>';
                         
                         return `
-                            <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border-left: 4px solid #2563eb;">
+                            <div onclick="loadUpdateForEdit(${update.id})" style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border-left: 4px solid #2563eb; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='#f9fafb'">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                                     <strong style="color: #1f2937;">${date}${update.class_topic ? ' - ' + update.class_topic : ''}</strong>
-                                    ${sentBadge}
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        ${sentBadge}
+                                        <span style="color: #2563eb; font-size: 0.75rem; font-weight: 600;">✎️ Edit</span>
+                                    </div>
                                 </div>
                                 <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">${update.student_progress.substring(0, 100)}${update.student_progress.length > 100 ? '...' : ''}</p>
                             </div>
@@ -1108,7 +1111,8 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    alert('Progress logged successfully! ✅');
+                    const message = currentProgressUpdateId ? 'Progress updated successfully! ✅' : 'Progress logged successfully! ✅';
+                    alert(message);
                     currentProgressUpdateId = data.update.id;
                     document.getElementById('progressUpdateId').value = data.update.id;
                     
@@ -1123,6 +1127,47 @@
             } catch (error) {
                 console.error('Error:', error);
                 alert('Failed to save progress. Please try again.');
+            }
+        }
+        
+        async function loadUpdateForEdit(updateId) {
+            try {
+                // Fetch the specific update
+                const response = await fetch(`/api/get-student-updates/${currentProgressStudentId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const update = data.updates.find(u => u.id === updateId);
+                    if (update) {
+                        // Populate form with existing data
+                        document.getElementById('classDate').value = update.class_date.split('T')[0];
+                        document.getElementById('classTopic').value = update.class_topic || '';
+                        document.getElementById('studentProgress').value = update.student_progress || '';
+                        document.getElementById('skillsLearned').value = update.skills_learned || '';
+                        document.getElementById('instructorNotes').value = update.instructor_notes || '';
+                        document.getElementById('nextSteps').value = update.next_steps || '';
+                        
+                        // Set the update ID for editing
+                        currentProgressUpdateId = updateId;
+                        document.getElementById('progressUpdateId').value = updateId;
+                        
+                        // Show send button if not sent yet
+                        if (!update.sent_to_parent) {
+                            document.getElementById('sendToParentBtn').style.display = 'block';
+                        } else {
+                            document.getElementById('sendToParentBtn').style.display = 'block';
+                        }
+                        
+                        // Update modal title
+                        document.getElementById('progressModalTitle').textContent = `Edit Progress: ${currentProgressStudentName}`;
+                        
+                        // Scroll to top of modal
+                        document.querySelector('#progressModal .modal-content').scrollTop = 0;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading update:', error);
+                alert('Failed to load update for editing.');
             }
         }
         

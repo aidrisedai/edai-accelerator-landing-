@@ -542,6 +542,26 @@ app.post('/api/migrate-database', async (req, res) => {
             );
         `);
         
+        // Create progress_updates table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS progress_updates (
+                id SERIAL PRIMARY KEY,
+                program_id INTEGER NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+                student_id INTEGER NOT NULL REFERENCES enrolled_students(id) ON DELETE CASCADE,
+                class_date DATE NOT NULL,
+                class_topic VARCHAR(255),
+                student_progress TEXT NOT NULL,
+                instructor_notes TEXT,
+                skills_learned TEXT,
+                next_steps TEXT,
+                sent_to_parent BOOLEAN DEFAULT FALSE,
+                sent_at TIMESTAMP,
+                created_by VARCHAR(255),
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+        `);
+        
         // Create settings table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS settings (
@@ -2052,6 +2072,363 @@ app.delete('/api/remove-student/:id', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to remove student: ' + error.message
+        });
+    }
+});
+
+// ============================================
+// PROGRESS UPDATES API ENDPOINTS
+// ============================================
+
+// API endpoint to create progress update
+app.post('/api/create-update', async (req, res) => {
+    try {
+        const {
+            programId,
+            studentId,
+            classDate,
+            classTopic,
+            studentProgress,
+            instructorNotes,
+            skillsLearned,
+            nextSteps,
+            createdBy
+        } = req.body;
+        
+        // Validation
+        if (!programId || !studentId || !classDate || !studentProgress) {
+            return res.status(400).json({
+                success: false,
+                error: 'Program ID, Student ID, Class Date, and Progress are required'
+            });
+        }
+        
+        const result = await pool.query(`
+            INSERT INTO progress_updates (
+                program_id,
+                student_id,
+                class_date,
+                class_topic,
+                student_progress,
+                instructor_notes,
+                skills_learned,
+                next_steps,
+                created_by
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            RETURNING *
+        `, [
+            programId,
+            studentId,
+            classDate,
+            classTopic,
+            studentProgress,
+            instructorNotes,
+            skillsLearned,
+            nextSteps,
+            createdBy
+        ]);
+        
+        res.status(201).json({
+            success: true,
+            message: 'Progress update created successfully',
+            update: result.rows[0]
+        });
+        
+    } catch (error) {
+        console.error('Error creating progress update:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to create progress update: ' + error.message
+        });
+    }
+});
+
+// API endpoint to get updates for a specific student
+app.get('/api/get-student-updates/:studentId', async (req, res) => {
+    try {
+        const { studentId } = req.params;
+        
+        const result = await pool.query(`
+            SELECT pu.*, es.student_name, es.parent_email, p.name as program_name
+            FROM progress_updates pu
+            JOIN enrolled_students es ON pu.student_id = es.id
+            JOIN programs p ON pu.program_id = p.id
+            WHERE pu.student_id = $1
+            ORDER BY pu.class_date DESC, pu.created_at DESC
+        `, [studentId]);
+        
+        res.status(200).json({
+            success: true,
+            count: result.rows.length,
+            updates: result.rows
+        });
+        
+    } catch (error) {
+        console.error('Error getting student updates:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve updates: ' + error.message
+        });
+    }
+});
+
+// API endpoint to get all updates for a program
+app.get('/api/get-program-updates/:programId', async (req, res) => {
+    try {
+        const { programId } = req.params;
+        
+        const result = await pool.query(`
+            SELECT pu.*, es.student_name, es.parent_email
+            FROM progress_updates pu
+            JOIN enrolled_students es ON pu.student_id = es.id
+            WHERE pu.program_id = $1
+            ORDER BY pu.class_date DESC, pu.created_at DESC
+        `, [programId]);
+        
+        res.status(200).json({
+            success: true,
+            count: result.rows.length,
+            updates: result.rows
+        });
+        
+    } catch (error) {
+        console.error('Error getting program updates:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve updates: ' + error.message
+        });
+    }
+});
+
+// API endpoint to update a progress update
+app.put('/api/update-progress/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            classDate,
+            classTopic,
+            studentProgress,
+            instructorNotes,
+            skillsLearned,
+            nextSteps
+        } = req.body;
+        
+        const result = await pool.query(`
+            UPDATE progress_updates
+            SET class_date = $1,
+                class_topic = $2,
+                student_progress = $3,
+                instructor_notes = $4,
+                skills_learned = $5,
+                next_steps = $6,
+                updated_at = NOW()
+            WHERE id = $7
+            RETURNING *
+        `, [
+            classDate,
+            classTopic,
+            studentProgress,
+            instructorNotes,
+            skillsLearned,
+            nextSteps,
+            id
+        ]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Progress update not found'
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Progress update updated successfully',
+            update: result.rows[0]
+        });
+        
+    } catch (error) {
+        console.error('Error updating progress:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update progress: ' + error.message
+        });
+    }
+});
+
+// API endpoint to delete a progress update
+app.delete('/api/delete-update/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await pool.query(
+            'DELETE FROM progress_updates WHERE id = $1 RETURNING *',
+            [id]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Progress update not found'
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Progress update deleted successfully'
+        });
+        
+    } catch (error) {
+        console.error('Error deleting update:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to delete update: ' + error.message
+        });
+    }
+});
+
+// API endpoint to send progress update to parent
+app.post('/api/send-update-to-parent/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Get update with student and program details
+        const result = await pool.query(`
+            SELECT pu.*, es.student_name, es.parent_name, es.parent_email, p.name as program_name
+            FROM progress_updates pu
+            JOIN enrolled_students es ON pu.student_id = es.id
+            JOIN programs p ON pu.program_id = p.id
+            WHERE pu.id = $1
+        `, [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Progress update not found'
+            });
+        }
+        
+        const update = result.rows[0];
+        
+        // Get Resend settings
+        const settings = await getSettings();
+        
+        if (!settings.resend_api_key) {
+            return res.status(400).json({
+                success: false,
+                error: 'Resend API key not configured. Please configure in Settings.'
+            });
+        }
+        
+        const { Resend } = require('resend');
+        const resend = new Resend(settings.resend_api_key);
+        
+        // Format date
+        const classDate = new Date(update.class_date).toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        // Create email HTML
+        const emailHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
+                    .header { background: linear-gradient(135deg, #2563eb, #3b82f6); padding: 30px; text-align: center; color: white; }
+                    .content { padding: 30px; background: #f9fafb; }
+                    .section { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                    .section-title { color: #2563eb; font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+                    .section-content { color: #4b5563; margin-bottom: 15px; }
+                    .footer { padding: 20px; text-align: center; color: #6b7280; font-size: 14px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1 style="margin: 0;">✨ Progress Update</h1>
+                    <p style="margin: 10px 0 0 0;">${update.program_name}</p>
+                </div>
+                
+                <div class="content">
+                    <p>Dear ${update.parent_name},</p>
+                    <p>Here's an update on <strong>${update.student_name}</strong>'s progress in class!</p>
+                    
+                    <div class="section">
+                        <div class="section-title">📅 Class Date</div>
+                        <div class="section-content">${classDate}</div>
+                    </div>
+                    
+                    ${update.class_topic ? `
+                        <div class="section">
+                            <div class="section-title">📚 Topic Covered</div>
+                            <div class="section-content">${update.class_topic}</div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="section">
+                        <div class="section-title">💫 Progress</div>
+                        <div class="section-content">${update.student_progress.replace(/\n/g, '<br>')}</div>
+                    </div>
+                    
+                    ${update.skills_learned ? `
+                        <div class="section">
+                            <div class="section-title">🎯 Skills Learned</div>
+                            <div class="section-content">${update.skills_learned.replace(/\n/g, '<br>')}</div>
+                        </div>
+                    ` : ''}
+                    
+                    ${update.instructor_notes ? `
+                        <div class="section">
+                            <div class="section-title">📝 Instructor Notes</div>
+                            <div class="section-content">${update.instructor_notes.replace(/\n/g, '<br>')}</div>
+                        </div>
+                    ` : ''}
+                    
+                    ${update.next_steps ? `
+                        <div class="section">
+                            <div class="section-title">➡️ Next Steps</div>
+                            <div class="section-content">${update.next_steps.replace(/\n/g, '<br>')}</div>
+                        </div>
+                    ` : ''}
+                    
+                    <p>Keep up the great work! If you have any questions, please don't hesitate to reach out.</p>
+                </div>
+                
+                <div class="footer">
+                    <p>EdAI Accelerator Team<br>
+                    Building the next generation of Muslim innovators</p>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        // Send email
+        await resend.emails.send({
+            from: settings.email_from_address || 'EdAI Accelerator <noreply@edaiaccelerator.com>',
+            to: update.parent_email,
+            subject: `Progress Update: ${update.student_name} - ${update.program_name}`,
+            html: emailHtml
+        });
+        
+        // Mark as sent
+        await pool.query(
+            'UPDATE progress_updates SET sent_to_parent = TRUE, sent_at = NOW() WHERE id = $1',
+            [id]
+        );
+        
+        res.status(200).json({
+            success: true,
+            message: `Progress update sent to ${update.parent_email}`
+        });
+        
+    } catch (error) {
+        console.error('Error sending update to parent:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to send update: ' + error.message
         });
     }
 });

@@ -929,6 +929,11 @@
                             <div class="detail-label">Decision Date</div>
                             <div class="detail-value">${applicant.decision_date ? new Date(applicant.decision_date).toLocaleString() : 'N/A'}</div>
                         </div>
+                        <div style="margin-top: 1rem;">
+                            <button class="btn-send-invite" onclick="showEnrollModal(${applicant.id}, '${applicant.teen_name}')" style="background: linear-gradient(135deg, #2563eb, #3b82f6);">
+                                📚 Enroll in Program
+                            </button>
+                        </div>
                     </div>
                 `;
             }
@@ -1291,6 +1296,102 @@
             } catch (error) {
                 console.error('Error:', error);
                 alert('Failed to reject applicant. Please try again.');
+            }
+        }
+        
+        async function showEnrollModal(applicationId, teenName) {
+            try {
+                // Fetch available programs
+                const response = await fetch('/api/get-programs');
+                const data = await response.json();
+                
+                if (!data.success || data.programs.length === 0) {
+                    alert('No programs available. Please create a program first.');
+                    return;
+                }
+                
+                // Filter to active and upcoming programs
+                const availablePrograms = data.programs.filter(p => 
+                    p.status === 'active' || p.status === 'upcoming'
+                );
+                
+                if (availablePrograms.length === 0) {
+                    alert('No active or upcoming programs available.');
+                    return;
+                }
+                
+                // Create program selection HTML
+                const programOptions = availablePrograms.map(p => 
+                    `<option value="${p.id}">${p.name} (${p.program_type})</option>`
+                ).join('');
+                
+                // Create selection dialog
+                const programSelect = document.createElement('div');
+                programSelect.innerHTML = `
+                    <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 500px;">
+                        <h3 style="margin-bottom: 1rem; color: #1f2937;">Enroll ${teenName} in Program</h3>
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Program</label>
+                            <select id="enrollProgramSelect" style="width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem;">
+                                <option value="">Choose a program...</option>
+                                ${programOptions}
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            <button onclick="closeEnrollModal()" style="padding: 0.75rem 1.5rem; background: #f3f4f6; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+                            <button onclick="enrollInProgram(${applicationId})" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Enroll</button>
+                        </div>
+                    </div>
+                `;
+                
+                // Create modal overlay
+                const modal = document.createElement('div');
+                modal.id = 'enrollModal';
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000;';
+                modal.appendChild(programSelect);
+                document.body.appendChild(modal);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load programs.');
+            }
+        }
+        
+        function closeEnrollModal() {
+            const modal = document.getElementById('enrollModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        async function enrollInProgram(applicationId) {
+            const programId = document.getElementById('enrollProgramSelect').value;
+            
+            if (!programId) {
+                alert('Please select a program');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/enroll-from-application', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ applicationId, programId: parseInt(programId) })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Student enrolled successfully!');
+                    closeEnrollModal();
+                    closeModal();
+                    loadApplicants();
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to enroll student. Please try again.');
             }
         }
         

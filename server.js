@@ -521,6 +521,27 @@ app.post('/api/migrate-database', async (req, res) => {
             );
         `);
         
+        // Create enrolled_students table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS enrolled_students (
+                id SERIAL PRIMARY KEY,
+                program_id INTEGER NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+                application_id INTEGER REFERENCES applications(id) ON DELETE SET NULL,
+                student_name VARCHAR(255) NOT NULL,
+                student_age INTEGER,
+                student_grade INTEGER,
+                parent_name VARCHAR(255) NOT NULL,
+                parent_email VARCHAR(255) NOT NULL,
+                parent_phone VARCHAR(50),
+                enrollment_date DATE DEFAULT CURRENT_DATE,
+                enrollment_source VARCHAR(50) DEFAULT 'manual',
+                status VARCHAR(50) DEFAULT 'active',
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+        `);
+        
         // Create settings table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS settings (
@@ -1730,6 +1751,295 @@ app.delete('/api/delete-program/:id', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to delete program: ' + error.message
+        });
+    }
+});
+
+// ============= STUDENT ENROLLMENT API ENDPOINTS =============
+
+// API endpoint to enroll a student manually
+app.post('/api/enroll-student', async (req, res) => {
+    try {
+        const {
+            programId,
+            studentName,
+            studentAge,
+            studentGrade,
+            parentName,
+            parentEmail,
+            parentPhone,
+            notes
+        } = req.body;
+        
+        // Validation
+        if (!programId || !studentName || !parentName || !parentEmail) {
+            return res.status(400).json({
+                success: false,
+                error: 'Program ID, student name, parent name, and parent email are required'
+            });
+        }
+        
+        const result = await pool.query(`
+            INSERT INTO enrolled_students (
+                program_id,
+                student_name,
+                student_age,
+                student_grade,
+                parent_name,
+                parent_email,
+                parent_phone,
+                enrollment_source,
+                notes
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            RETURNING *
+        `, [
+            programId,
+            studentName,
+            studentAge,
+            studentGrade,
+            parentName,
+            parentEmail,
+            parentPhone,
+            'manual',
+            notes
+        ]);
+        
+        res.status(201).json({
+            success: true,
+            message: 'Student enrolled successfully',
+            student: result.rows[0]
+        });
+        
+    } catch (error) {
+        console.error('Error enrolling student:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to enroll student: ' + error.message
+        });
+    }
+});
+
+// API endpoint to enroll student from application
+app.post('/api/enroll-from-application', async (req, res) => {
+    try {
+        const { applicationId, programId } = req.body;
+        
+        if (!applicationId || !programId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Application ID and Program ID are required'
+            });
+        }
+        
+        // Get application details
+        const appResult = await pool.query(
+            'SELECT * FROM applications WHERE id = $1',
+            [applicationId]
+        );
+        
+        if (appResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Application not found'
+            });
+        }
+        
+        const app = appResult.rows[0];
+        
+        // Check if already enrolled
+        const existingResult = await pool.query(
+            'SELECT * FROM enrolled_students WHERE application_id = $1 AND program_id = $2',
+            [applicationId, programId]
+        );
+        
+        if (existingResult.rows.length > 0) {
+            return res.status(409).json({
+                success: false,
+                error: 'Student is already enrolled in this program'
+            });
+        }
+        
+        // Enroll student
+        const result = await pool.query(`
+            INSERT INTO enrolled_students (
+                program_id,
+                application_id,
+                student_name,
+                student_age,
+                student_grade,
+                parent_name,
+                parent_email,
+                parent_phone,
+                enrollment_source
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            RETURNING *
+        `, [
+            programId,
+            applicationId,
+            app.teen_name,
+            app.teen_age,
+            app.teen_grade,
+            app.parent_name,
+            app.parent_email,
+            app.parent_phone,
+            'application'
+        ]);
+        
+        res.status(201).json({
+            success: true,
+            message: 'Student enrolled successfully',
+            student: result.rows[0]
+        });
+        
+    } catch (error) {
+        console.error('Error enrolling from application:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to enroll student: ' + error.message
+        });
+    }
+});
+
+// API endpoint to get all enrolled students
+app.get('/api/get-enrolled-students', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT es.*, p.name as program_name, p.program_type
+            FROM enrolled_students es
+            JOIN programs p ON es.program_id = p.id
+            ORDER BY es.created_at DESC
+        `);
+        
+        res.status(200).json({
+            success: true,
+            count: result.rows.length,
+            students: result.rows
+        });
+        
+    } catch (error) {
+        console.error('Error getting enrolled students:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve enrolled students'
+        });
+    }
+});
+
+// API endpoint to get students for a specific program
+app.get('/api/get-program-students/:programId', async (req, res) => {
+    try {
+        const { programId } = req.params;
+        
+        const result = await pool.query(`
+            SELECT * FROM enrolled_students
+            WHERE program_id = $1
+            ORDER BY student_name ASC
+        `, [programId]);
+        
+        res.status(200).json({
+            success: true,
+            count: result.rows.length,
+            students: result.rows
+        });
+        
+    } catch (error) {
+        console.error('Error getting program students:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve students'
+        });
+    }
+});
+
+// API endpoint to update student
+app.put('/api/update-student/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            studentName,
+            studentAge,
+            studentGrade,
+            parentName,
+            parentEmail,
+            parentPhone,
+            status,
+            notes
+        } = req.body;
+        
+        const result = await pool.query(`
+            UPDATE enrolled_students
+            SET student_name = $1,
+                student_age = $2,
+                student_grade = $3,
+                parent_name = $4,
+                parent_email = $5,
+                parent_phone = $6,
+                status = $7,
+                notes = $8,
+                updated_at = NOW()
+            WHERE id = $9
+            RETURNING *
+        `, [
+            studentName,
+            studentAge,
+            studentGrade,
+            parentName,
+            parentEmail,
+            parentPhone,
+            status,
+            notes,
+            id
+        ]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Student not found'
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Student updated successfully',
+            student: result.rows[0]
+        });
+        
+    } catch (error) {
+        console.error('Error updating student:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update student: ' + error.message
+        });
+    }
+});
+
+// API endpoint to remove student from program
+app.delete('/api/remove-student/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await pool.query(
+            'DELETE FROM enrolled_students WHERE id = $1 RETURNING *',
+            [id]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Student not found'
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Student removed from program successfully'
+        });
+        
+    } catch (error) {
+        console.error('Error removing student:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to remove student: ' + error.message
         });
     }
 });

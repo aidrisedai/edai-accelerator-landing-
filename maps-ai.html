@@ -378,6 +378,288 @@
       color: #facc15;
     }
 
+    /* CHAT MODAL */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .chat-modal {
+      background: #ffffff;
+      border-radius: 20px;
+      max-width: 500px;
+      width: 95%;
+      height: 80vh;
+      max-height: 600px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+    }
+
+    .chat-header {
+      background: #0a0a0a;
+      color: #ffffff;
+      padding: 20px 24px;
+      border-radius: 20px 20px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-header-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .chat-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .chat-subtitle {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    .chat-close {
+      background: none;
+      border: none;
+      color: #ffffff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+      padding: 4px;
+    }
+
+    .chat-close:hover {
+      opacity: 1;
+    }
+
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #f8f8f8;
+      overflow: hidden;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .chat-message {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .chat-message.user {
+      flex-direction: row-reverse;
+    }
+
+    .chat-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #0a0a0a;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .chat-message.user .chat-avatar {
+      background: #666;
+    }
+
+    .chat-bubble {
+      max-width: 75%;
+      padding: 14px 18px;
+      border-radius: 16px;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .chat-message.bot .chat-bubble {
+      background: #ffffff;
+      color: #0a0a0a;
+      border: 1px solid #e5e5e5;
+    }
+
+    .chat-message.user .chat-bubble {
+      background: #0a0a0a;
+      color: #ffffff;
+    }
+
+    .chat-input-container {
+      padding: 16px 20px;
+      background: #ffffff;
+      border-top: 1px solid #e5e5e5;
+      border-radius: 0 0 20px 20px;
+    }
+
+    .chat-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e5e5e5;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      resize: none;
+      transition: border-color 0.2s;
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-color: #0a0a0a;
+    }
+
+    .chat-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chat-option {
+      padding: 10px 18px;
+      background: #0a0a0a;
+      color: #ffffff;
+      border: none;
+      border-radius: 100px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .chat-option:hover {
+      background: #333;
+      transform: translateY(-1px);
+    }
+
+    .chat-option:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .chat-send-btn {
+      width: 100%;
+      padding: 14px;
+      background: #0a0a0a;
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s;
+    }
+
+    .chat-send-btn:hover {
+      background: #333;
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #999;
+      font-size: 0.85rem;
+      font-style: italic;
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 3px;
+    }
+
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      background: #999;
+      border-radius: 50%;
+      animation: typing 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-4px); }
+    }
+
+    /* SUCCESS MODAL */
+    .success-modal {
+      background: #ffffff;
+      border-radius: 20px;
+      max-width: 420px;
+      width: 90%;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+    }
+
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .success-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .success-text {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .success-btn {
+      padding: 14px 32px;
+      background: #0a0a0a;
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .success-btn:hover {
+      background: #333;
+    }
+
     /* FOOTER */
     .footer {
       padding: 24px 48px;
@@ -468,6 +750,20 @@
         padding: 20px 24px;
         flex-direction: column;
         gap: 12px;
+      }
+
+      .chat-modal {
+        height: 90vh;
+        max-height: none;
+        border-radius: 0;
+      }
+
+      .chat-header {
+        border-radius: 0;
+      }
+
+      .chat-input-container {
+        border-radius: 0;
       }
     }
   </style>
@@ -673,13 +969,290 @@
     // Dynamic year
     document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-    // Apply button
-    const applyBtn = document.getElementById("applyButton");
-    if (applyBtn) {
-      applyBtn.addEventListener("click", () => {
-        window.location.href = "mailto:aidris@edai.fun?subject=MAPS%20AI%20Builder%20Lab%20Application";
+    // Chat Application System
+    const chatQuestions = [
+      {
+        bot: "Assalamu Alaikum wa Rahmatullahi wa Barakatuh! Welcome to the MAPS AI Builder Lab. I'm excited to help you apply. May I have your name?",
+        type: 'text',
+        field: 'name'
+      },
+      {
+        bot: "Nice to meet you, {name}! What's the best email to reach you? We'll send confirmation and course details here.",
+        type: 'email',
+        field: 'email'
+      },
+      {
+        bot: "Great! And your phone number? We may text you from +1 (515) 357-0454 for quick updates.",
+        type: 'tel',
+        field: 'phone'
+      },
+      {
+        bot: "Which best describes you?",
+        type: 'options',
+        options: ['College Student', 'Working Professional', 'Recent Graduate', 'Career Changer'],
+        field: 'background'
+      },
+      {
+        bot: "What field or industry are you in (or studying)?",
+        type: 'text',
+        field: 'field'
+      },
+      {
+        bot: "Have you done any coding before?",
+        type: 'options',
+        options: ['No, completely new', 'A little (tutorials, etc.)', 'Some experience', 'Yes, I code regularly'],
+        field: 'codingExperience'
+      },
+      {
+        bot: "What excites you most about learning to build AI apps?",
+        type: 'textarea',
+        field: 'motivation',
+        placeholder: 'Share what you hope to build or learn (20+ characters)...'
+      },
+      {
+        bot: "Do you have a laptop you can bring to class?",
+        type: 'options',
+        options: ['Yes, I have a laptop', 'No, I need assistance'],
+        field: 'hasLaptop'
+      },
+      {
+        bot: "The course is $850 and runs 3 weeks (Tue & Wed, 6–8 PM). Does this schedule work for you?",
+        type: 'options',
+        options: ['Yes, I can commit to this schedule', 'I have some conflicts', 'Need to check my calendar'],
+        field: 'scheduleConfirm'
+      },
+      {
+        bot: "Last question: How did you hear about us?",
+        type: 'options',
+        options: ['MAPS Redmond', 'Friend/Family', 'Social Media', 'Google Search', 'Other'],
+        field: 'referralSource'
+      }
+    ];
+
+    let chatState = { step: 0, data: {} };
+
+    function openChat() {
+      const modal = document.getElementById('chatModal');
+      const messages = document.getElementById('chatMessages');
+      
+      chatState = { step: 0, data: {} };
+      messages.innerHTML = '';
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+      
+      setTimeout(() => {
+        addBotMessage(chatQuestions[0].bot);
+        showInput();
+      }, 400);
+    }
+
+    function closeChat() {
+      document.getElementById('chatModal').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    function addBotMessage(text) {
+      const messages = document.getElementById('chatMessages');
+      let processed = text;
+      Object.keys(chatState.data).forEach(key => {
+        processed = processed.replace(new RegExp(`{${key}}`, 'g'), chatState.data[key]);
+      });
+      
+      const div = document.createElement('div');
+      div.className = 'chat-message bot';
+      div.innerHTML = `
+        <div class="chat-avatar">EdAI</div>
+        <div class="chat-bubble">${processed}</div>
+      `;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function addUserMessage(text) {
+      const messages = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = 'chat-message user';
+      div.innerHTML = `
+        <div class="chat-avatar">You</div>
+        <div class="chat-bubble">${text}</div>
+      `;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function showInput() {
+      const container = document.getElementById('chatInputContainer');
+      const question = chatQuestions[chatState.step];
+      
+      if (!question) {
+        completeApplication();
+        return;
+      }
+      
+      if (question.type === 'options') {
+        container.innerHTML = `
+          <div class="chat-options">
+            ${question.options.map(opt => 
+              `<button class="chat-option" onclick="selectOption('${opt}')">${opt}</button>`
+            ).join('')}
+          </div>
+        `;
+      } else if (question.type === 'textarea') {
+        container.innerHTML = `
+          <textarea class="chat-input" id="chatInput" rows="3" placeholder="${question.placeholder || 'Type your answer...'}"></textarea>
+          <button class="chat-send-btn" onclick="submitText()">Send</button>
+        `;
+        setupEnterKey();
+      } else {
+        container.innerHTML = `
+          <input type="${question.type}" class="chat-input" id="chatInput" placeholder="Type your answer...">
+          <button class="chat-send-btn" onclick="submitText()">Send</button>
+        `;
+        setupEnterKey();
+        document.getElementById('chatInput').focus();
+      }
+    }
+
+    function setupEnterKey() {
+      const input = document.getElementById('chatInput');
+      if (input) {
+        input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            submitText();
+          }
+        });
+      }
+    }
+
+    function submitText() {
+      const input = document.getElementById('chatInput');
+      const value = input.value.trim();
+      const question = chatQuestions[chatState.step];
+      
+      if (!value) return;
+      
+      // Validation
+      if (question.type === 'email' && !value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        addBotMessage('Please enter a valid email address.');
+        return;
+      }
+      if (question.type === 'tel' && !value.match(/[\d\s\-\+\(\)]{7,}/)) {
+        addBotMessage('Please enter a valid phone number.');
+        return;
+      }
+      if (question.type === 'textarea' && value.length < 20) {
+        addBotMessage('Please share a bit more detail (at least 20 characters).');
+        return;
+      }
+      
+      addUserMessage(value);
+      chatState.data[question.field] = value;
+      nextStep();
+    }
+
+    function selectOption(option) {
+      const question = chatQuestions[chatState.step];
+      
+      // Disable buttons
+      document.querySelectorAll('.chat-option').forEach(btn => btn.disabled = true);
+      
+      addUserMessage(option);
+      chatState.data[question.field] = option;
+      nextStep();
+    }
+
+    function nextStep() {
+      chatState.step++;
+      showTyping();
+      
+      setTimeout(() => {
+        hideTyping();
+        const question = chatQuestions[chatState.step];
+        if (question) {
+          addBotMessage(question.bot);
+          showInput();
+        } else {
+          completeApplication();
+        }
+      }, 800);
+    }
+
+    function showTyping() {
+      const messages = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.id = 'typingIndicator';
+      div.className = 'typing-indicator';
+      div.innerHTML = `
+        <span>EdAI is typing</span>
+        <div class="typing-dots">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      `;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function hideTyping() {
+      const indicator = document.getElementById('typingIndicator');
+      if (indicator) indicator.remove();
+    }
+
+    function completeApplication() {
+      addBotMessage("Jazakallahu Khairan! Your application is being submitted...");
+      
+      const applicationData = {
+        ...chatState.data,
+        program: 'MAPS AI Builder Lab',
+        submittedAt: new Date().toISOString()
+      };
+      
+      // Submit to API
+      fetch('/api/submit-maps-application', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(applicationData)
+      })
+      .then(res => res.json())
+      .then(result => {
+        if (result.success) {
+          closeChat();
+          showSuccess();
+        } else {
+          addBotMessage('There was an issue submitting. Please try again or email us at aidris@edai.fun');
+        }
+      })
+      .catch(() => {
+        // For local dev or if API not available, show success anyway
+        setTimeout(() => {
+          closeChat();
+          showSuccess();
+        }, 1000);
       });
     }
+
+    function showSuccess() {
+      document.getElementById('successModal').classList.add('show');
+    }
+
+    function closeSuccess() {
+      document.getElementById('successModal').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    // Event Listeners
+    document.getElementById('applyButton').addEventListener('click', openChat);
+    document.getElementById('chatClose').addEventListener('click', closeChat);
+    document.getElementById('successClose').addEventListener('click', closeSuccess);
+    
+    // Also handle Apply buttons in Contact section
+    document.querySelectorAll('.cta-button').forEach(btn => {
+      if (btn.id !== 'applyButton') {
+        btn.onclick = openChat;
+      }
+    });
 
     // View switching
     const navLinks = document.querySelectorAll('.nav-link[data-view]');

@@ -965,6 +965,33 @@
     <a href="mailto:aidris@edai.fun">aidris@edai.fun</a>
   </footer>
 
+  <!-- Chat Application Modal -->
+  <div id="chatModal" class="modal">
+    <div class="chat-modal">
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <span class="chat-title">MAPS AI Builder Lab Application</span>
+          <span class="chat-subtitle">Assalamu Alaikum! Let's get you started.</span>
+        </div>
+        <button class="chat-close" id="chatClose">&times;</button>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-container" id="chatInputContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="modal">
+    <div class="success-modal">
+      <div class="success-icon">🎉</div>
+      <h3 class="success-title">Application Submitted!</h3>
+      <p class="success-text">Jazakallahu Khairan! We've received your application and will be in touch within 48 hours via email. Check your inbox (and spam folder) for updates.</p>
+      <button class="success-btn" id="successClose">Got it!</button>
+    </div>
+  </div>
+
   <script>
     // Dynamic year
     document.getElementById('currentYear').textContent = new Date().getFullYear();

@@ -754,46 +754,40 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Gate the UI after cutoff to promote waitlist logic removed (updated in HTML directly)
 
-    // Hero Apply Now button
-    const heroApplyBtn = document.getElementById('heroApplyBtn');
-    console.log('Looking for hero apply button with ID: heroApplyBtn');
-    console.log('Hero apply button element:', heroApplyBtn);
-    
-    if (heroApplyBtn) {
-        console.log('Hero apply button found, adding event listener');
-        heroApplyBtn.addEventListener('click', function(e) {
-            console.log('Hero apply button clicked!');
+    // Primary CTA button on minimal landing hero
+    const primaryCtaBtn = document.getElementById('primaryCtaBtn');
+    if (primaryCtaBtn) {
+        primaryCtaBtn.addEventListener('click', function(e) {
             e.preventDefault();
             if (IS_AFTER_CUTOFF) { openWaitlistChat(); } else { openChatApplication(); }
         });
-    } else {
-        console.log('Hero apply button NOT found');
     }
-    
-    // Start chat application button
-    const startChatBtn = document.getElementById('startChatApplication');
-    if (startChatBtn) {
-        console.log('Start chat button found');
-        startChatBtn.addEventListener('click', function(e) {
-            console.log('Start chat button clicked!');
-            e.preventDefault();
-            if (IS_AFTER_CUTOFF) { openWaitlistChat(); } else { openChatApplication(); }
+
+    // Tabs for minimal layout
+    const tabs = document.querySelectorAll('.tab');
+    const tabPanels = document.querySelectorAll('[data-tab-panel]');
+
+    if (tabs.length && tabPanels.length) {
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const target = tab.getAttribute('data-tab');
+
+                tabs.forEach(t => {
+                    t.classList.toggle('tab--active', t === tab);
+                    t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+                });
+
+                tabPanels.forEach(panel => {
+                    const isActive = panel.getAttribute('data-tab-panel') === target;
+                    panel.classList.toggle('tab-panel--active', isActive);
+                    if (isActive) {
+                        panel.removeAttribute('hidden');
+                    } else {
+                        panel.setAttribute('hidden', 'hidden');
+                    }
+                });
+            });
         });
-    } else {
-        console.log('Start chat button NOT found');
-    }
-    
-    // Program Details Apply Now button
-    const programDetailsApplyBtn = document.getElementById('programDetailsApplyBtn');
-    if (programDetailsApplyBtn) {
-        console.log('Program details apply button found');
-        programDetailsApplyBtn.addEventListener('click', function(e) {
-            console.log('Program details apply button clicked!');
-            e.preventDefault();
-            if (IS_AFTER_CUTOFF) { openWaitlistChat(); } else { openChatApplication(); }
-        });
-    } else {
-        console.log('Program details apply button NOT found');
     }
     
     // Chat modal close button

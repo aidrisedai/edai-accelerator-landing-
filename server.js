@@ -55,6 +55,11 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Adult MAPS AI builder lab landing page
+app.get('/maps-ai', (req, res) => {
+    res.sendFile(path.join(__dirname, 'maps-ai.html'));
+});
+
 // Serve admin page
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));

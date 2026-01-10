@@ -490,6 +490,115 @@ app.post('/api/submit-application', async (req, res) => {
     }
 });
 
+// Store OTPs temporarily (in production, use Redis or database)
+const mapsOtpStore = new Map();
+
+// API endpoint to send OTP for email verification
+app.post('/api/send-maps-otp', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ success: false, error: 'Email is required' });
+        }
+        
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Store OTP with 10-minute expiry
+        mapsOtpStore.set(email.trim().toLowerCase(), {
+            otp,
+            expires: Date.now() + 10 * 60 * 1000 // 10 minutes
+        });
+        
+        // Send OTP via email
+        const settings = await getSettings();
+        const { Resend } = require('resend');
+        const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
+        
+        await resend.emails.send({
+            from: settings.email_from_address || 'EdAI <noreply@edaiaccelerator.com>',
+            to: email.trim().toLowerCase(),
+            subject: 'Verify Your Email - MAPS AI Builder Lab',
+            html: `
+                <div style="font-family: 'Outfit', sans-serif; max-width: 500px; margin: 0 auto; padding: 40px 20px;">
+                    <h2 style="color: #0a0a0a; margin-bottom: 20px;">Email Verification</h2>
+                    <p style="color: #666; margin-bottom: 30px;">Enter this code in the application form to verify your email:</p>
+                    <div style="background: #f8f8f8; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+                        <span style="font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #0a0a0a;">${otp}</span>
+                    </div>
+                    <p style="color: #999; font-size: 14px;">This code expires in 10 minutes.</p>
+                    <p style="color: #999; font-size: 14px;">If you didn't request this, please ignore this email.</p>
+                </div>
+            `
+        });
+        
+        console.log(`OTP sent to ${email}`);
+        
+        res.status(200).json({
+            success: true,
+            message: 'Verification code sent to your email'
+        });
+        
+    } catch (error) {
+        console.error('Error sending OTP:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to send verification code. Please try again.'
+        });
+    }
+});
+
+// API endpoint to verify OTP
+app.post('/api/verify-maps-otp', async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        
+        if (!email || !otp) {
+            return res.status(400).json({ success: false, error: 'Email and OTP are required' });
+        }
+        
+        const stored = mapsOtpStore.get(email.trim().toLowerCase());
+        
+        if (!stored) {
+            return res.status(400).json({
+                success: false,
+                error: 'No verification code found. Please request a new one.'
+            });
+        }
+        
+        if (Date.now() > stored.expires) {
+            mapsOtpStore.delete(email.trim().toLowerCase());
+            return res.status(400).json({
+                success: false,
+                error: 'Verification code expired. Please request a new one.'
+            });
+        }
+        
+        if (stored.otp !== otp.trim()) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid verification code. Please try again.'
+            });
+        }
+        
+        // OTP verified - remove from store
+        mapsOtpStore.delete(email.trim().toLowerCase());
+        
+        res.status(200).json({
+            success: true,
+            message: 'Email verified successfully'
+        });
+        
+    } catch (error) {
+        console.error('Error verifying OTP:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Verification failed. Please try again.'
+        });
+    }
+});
+
 // API endpoint for MAPS AI Builder Lab applications (adults)
 app.post('/api/submit-maps-application', async (req, res) => {
     try {
@@ -568,6 +677,76 @@ app.post('/api/submit-maps-application', async (req, res) => {
         ]);
 
         console.log('MAPS application inserted:', result.rows[0]);
+        
+        // Send confirmation email
+        try {
+            const settings = await getSettings();
+            const { Resend } = require('resend');
+            const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
+            
+            await resend.emails.send({
+                from: settings.email_from_address || 'EdAI <noreply@edaiaccelerator.com>',
+                to: email.trim().toLowerCase(),
+                subject: 'Application Received - MAPS AI Builder Lab',
+                html: `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body { font-family: 'Outfit', -apple-system, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
+                            .header { background: #0a0a0a; color: white; padding: 40px 30px; text-align: center; }
+                            .content { background: #f9f9f9; padding: 40px 30px; }
+                            .info-box { background: white; padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #0a0a0a; }
+                            .footer { padding: 20px; text-align: center; color: #999; font-size: 14px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1 style="margin: 0; font-size: 24px;">🎉 Application Received!</h1>
+                            <p style="margin: 10px 0 0 0; opacity: 0.9;">MAPS AI Builder Lab</p>
+                        </div>
+                        <div class="content">
+                            <p><strong>Assalamu Alaikum ${name.trim()},</strong></p>
+                            <p>Jazakallahu Khairan for applying to the MAPS AI Builder Lab! We're excited about your interest in learning to build AI-powered applications.</p>
+                            
+                            <div class="info-box">
+                                <p style="margin: 0;"><strong>📧 Application ID:</strong> #${result.rows[0].id}</p>
+                                <p style="margin: 10px 0 0 0;"><strong>📅 Submitted:</strong> ${new Date(result.rows[0].submitted_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                            </div>
+                            
+                            <h3>📋 What Happens Next?</h3>
+                            <ul>
+                                <li><strong>Review:</strong> We'll review your application within 2-3 business days</li>
+                                <li><strong>Follow-up:</strong> You'll receive an email or call from us at +1 (515) 357-0454</li>
+                                <li><strong>Program Details:</strong> We'll share schedule, payment info, and preparation materials</li>
+                            </ul>
+                            
+                            <h3>📍 Program Details</h3>
+                            <ul>
+                                <li><strong>Duration:</strong> 3 weeks (Tue & Wed evenings)</li>
+                                <li><strong>Time:</strong> 6–8 PM</li>
+                                <li><strong>Location:</strong> MAPS Redmond, WA</li>
+                                <li><strong>Investment:</strong> $850</li>
+                            </ul>
+                            
+                            <p>Questions? Reply to this email or contact us at <a href="mailto:aidris@edai.fun" style="color: #0a0a0a;">aidris@edai.fun</a> or call/text <a href="tel:+15153570454" style="color: #0a0a0a;">+1 (515) 357-0454</a>.</p>
+                            
+                            <p style="margin-top: 30px;">Looking forward to building with you!</p>
+                            <p><strong>— The EdAI Team</strong></p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${new Date().getFullYear()} EdAI · MAPS Redmond, WA</p>
+                        </div>
+                    </body>
+                    </html>
+                `
+            });
+            
+            console.log(`Confirmation email sent to ${email}`);
+        } catch (emailError) {
+            console.error('Failed to send confirmation email:', emailError);
+            // Don't fail the application if email fails
+        }
 
         res.status(200).json({
             success: true,
@@ -610,6 +789,45 @@ app.get('/api/get-maps-applications', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to fetch applications'
+        });
+    }
+});
+
+// API endpoint to update MAPS application status
+app.post('/api/update-maps-status', async (req, res) => {
+    try {
+        const { applicationId, status } = req.body;
+        
+        if (!applicationId || !status) {
+            return res.status(400).json({
+                success: false,
+                error: 'Application ID and status are required'
+            });
+        }
+        
+        const validStatuses = ['pending', 'reviewed', 'accepted', 'rejected', 'enrolled'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid status'
+            });
+        }
+        
+        await pool.query(
+            'UPDATE maps_applications SET application_status = $1, updated_at = NOW() WHERE id = $2',
+            [status, applicationId]
+        );
+        
+        res.status(200).json({
+            success: true,
+            message: 'Status updated successfully'
+        });
+        
+    } catch (error) {
+        console.error('Error updating MAPS status:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update status'
         });
     }
 });

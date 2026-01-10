@@ -586,6 +586,52 @@
       background: #333;
     }
 
+    /* OTP Verification Styles */
+    .otp-input-wrapper {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .otp-input-wrapper .chat-input {
+      flex: 1;
+      letter-spacing: 6px;
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .otp-input-wrapper .chat-send-btn {
+      width: auto;
+      margin-top: 0;
+      padding: 14px 24px;
+    }
+
+    .resend-otp-btn {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      background: transparent;
+      color: #666;
+      border: none;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .resend-otp-btn:hover {
+      color: #0a0a0a;
+      text-decoration: underline;
+    }
+
+    .sending-otp {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+      font-style: italic;
+    }
+
     .typing-indicator {
       display: flex;
       align-items: center;
@@ -1113,7 +1159,13 @@
       {
         bot: "Nice to meet you, {name}! What's the best email to reach you? We'll send confirmation and course details here.",
         type: 'email',
-        field: 'email'
+        field: 'email',
+        requiresOTP: true
+      },
+      {
+        bot: "I've sent a 6-digit verification code to {email}. Please enter it below to verify your email.",
+        type: 'otp',
+        field: 'emailVerified'
       },
       {
         bot: "Great! And your phone number? We may text you from +1 (515) 357-0454 for quick updates.",
@@ -1163,7 +1215,7 @@
       }
     ];
 
-    let chatState = { step: 0, data: {} };
+    let chatState = { step: 0, data: {}, emailVerified: false, otpSending: false };
 
     function openChat() {
       console.log('openChat called');
@@ -1179,7 +1231,7 @@
         return;
       }
       
-      chatState = { step: 0, data: {} };
+      chatState = { step: 0, data: {}, emailVerified: false, otpSending: false };
       messages.innerHTML = '';
       modal.classList.add('show');
       document.body.style.overflow = 'hidden';
@@ -1256,6 +1308,17 @@
           <button class="chat-send-btn" onclick="submitText()">Send</button>
         `;
         setupEnterKey();
+      } else if (question.type === 'otp') {
+        container.innerHTML = `
+          <div class="otp-input-wrapper">
+            <input type="text" class="chat-input otp-input" id="chatInput" placeholder="Enter 6-digit code" maxlength="6" inputmode="numeric" pattern="[0-9]*">
+            <button class="chat-send-btn" onclick="verifyOTP()">Verify</button>
+          </div>
+          <button class="resend-otp-btn" onclick="resendOTP()">Didn't receive it? Resend code</button>
+        `;
+        setupEnterKey('verifyOTP');
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput) chatInput.focus();
       } else {
         container.innerHTML = `
           <input type="${question.type}" class="chat-input" id="chatInput" placeholder="Type your answer...">
@@ -1267,13 +1330,17 @@
       }
     }
 
-    function setupEnterKey() {
+    function setupEnterKey(action = 'submitText') {
       const input = document.getElementById('chatInput');
       if (input) {
         input.addEventListener('keypress', (e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            submitText();
+            if (action === 'verifyOTP') {
+              verifyOTP();
+            } else {
+              submitText();
+            }
           }
         });
       }
@@ -1304,7 +1371,13 @@
       
       addUserMessage(value);
       chatState.data[question.field] = value;
-      nextStep();
+      
+      // If this question requires OTP, send it before moving to next step
+      if (question.requiresOTP) {
+        sendOTP(value);
+      } else {
+        nextStep();
+      }
     }
 
     function selectOption(option) {
@@ -1333,6 +1406,121 @@
           completeApplication();
         }
       }, 800);
+    }
+
+    // OTP Functions
+    async function sendOTP(email) {
+      if (chatState.otpSending) return;
+      chatState.otpSending = true;
+      
+      showTyping();
+      const container = document.getElementById('chatInputContainer');
+      if (container) container.innerHTML = '<div class="sending-otp">Sending verification code...</div>';
+      
+      try {
+        const response = await fetch('/api/send-maps-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        
+        const result = await response.json();
+        hideTyping();
+        chatState.otpSending = false;
+        
+        if (result.success) {
+          nextStep();
+        } else {
+          addBotMessage('Sorry, I couldn\'t send the verification code. ' + (result.error || 'Please check your email and try again.'));
+          // Go back to email step
+          chatState.step--;
+          showInput();
+        }
+      } catch (error) {
+        hideTyping();
+        chatState.otpSending = false;
+        console.error('OTP send error:', error);
+        addBotMessage('Network error sending verification code. Please try again.');
+        chatState.step--;
+        showInput();
+      }
+    }
+
+    async function verifyOTP() {
+      const input = document.getElementById('chatInput');
+      if (!input) return;
+      
+      const otp = input.value.trim();
+      if (!otp || otp.length !== 6) {
+        addBotMessage('Please enter the 6-digit code from your email.');
+        return;
+      }
+      
+      addUserMessage(otp);
+      showTyping();
+      
+      const container = document.getElementById('chatInputContainer');
+      if (container) container.innerHTML = '<div class="sending-otp">Verifying...</div>';
+      
+      try {
+        const response = await fetch('/api/verify-maps-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: chatState.data.email, otp })
+        });
+        
+        const result = await response.json();
+        hideTyping();
+        
+        if (result.success) {
+          chatState.emailVerified = true;
+          chatState.data.emailVerified = true;
+          addBotMessage('✓ Email verified successfully!');
+          setTimeout(() => nextStep(), 500);
+        } else {
+          addBotMessage(result.error || 'Invalid code. Please try again.');
+          showInput();
+        }
+      } catch (error) {
+        hideTyping();
+        console.error('OTP verify error:', error);
+        addBotMessage('Network error. Please try again.');
+        showInput();
+      }
+    }
+
+    async function resendOTP() {
+      if (chatState.otpSending) return;
+      
+      const email = chatState.data.email;
+      if (!email) {
+        addBotMessage('Email not found. Please start over.');
+        return;
+      }
+      
+      chatState.otpSending = true;
+      addBotMessage('Sending a new code...');
+      
+      try {
+        const response = await fetch('/api/send-maps-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        
+        const result = await response.json();
+        chatState.otpSending = false;
+        
+        if (result.success) {
+          addBotMessage('New verification code sent! Check your email (and spam folder).');
+        } else {
+          addBotMessage('Couldn\'t resend code. ' + (result.error || 'Please try again.'));
+        }
+      } catch (error) {
+        chatState.otpSending = false;
+        console.error('OTP resend error:', error);
+        addBotMessage('Network error. Please try again.');
+      }
     }
 
     function showTyping() {

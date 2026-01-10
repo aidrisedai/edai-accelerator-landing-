@@ -534,7 +534,89 @@
             color: #3730a3;
         }
         
+        /* Tab Styles */
+        .dashboard-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+        
+        .tab-btn.active {
+            background: #f3f4f6;
+            color: #2563eb;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* MAPS Application Status Badges */
+        .status-reviewed {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-accepted {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-rejected {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .status-enrolled {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+        
+        /* Status Dropdown */
+        .status-select {
+            padding: 0.375rem 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: white;
+        }
+
         @media (max-width: 768px) {
+            .dashboard-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab-btn {
+                flex: 1;
+                min-width: 140px;
+                font-size: 0.85rem;
+                padding: 0.6rem 1rem;
+            }
+            
             .dashboard-header-content {
                 flex-direction: column;
                 gap: 1rem;
@@ -595,9 +677,16 @@
                     <button class="btn-logout" onclick="logout()">Logout</button>
                 </div>
             </div>
+            <!-- Tab Navigation -->
+            <div class="dashboard-tabs">
+                <button class="tab-btn active" onclick="switchTab('teen')" id="teenTabBtn">🎓 Teen Program</button>
+                <button class="tab-btn" onclick="switchTab('maps')" id="mapsTabBtn">🧑‍💻 MAPS AI Builder Lab</button>
+            </div>
         </div>
         
         <div class="dashboard-content">
+            <!-- Teen Program Tab -->
+            <div id="teenTab" class="tab-content active">
             <!-- Stats -->
             <div class="stats-grid">
                 <div class="stat-card">
@@ -671,6 +760,70 @@
                 
                 <div id="tableContent">
                     <div class="loading">Loading applicants...</div>
+                </div>
+            </div>
+            </div>
+            
+            <!-- MAPS AI Builder Lab Tab -->
+            <div id="mapsTab" class="tab-content">
+                <!-- MAPS Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total MAPS Applications</div>
+                        <div class="stat-value" id="mapsTotalCount">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Pending Review</div>
+                        <div class="stat-value" id="mapsPendingCount">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Accepted</div>
+                        <div class="stat-value" id="mapsAcceptedCount">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">This Week</div>
+                        <div class="stat-value" id="mapsWeekCount">-</div>
+                    </div>
+                </div>
+                
+                <!-- MAPS Filters -->
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Status</label>
+                        <select id="mapsFilterStatus" onchange="loadMapsApplicants()">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="reviewed">Reviewed</option>
+                            <option value="accepted">Accepted</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="enrolled">Enrolled</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Background</label>
+                        <select id="mapsFilterBackground" onchange="loadMapsApplicants()">
+                            <option value="">All Backgrounds</option>
+                            <option value="College Student">College Student</option>
+                            <option value="Working Professional">Working Professional</option>
+                            <option value="Recent Graduate">Recent Graduate</option>
+                            <option value="Career Changer">Career Changer</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <input type="text" id="mapsFilterSearch" placeholder="Name, email, field..." oninput="loadMapsApplicants()">
+                    </div>
+                </div>
+                
+                <!-- MAPS Applicants Table -->
+                <div class="applicants-table">
+                    <div class="table-header">
+                        <h2>MAPS AI Builder Lab Applications</h2>
+                    </div>
+                    
+                    <div id="mapsTableContent">
+                        <div class="loading">Loading MAPS applicants...</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1405,6 +1558,248 @@
                 closeModal();
             }
         });
+        
+        // ========================================
+        // MAPS AI Builder Lab Functions
+        // ========================================
+        
+        let currentTab = 'teen';
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`${tab}TabBtn`).classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${tab}Tab`).classList.add('active');
+            
+            // Load data for the tab
+            if (tab === 'maps') {
+                loadMapsApplicants();
+            } else {
+                loadApplicants();
+            }
+        }
+        
+        async function loadMapsApplicants() {
+            try {
+                const response = await fetch('/api/get-maps-applications');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateMapsStats(data.applications);
+                    displayMapsApplicants(filterMapsApplicants(data.applications));
+                } else {
+                    document.getElementById('mapsTableContent').innerHTML = 
+                        `<div class="empty-state">Error loading applicants: ${data.error}</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('mapsTableContent').innerHTML = 
+                    '<div class="empty-state">Failed to load MAPS applicants. Please refresh the page.</div>';
+            }
+        }
+        
+        function filterMapsApplicants(applications) {
+            const status = document.getElementById('mapsFilterStatus').value;
+            const background = document.getElementById('mapsFilterBackground').value;
+            const search = document.getElementById('mapsFilterSearch').value.toLowerCase();
+            
+            return applications.filter(app => {
+                if (status && app.status !== status) return false;
+                if (background && app.background !== background) return false;
+                if (search && 
+                    !app.name.toLowerCase().includes(search) && 
+                    !app.email.toLowerCase().includes(search) &&
+                    !(app.field && app.field.toLowerCase().includes(search))) return false;
+                return true;
+            });
+        }
+        
+        function updateMapsStats(applications) {
+            const total = applications.length;
+            const pending = applications.filter(a => a.status === 'pending').length;
+            const accepted = applications.filter(a => a.status === 'accepted').length;
+            
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const thisWeek = applications.filter(a => new Date(a.submitted_at) > oneWeekAgo).length;
+            
+            document.getElementById('mapsTotalCount').textContent = total;
+            document.getElementById('mapsPendingCount').textContent = pending;
+            document.getElementById('mapsAcceptedCount').textContent = accepted;
+            document.getElementById('mapsWeekCount').textContent = thisWeek;
+        }
+        
+        function displayMapsApplicants(applications) {
+            const tableContent = document.getElementById('mapsTableContent');
+            
+            if (applications.length === 0) {
+                tableContent.innerHTML = '<div class="empty-state">No MAPS applicants found.</div>';
+                return;
+            }
+            
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Background</th>
+                            <th>Field</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${applications.map(app => `
+                            <tr>
+                                <td>${new Date(app.submitted_at).toLocaleDateString()}</td>
+                                <td>${app.name}</td>
+                                <td>${app.email}</td>
+                                <td>${app.background || '-'}</td>
+                                <td>${app.field || '-'}</td>
+                                <td>
+                                    <select class="status-select status-${app.status}" onchange="updateMapsStatus(${app.id}, this.value)">
+                                        <option value="pending" ${app.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="reviewed" ${app.status === 'reviewed' ? 'selected' : ''}>Reviewed</option>
+                                        <option value="accepted" ${app.status === 'accepted' ? 'selected' : ''}>Accepted</option>
+                                        <option value="rejected" ${app.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                                        <option value="enrolled" ${app.status === 'enrolled' ? 'selected' : ''}>Enrolled</option>
+                                    </select>
+                                </td>
+                                <td><button class="btn-view" onclick='viewMapsApplicant(${JSON.stringify(app).replace(/'/g, "&#39;")})'>View</button></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            tableContent.innerHTML = html;
+        }
+        
+        async function updateMapsStatus(applicationId, status) {
+            try {
+                const response = await fetch('/api/update-maps-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ applicationId, status })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    loadMapsApplicants(); // Refresh to update stats and styling
+                } else {
+                    alert(`Error: ${data.error}`);
+                    loadMapsApplicants(); // Refresh to reset dropdown
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to update status. Please try again.');
+                loadMapsApplicants();
+            }
+        }
+        
+        function viewMapsApplicant(applicant) {
+            document.getElementById('modalTitle').textContent = `${applicant.name} - MAPS Application`;
+            
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="detail-section">
+                    <h3>Contact Information</h3>
+                    <div class="detail-row">
+                        <div class="detail-label">Name</div>
+                        <div class="detail-value">${applicant.name}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Email</div>
+                        <div class="detail-value"><a href="mailto:${applicant.email}">${applicant.email}</a></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Phone</div>
+                        <div class="detail-value"><a href="tel:${applicant.phone}">${applicant.phone}</a></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Email Verified</div>
+                        <div class="detail-value">${applicant.email_verified ? '✅ Yes' : '❌ No'}</div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h3>Background</h3>
+                    <div class="detail-row">
+                        <div class="detail-label">Type</div>
+                        <div class="detail-value">${applicant.background || '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Field/Industry</div>
+                        <div class="detail-value">${applicant.field || '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Coding Experience</div>
+                        <div class="detail-value">${applicant.coding_experience || '-'}</div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h3>Motivation</h3>
+                    <div class="detail-row">
+                        <div class="detail-label">Why AI?</div>
+                        <div class="detail-value" style="white-space: pre-wrap;">${applicant.motivation || '-'}</div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h3>Logistics</h3>
+                    <div class="detail-row">
+                        <div class="detail-label">Has Laptop</div>
+                        <div class="detail-value">${applicant.has_laptop || '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Schedule Confirmation</div>
+                        <div class="detail-value">${applicant.schedule_confirm || '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Referral Source</div>
+                        <div class="detail-value">${applicant.referral_source || '-'}</div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h3>Application Status</h3>
+                    <div class="detail-row">
+                        <div class="detail-label">Current Status</div>
+                        <div class="detail-value"><span class="status-badge status-${applicant.status}">${applicant.status}</span></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Submitted</div>
+                        <div class="detail-value">${new Date(applicant.submitted_at).toLocaleString()}</div>
+                    </div>
+                    ${applicant.updated_at ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Last Updated</div>
+                            <div class="detail-value">${new Date(applicant.updated_at).toLocaleString()}</div>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="detail-section" style="background: #f0f9ff; padding: 1.5rem; border-radius: 12px;">
+                    <h3>Quick Actions</h3>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+                        <button class="btn-send-invite" onclick="updateMapsStatus(${applicant.id}, 'accepted'); closeModal();" style="background: linear-gradient(135deg, #10b981, #34d399);">✅ Accept</button>
+                        <button class="btn-send-invite" onclick="updateMapsStatus(${applicant.id}, 'rejected'); closeModal();" style="background: linear-gradient(135deg, #ef4444, #f87171);">❌ Reject</button>
+                        <button class="btn-send-invite" onclick="updateMapsStatus(${applicant.id}, 'enrolled'); closeModal();" style="background: linear-gradient(135deg, #6366f1, #818cf8);">📚 Mark Enrolled</button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('applicantModal').classList.add('active');
+        }
     </script>
 </body>
 </html>

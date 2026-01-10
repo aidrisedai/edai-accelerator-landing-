@@ -1059,8 +1059,18 @@
     let chatState = { step: 0, data: {} };
 
     function openChat() {
+      console.log('openChat called');
       const modal = document.getElementById('chatModal');
       const messages = document.getElementById('chatMessages');
+      
+      console.log('Modal found:', !!modal);
+      console.log('Messages found:', !!messages);
+      
+      if (!modal || !messages) {
+        console.error('Chat elements not found!');
+        alert('Application form is loading. Please try again in a moment.');
+        return;
+      }
       
       chatState = { step: 0, data: {} };
       messages.innerHTML = '';
@@ -1074,12 +1084,17 @@
     }
 
     function closeChat() {
-      document.getElementById('chatModal').classList.remove('show');
-      document.body.style.overflow = '';
+      const modal = document.getElementById('chatModal');
+      if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+      }
     }
 
     function addBotMessage(text) {
       const messages = document.getElementById('chatMessages');
+      if (!messages) return;
+      
       let processed = text;
       Object.keys(chatState.data).forEach(key => {
         processed = processed.replace(new RegExp(`{${key}}`, 'g'), chatState.data[key]);
@@ -1097,6 +1112,8 @@
 
     function addUserMessage(text) {
       const messages = document.getElementById('chatMessages');
+      if (!messages) return;
+      
       const div = document.createElement('div');
       div.className = 'chat-message user';
       div.innerHTML = `
@@ -1109,6 +1126,8 @@
 
     function showInput() {
       const container = document.getElementById('chatInputContainer');
+      if (!container) return;
+      
       const question = chatQuestions[chatState.step];
       
       if (!question) {
@@ -1136,7 +1155,8 @@
           <button class="chat-send-btn" onclick="submitText()">Send</button>
         `;
         setupEnterKey();
-        document.getElementById('chatInput').focus();
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput) chatInput.focus();
       }
     }
 
@@ -1154,6 +1174,8 @@
 
     function submitText() {
       const input = document.getElementById('chatInput');
+      if (!input) return;
+      
       const value = input.value.trim();
       const question = chatQuestions[chatState.step];
       
@@ -1180,6 +1202,7 @@
 
     function selectOption(option) {
       const question = chatQuestions[chatState.step];
+      if (!question) return;
       
       // Disable buttons
       document.querySelectorAll('.chat-option').forEach(btn => btn.disabled = true);
@@ -1207,6 +1230,8 @@
 
     function showTyping() {
       const messages = document.getElementById('chatMessages');
+      if (!messages) return;
+      
       const div = document.createElement('div');
       div.id = 'typingIndicator';
       div.className = 'typing-indicator';
@@ -1261,12 +1286,16 @@
     }
 
     function showSuccess() {
-      document.getElementById('successModal').classList.add('show');
+      const modal = document.getElementById('successModal');
+      if (modal) modal.classList.add('show');
     }
 
     function closeSuccess() {
-      document.getElementById('successModal').classList.remove('show');
-      document.body.style.overflow = '';
+      const modal = document.getElementById('successModal');
+      if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+      }
     }
 
     // Initialize when DOM is ready

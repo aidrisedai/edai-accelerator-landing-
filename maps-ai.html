@@ -6,7 +6,7 @@
   <title>EdAI · MAPS AI Builder Lab</title>
   <meta
     name="description"
-    content="EdAI · MAPS AI Builder Lab — an ambient, cinematic space to explore what you could build with AI next."
+    content="Build meaningful AI products at EdAI's MAPS AI Builder Lab in Redmond."
   />
 
   <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
@@ -15,24 +15,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap"
     rel="stylesheet"
   />
 
   <style>
-    :root {
-      --bg-deep: #020617;
-      --bg-soft: #020817;
-      --accent: #f97316;
-      --accent-soft: #fed7aa;
-      --accent-secondary: #38bdf8;
-      --text-main: #f9fafb;
-      --text-muted: #9ca3af;
-      --radius-xl: 32px;
-      --radius-lg: 20px;
-      --shadow-soft: 0 40px 120px rgba(15, 23, 42, 0.9);
-    }
-
     * {
       box-sizing: border-box;
       margin: 0;
@@ -40,71 +27,13 @@
     }
 
     body {
-      font-family: "Outfit", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background:
-        radial-gradient(circle at 0% 0%, rgba(248, 250, 252, 0.08) 0, transparent 50%),
-        radial-gradient(circle at 100% 100%, rgba(6, 95, 70, 0.32) 0, transparent 60%),
-        radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.32) 0, transparent 55%),
-        var(--bg-deep);
-      color: var(--text-main);
+      font-family: "Outfit", system-ui, -apple-system, sans-serif;
+      background: #ffffff;
+      color: #0a0a0a;
       min-height: 100vh;
       display: flex;
-      justify-content: center;
-      align-items: stretch;
-      padding: 24px;
-      overflow: hidden;
-    }
-
-    .page {
-      width: 100%;
-      max-width: 1180px;
-      border-radius: var(--radius-xl);
-      background: radial-gradient(circle at 0 0, rgba(15, 23, 42, 0.85), transparent 65%),
-        radial-gradient(circle at 100% 100%, rgba(8, 47, 73, 0.9), transparent 65%),
-        linear-gradient(135deg, #020617, #020617);
-      box-shadow: var(--shadow-soft);
-      position: relative;
-      overflow: hidden;
-      padding: 22px 26px 26px;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      gap: 16px;
-      isolation: isolate;
-    }
-
-    .page::before,
-    .page::after {
-      content: "";
-      position: absolute;
-      border-radius: 999px;
-      filter: blur(40px);
-      opacity: 0.9;
-      mix-blend-mode: screen;
-      pointer-events: none;
-    }
-
-    .page::before {
-      width: 420px;
-      height: 420px;
-      background: radial-gradient(circle at 0 0, #fed7aa 0, transparent 70%);
-      top: -140px;
-      left: -80px;
-      animation: drift 26s ease-in-out infinite alternate;
-    }
-
-    .page::after {
-      width: 360px;
-      height: 360px;
-      background: radial-gradient(circle at 100% 100%, #38bdf8 0, transparent 70%);
-      bottom: -140px;
-      right: -60px;
-      animation: drift 30s ease-in-out infinite alternate-reverse;
-    }
-
-    @keyframes drift {
-      0% { transform: translate3d(0, 0, 0) scale(1); }
-      50% { transform: translate3d(20px, -10px, 0) scale(1.04); }
-      100% { transform: translate3d(-10px, 20px, 0) scale(1.02); }
+      flex-direction: column;
+      padding: 0;
     }
 
     /* HEADER */
@@ -112,586 +41,202 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 0.85rem;
-      position: relative;
-      z-index: 2;
+      padding: 24px 40px;
+      border-bottom: 1px solid #f0f0f0;
     }
 
     .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .brand-mark {
-      width: 30px;
-      height: 30px;
-      border-radius: 999px;
-      background:
-        conic-gradient(from 210deg, #f97316, #facc15, #22c55e, #38bdf8, #6366f1, #f97316);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .brand-mark::after {
-      content: "";
-      position: absolute;
-      inset: 5px;
-      border-radius: inherit;
-      background: radial-gradient(circle at 30% 0, rgba(255,255,255,0.9), transparent 55%),
-        rgba(15, 23, 42, 0.92);
-    }
-
-    .brand-text {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .brand-line-1 {
-      font-size: 0.75rem;
-      letter-spacing: 0.24em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-    }
-
-    .brand-line-2 {
-      font-size: 0.96rem;
+      font-size: 1.1rem;
       font-weight: 600;
+      letter-spacing: -0.02em;
     }
 
-    .nav {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      color: var(--text-muted);
-    }
-
-    .nav-pill {
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      background: rgba(15, 23, 42, 0.7);
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.8rem;
-    }
-
-    .nav-links a {
-      color: var(--text-muted);
+    .nav a {
+      color: #666;
       text-decoration: none;
-      padding: 4px 8px;
-      border-radius: 999px;
+      font-size: 0.95rem;
+      margin-left: 32px;
+      transition: color 0.2s;
     }
 
-    .nav-links a:hover {
-      background: rgba(148, 163, 184, 0.14);
-      color: var(--text-main);
+    .nav a:hover {
+      color: #0a0a0a;
     }
 
-    /* MAIN GRID */
-    .hero {
-      position: relative;
-      z-index: 2;
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-      gap: 28px;
-      align-items: stretch;
-      padding: 4px 6px 8px;
-    }
-
-    .hero-copy {
+    /* MAIN */
+    .main {
+      flex: 1;
       display: flex;
-      flex-direction: column;
+      align-items: center;
       justify-content: center;
-      gap: 18px;
+      padding: 60px 40px;
+    }
+
+    .container {
+      max-width: 680px;
+      text-align: center;
     }
 
     .eyebrow {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.2em;
-      color: var(--text-muted);
-    }
-
-    .hero-title {
-      font-size: clamp(2.4rem, 3vw + 1.4rem, 3.2rem);
-      line-height: 1.05;
-      font-weight: 700;
-    }
-
-    .hero-title span {
-      background: linear-gradient(130deg, #f97316, #facc15, #38bdf8);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .hero-subtitle {
-      font-size: 0.98rem;
-      line-height: 1.7;
-      color: var(--text-muted);
-      max-width: 30rem;
-    }
-
-    .hero-subtitle strong {
-      color: #e5e7eb;
-    }
-
-    .meta-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      font-size: 0.78rem;
-      color: var(--text-muted);
-    }
-
-    .meta-pill {
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.45);
-      background: rgba(15, 23, 42, 0.9);
-      padding: 6px 11px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .meta-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: #22c55e;
-      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.3);
-    }
-
-    .cta-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      margin-top: 6px;
-    }
-
-    .cta-input {
-      flex: 1 1 200px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      background: rgba(15, 23, 42, 0.8);
-      color: var(--text-main);
-      padding: 10px 14px;
       font-size: 0.9rem;
-      outline: none;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 24px;
     }
 
-    .cta-input::placeholder {
-      color: #64748b;
+    .title {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 28px;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      line-height: 1.6;
+      color: #666;
+      margin-bottom: 48px;
+      font-weight: 400;
     }
 
     .cta-button {
-      border-radius: 999px;
-      border: none;
-      padding: 10px 20px;
-      font-size: 0.86rem;
+      display: inline-block;
+      background: #0a0a0a;
+      color: #ffffff;
+      padding: 18px 48px;
+      border-radius: 8px;
+      font-size: 1rem;
       font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      background: linear-gradient(135deg, #f97316, #f97316, #facc15);
-      color: #111827;
+      text-decoration: none;
+      border: none;
       cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 18px 40px rgba(248, 113, 22, 0.5);
-      transform-origin: center;
-      transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, filter 0.12s ease-out;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
     }
 
     .cta-button:hover {
-      transform: translateY(-2px) scale(1.02);
-      filter: brightness(1.03);
-      box-shadow: 0 24px 55px rgba(248, 113, 22, 0.7);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     }
 
-    .cta-note {
-      font-size: 0.76rem;
-      color: var(--text-muted);
-    }
-
-    /* VISUAL STACK */
-    .visual {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      perspective: 1200px;
-    }
-
-    .visual-card {
-      position: relative;
-      width: 100%;
-      max-width: 420px;
-      aspect-ratio: 4 / 3;
-      border-radius: var(--radius-lg);
-      background:
-        radial-gradient(circle at 0 0, rgba(248, 250, 252, 0.15), transparent 60%),
-        radial-gradient(circle at 120% 0, rgba(59, 130, 246, 0.45), transparent 70%),
-        radial-gradient(circle at 0 120%, rgba(248, 113, 22, 0.5), transparent 70%),
-        rgba(15, 23, 42, 0.96);
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      overflow: hidden;
-      box-shadow: 0 28px 80px rgba(15, 23, 42, 0.9);
-      transform-style: preserve-3d;
-      transition: transform 0.18s ease-out;
-    }
-
-    .orb-layer {
-      position: absolute;
-      inset: 10%;
-      filter: blur(18px);
-      opacity: 0.9;
-      mix-blend-mode: screen;
-      animation: orbDrift 18s ease-in-out infinite alternate;
-    }
-
-    .orb-layer--one {
-      background: radial-gradient(circle at 0 0, #f97316 0, transparent 60%);
-    }
-
-    .orb-layer--two {
-      background: radial-gradient(circle at 100% 0, #38bdf8 0, transparent 60%);
-      animation-duration: 22s;
-      animation-delay: -8s;
-    }
-
-    .orb-layer--three {
-      background: radial-gradient(circle at 50% 110%, #22c55e 0, transparent 60%);
-      animation-duration: 26s;
-      animation-delay: -4s;
-    }
-
-    @keyframes orbDrift {
-      0% { transform: translate3d(0, 0, 0) scale(1); }
-      50% { transform: translate3d(10px, -6px, 0) scale(1.04); }
-      100% { transform: translate3d(-8px, 8px, 0) scale(1.02); }
-    }
-
-    .ring {
-      position: absolute;
-      inset: 20%;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transform: translateZ(40px);
-    }
-
-    .ring::before {
-      content: "";
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: #e5e7eb;
-      box-shadow: 0 0 0 3px rgba(229, 231, 235, 0.45);
-      animation: orbitDot 14s linear infinite;
-      transform-origin: 120px 0;
-    }
-
-    @keyframes orbitDot {
-      0%   { transform: rotate(0deg) translateX(120px); }
-      100% { transform: rotate(360deg) translateX(120px); }
-    }
-
-    .chip-stack {
-      position: absolute;
-      inset-inline: 14%;
-      bottom: 14%;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      transform: translateZ(60px);
-    }
-
-    .chip {
-      border-radius: 999px;
-      padding: 6px 10px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.8);
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      display: inline-flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .chip strong {
-      color: #e5e7eb;
-      font-weight: 500;
-    }
-
-    .chip-badge {
-      border-radius: 999px;
-      padding: 3px 7px;
-      background: rgba(249, 115, 22, 0.12);
-      border: 1px solid rgba(249, 115, 22, 0.5);
-      color: #fed7aa;
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-    }
-
-    .corner-tag {
-      position: absolute;
-      top: 14%;
-      left: 14%;
-      border-radius: 999px;
-      padding: 4px 10px;
-      background: rgba(17, 24, 39, 0.8);
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      font-size: 0.7rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      transform: translateZ(50px);
+    .cta-button:active {
+      transform: translateY(0);
     }
 
     /* FOOTER */
     .footer {
-      position: relative;
-      z-index: 2;
+      padding: 32px 40px;
+      border-top: 1px solid #f0f0f0;
       display: flex;
-      flex-wrap: wrap;
       justify-content: space-between;
-      gap: 12px;
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      padding: 0 6px;
-    }
-
-    .footer-block {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .footer-label {
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      font-size: 0.7rem;
-    }
-
-    .footer-main {
-      color: #e5e7eb;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #999;
     }
 
     .footer a {
-      color: #e5e7eb;
+      color: #666;
       text-decoration: none;
+      margin-left: 24px;
     }
 
     .footer a:hover {
-      text-decoration: underline;
+      color: #0a0a0a;
     }
 
     /* RESPONSIVE */
-    @media (max-width: 960px) {
-      body {
-        padding: 16px;
-      }
-      .page {
-        padding-inline: 18px;
-      }
-      .hero {
-        grid-template-columns: minmax(0, 1fr);
-        row-gap: 24px;
-      }
-      .visual {
-        order: -1;
-      }
-      .visual-card {
-        margin-inline: auto;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .page {
-        padding: 18px 14px 20px;
-        border-radius: 26px;
-      }
+    @media (max-width: 768px) {
       .header {
+        padding: 20px 24px;
         flex-direction: column;
+        gap: 16px;
         align-items: flex-start;
-        gap: 8px;
       }
-      .cta-row {
-        flex-direction: column;
-        align-items: stretch;
+
+      .nav {
+        display: flex;
+        gap: 20px;
       }
+
+      .nav a {
+        margin-left: 0;
+      }
+
+      .main {
+        padding: 40px 24px;
+      }
+
+      .title {
+        font-size: 2.5rem;
+      }
+
+      .subtitle {
+        font-size: 1.05rem;
+      }
+
       .cta-button {
-        justify-content: center;
+        padding: 16px 40px;
         width: 100%;
       }
+
       .footer {
+        padding: 24px;
         flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+      }
+
+      .footer-links {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .footer a {
+        margin-left: 0;
       }
     }
   </style>
 </head>
 <body>
-  <div class="page" id="mapsPage">
-    <header class="header">
-      <div class="brand">
-        <div class="brand-mark" aria-hidden="true"></div>
-        <div class="brand-text">
-          <span class="brand-line-1">EdAI · MAPS Redmond</span>
-          <span class="brand-line-2">AI Builder Lab</span>
-        </div>
-      </div>
-      <div class="nav">
-        <div class="nav-pill">Cohort · Adults & College</div>
-        <div class="nav-links">
-          <a href="https://www.linkedin.com/in/azibit" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-          <a href="mailto:aidris@edai.fun">Contact</a>
-        </div>
-      </div>
-    </header>
+  <header class="header">
+    <div class="brand">EdAI</div>
+    <nav class="nav">
+      <a href="https://www.linkedin.com/in/azibit" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      <a href="mailto:aidris@edai.fun">Contact</a>
+    </nav>
+  </header>
 
-    <main class="hero">
-      <section class="hero-copy" aria-label="Program overview">
-        <p class="eyebrow">MAPS Redmond · Evening Lab</p>
-        <h1 class="hero-title">
-          Empowering the next generation of
-          <span>Muslim AI builders.</span>
-        </h1>
-        <p class="hero-subtitle">
-          A cinematic, hands-on space where you bring one real situation from work, school, or your
-          community — and we explore what an AI‑powered tool around it could look like, together,
-          in shaa Allah.
-        </p>
+  <main class="main">
+    <div class="container">
+      <div class="eyebrow">MAPS Redmond · AI Builder Lab</div>
+      <h1 class="title">Build meaningful AI products</h1>
+      <p class="subtitle">
+        A hands-on lab for Muslim builders to create AI solutions that matter.
+      </p>
+      <button class="cta-button" type="button" id="applyButton">Apply Now</button>
+    </div>
+  </main>
 
-        <div class="meta-row">
-          <div class="meta-pill">
-            <span class="meta-dot" aria-hidden="true"></span>
-            <span>Small, guided cohorts · Redmond, WA</span>
-          </div>
-          <div class="meta-pill">
-            <span>Evening sessions · Limited seats</span>
-          </div>
-        </div>
-
-        <div class="cta-row">
-          <input
-            type="email"
-            class="cta-input"
-            placeholder="Email address"
-            aria-label="Email address"
-          />
-          <button class="cta-button" type="button" id="ctaButton">
-            <span>Get in touch</span>
-          </button>
-        </div>
-        <p class="cta-note">No spam. Just one thoughtful reply with next steps, in shaa Allah.</p>
-      </section>
-
-      <section class="visual" aria-hidden="true">
-        <div class="visual-card" id="visualCard">
-          <div class="orb-layer orb-layer--one"></div>
-          <div class="orb-layer orb-layer--two"></div>
-          <div class="orb-layer orb-layer--three"></div>
-
-          <div class="corner-tag">Ideas · Impact · Ihsan</div>
-
-          <div class="ring"></div>
-
-          <div class="chip-stack">
-            <div class="chip">
-              <span><strong>One real scenario</strong> — from your work, studies, or masjid.</span>
-              <span class="chip-badge">01</span>
-            </div>
-            <div class="chip">
-              <span><strong>One guided evening</strong> to sketch, prototype, and reflect.</span>
-              <span class="chip-badge">02</span>
-            </div>
-            <div class="chip">
-              <span><strong>One concrete next step</strong> for your AI journey.</span>
-              <span class="chip-badge">03</span>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-block">
-        <span class="footer-label">Location</span>
-        <span class="footer-main">Redmond, WA · MAPS Redmond</span>
-        <span>United States</span>
-      </div>
-      <div class="footer-block">
-        <span class="footer-label">Contact</span>
-        <span class="footer-main"><a href="mailto:aidris@edai.fun">aidris@edai.fun</a></span>
-        <span>
-          <a href="https://www.linkedin.com/in/azibit" target="_blank" rel="noopener noreferrer">
-            linkedin.com/in/azibit
-          </a>
-        </span>
-      </div>
-    </footer>
-  </div>
+  <footer class="footer">
+    <div>© 2025 EdAI · Redmond, WA</div>
+    <div class="footer-links">
+      <a href="mailto:aidris@edai.fun">aidris@edai.fun</a>
+    </div>
+  </footer>
 
   <script>
-    // Subtle parallax / tilt for the visual card & page glow
-    (function () {
-      const page = document.getElementById("mapsPage");
-      const card = document.getElementById("visualCard");
-      const cta = document.getElementById("ctaButton");
-
-      if (!page || !card) return;
-
-      const bounds = () => page.getBoundingClientRect();
-
-      function handleMove(event) {
-        const rect = bounds();
-        const x = (event.clientX - rect.left) / rect.width - 0.5;
-        const y = (event.clientY - rect.top) / rect.height - 0.5;
-
-        const rotateX = y * -10;
-        const rotateY = x * 14;
-
-        card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-
-        const translatePageX = x * 8;
-        const translatePageY = y * 8;
-        page.style.transform = `translate3d(${translatePageX}px, ${translatePageY}px, 0)`;
-      }
-
-      function resetTilt() {
-        card.style.transform = "rotateX(0deg) rotateY(0deg)";
-        page.style.transform = "translate3d(0, 0, 0)";
-      }
-
-      page.addEventListener("pointermove", handleMove);
-      page.addEventListener("pointerleave", resetTilt);
-
-      // Simple visual feedback on CTA click (UI-only for now)
-      if (cta) {
-        cta.addEventListener("click", () => {
-          cta.blur();
-          cta.style.transform = "scale(0.97)";
-          setTimeout(() => {
-            cta.style.transform = "";
-          }, 120);
-        });
-      }
-    })();
+    // Simple click handler for Apply button
+    const applyBtn = document.getElementById("applyButton");
+    if (applyBtn) {
+      applyBtn.addEventListener("click", () => {
+        // Add your application form/modal logic here
+        window.location.href = "mailto:aidris@edai.fun?subject=MAPS%20AI%20Builder%20Lab%20Application";
+      });
+    }
   </script>
 </body>
 </html>

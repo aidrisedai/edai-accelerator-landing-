@@ -1242,36 +1242,43 @@
       document.body.style.overflow = '';
     }
 
-    // Event Listeners
-    document.getElementById('applyButton').addEventListener('click', openChat);
-    document.getElementById('chatClose').addEventListener('click', closeChat);
-    document.getElementById('successClose').addEventListener('click', closeSuccess);
-    
-    // Also handle Apply buttons in Contact section
-    document.querySelectorAll('.cta-button').forEach(btn => {
-      if (btn.id !== 'applyButton') {
-        btn.onclick = openChat;
-      }
-    });
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      // Event Listeners
+      const applyBtn = document.getElementById('applyButton');
+      const chatCloseBtn = document.getElementById('chatClose');
+      const successCloseBtn = document.getElementById('successClose');
+      
+      if (applyBtn) applyBtn.addEventListener('click', openChat);
+      if (chatCloseBtn) chatCloseBtn.addEventListener('click', closeChat);
+      if (successCloseBtn) successCloseBtn.addEventListener('click', closeSuccess);
+      
+      // Also handle Apply buttons in Contact section
+      document.querySelectorAll('.cta-button').forEach(btn => {
+        if (btn.id !== 'applyButton') {
+          btn.onclick = openChat;
+        }
+      });
 
-    // View switching
-    const navLinks = document.querySelectorAll('.nav-link[data-view]');
-    const views = document.querySelectorAll('.view');
+      // View switching
+      const navLinks = document.querySelectorAll('.nav-link[data-view]');
+      const views = document.querySelectorAll('.view');
 
-    navLinks.forEach(link => {
-      link.addEventListener('click', () => {
-        const targetView = link.dataset.view;
-        
-        // Update nav
-        navLinks.forEach(l => l.classList.remove('active'));
-        link.classList.add('active');
-        
-        // Update views
-        views.forEach(v => v.classList.remove('active'));
-        document.getElementById(`view-${targetView}`).classList.add('active');
-        
-        // Scroll to top
-        window.scrollTo(0, 0);
+      navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          const targetView = link.dataset.view;
+          
+          // Update nav
+          navLinks.forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+          
+          // Update views
+          views.forEach(v => v.classList.remove('active'));
+          document.getElementById(`view-${targetView}`).classList.add('active');
+          
+          // Scroll to top
+          window.scrollTo(0, 0);
+        });
       });
     });
   </script>

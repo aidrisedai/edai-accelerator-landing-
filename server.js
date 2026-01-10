@@ -490,6 +490,130 @@ app.post('/api/submit-application', async (req, res) => {
     }
 });
 
+// API endpoint for MAPS AI Builder Lab applications (adults)
+app.post('/api/submit-maps-application', async (req, res) => {
+    try {
+        console.log('=== MAPS APPLICATION RECEIVED ===');
+        console.log('Data:', JSON.stringify(req.body, null, 2));
+        
+        const {
+            name,
+            email,
+            phone,
+            background,
+            field,
+            codingExperience,
+            motivation,
+            hasLaptop,
+            scheduleConfirm,
+            referralSource
+        } = req.body;
+
+        // Validation
+        const validationErrors = [];
+        if (!name?.trim()) validationErrors.push('Name is required');
+        if (!email?.trim()) validationErrors.push('Email is required');
+        if (!phone?.trim()) validationErrors.push('Phone is required');
+        if (!background?.trim()) validationErrors.push('Background is required');
+        if (!motivation?.trim() || motivation.trim().length < 20) {
+            validationErrors.push('Motivation must be at least 20 characters');
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (email && !emailRegex.test(email.trim())) {
+            validationErrors.push('Invalid email format');
+        }
+
+        if (validationErrors.length > 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Validation failed',
+                details: validationErrors
+            });
+        }
+
+        // Check for duplicate email
+        const existing = await pool.query(
+            'SELECT id FROM maps_applications WHERE email = $1',
+            [email.trim().toLowerCase()]
+        );
+        
+        if (existing.rows.length > 0) {
+            return res.status(409).json({
+                success: false,
+                error: 'An application with this email already exists. Please contact us if you need to update your application.'
+            });
+        }
+
+        // Insert application
+        const result = await pool.query(`
+            INSERT INTO maps_applications (
+                name, email, phone, background, field, coding_experience,
+                motivation, has_laptop, schedule_confirm, referral_source,
+                application_status
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending')
+            RETURNING id, submitted_at
+        `, [
+            name.trim(),
+            email.trim().toLowerCase(),
+            phone.trim(),
+            background,
+            field?.trim() || null,
+            codingExperience || null,
+            motivation.trim(),
+            hasLaptop || null,
+            scheduleConfirm || null,
+            referralSource || null
+        ]);
+
+        console.log('MAPS application inserted:', result.rows[0]);
+
+        res.status(200).json({
+            success: true,
+            message: 'Application submitted successfully!',
+            applicationId: result.rows[0].id,
+            submittedAt: result.rows[0].submitted_at
+        });
+
+    } catch (error) {
+        console.error('MAPS application error:', error);
+        
+        if (error.code === '23505') {
+            return res.status(409).json({
+                success: false,
+                error: 'An application with this email already exists.'
+            });
+        }
+        
+        res.status(500).json({
+            success: false,
+            error: 'An error occurred. Please try again or contact us at aidris@edai.fun'
+        });
+    }
+});
+
+// API endpoint to get MAPS applications (admin)
+app.get('/api/get-maps-applications', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT * FROM maps_applications 
+            ORDER BY submitted_at DESC
+        `);
+        
+        res.status(200).json({
+            success: true,
+            applications: result.rows
+        });
+    } catch (error) {
+        console.error('Error fetching MAPS applications:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch applications'
+        });
+    }
+});
+
 // API endpoint to run database migrations (admin only - call once after deployment)
 app.post('/api/migrate-database', async (req, res) => {
     try {

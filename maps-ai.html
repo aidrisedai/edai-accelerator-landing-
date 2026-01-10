@@ -728,10 +728,18 @@
 
     /* RESPONSIVE */
     @media (max-width: 768px) {
+      html, body {
+        overflow-x: hidden;
+      }
+
       .header {
         padding: 12px 16px;
         flex-direction: column;
-        gap: 12px;
+        gap: 8px;
+        position: sticky;
+        top: 0;
+        background: #ffffff;
+        z-index: 100;
       }
 
       .nav {
@@ -746,26 +754,39 @@
       }
 
       .main {
-        padding: 24px 16px 40px;
+        padding: 20px 16px 32px;
+        min-height: auto;
+        justify-content: flex-start;
+      }
+
+      .eyebrow {
+        margin-bottom: 12px;
       }
 
       .title {
-        font-size: 2rem;
+        font-size: 1.85rem;
+        margin-bottom: 12px;
       }
 
       .subtitle {
         font-size: 0.95rem;
+        margin-bottom: 24px;
+      }
+
+      .cta-area {
+        margin-bottom: 32px;
       }
 
       .cta-button {
         padding: 16px 40px;
         width: 100%;
-        max-width: 300px;
-        font-size: 1.1rem;
+        max-width: 280px;
+        font-size: 1.05rem;
       }
 
       .info-bar {
         gap: 6px;
+        margin-bottom: 24px;
       }
 
       .info-chip {
@@ -774,27 +795,77 @@
       }
 
       .features {
-        gap: 24px;
+        gap: 16px;
+        margin-bottom: 0;
       }
 
       .feature {
         max-width: 100%;
+        padding: 12px;
+      }
+
+      .feature .icon {
+        font-size: 1.2rem;
+      }
+
+      .feature h3 {
+        font-size: 0.9rem;
       }
 
       .faq-view {
-        padding: 24px 16px;
+        padding: 20px 16px;
+      }
+
+      .faq-header {
+        margin-bottom: 20px;
+      }
+
+      .faq-icon {
+        font-size: 2rem;
+        margin-bottom: 8px;
       }
 
       .faq-title {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
+      }
+
+      .faq-subtitle {
+        font-size: 0.9rem;
       }
 
       .faq-cards {
         grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .faq-card {
+        padding: 16px;
+      }
+
+      .faq-card h3 {
+        font-size: 1rem;
+      }
+
+      .faq-card p {
+        font-size: 0.85rem;
+      }
+
+      .highlight-box {
+        padding: 16px;
+        margin-top: 20px;
+      }
+
+      .highlight-box h3 {
+        font-size: 1rem;
       }
 
       .highlight-box ul {
         grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .highlight-box li {
+        font-size: 0.85rem;
       }
 
       .footer {
@@ -804,76 +875,138 @@
         text-align: center;
       }
 
-      /* Chat Modal Mobile */
+      /* Chat Modal Mobile - Critical keyboard fix */
       .modal {
-        align-items: flex-end;
+        align-items: stretch;
+        padding: 0;
+      }
+
+      .modal.show {
+        display: flex;
       }
 
       .chat-modal {
         width: 100%;
-        height: 100vh;
-        height: 100dvh;
+        height: 100%;
         max-height: none;
         border-radius: 0;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
       }
 
       .chat-header {
         border-radius: 0;
-        padding: 16px;
-        position: sticky;
-        top: 0;
+        padding: 12px 16px;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 10;
       }
 
       .chat-title {
-        font-size: 1rem;
+        font-size: 0.95rem;
       }
 
       .chat-subtitle {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
+      }
+
+      .chat-close {
+        font-size: 1.3rem;
+        padding: 8px;
+      }
+
+      .chat-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
       }
 
       .chat-messages {
-        padding: 16px;
-        gap: 12px;
+        flex: 1;
+        padding: 12px 16px;
+        gap: 10px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        min-height: 0;
       }
 
       .chat-bubble {
         max-width: 85%;
-        padding: 12px 14px;
+        padding: 10px 14px;
         font-size: 0.9rem;
       }
 
       .chat-avatar {
-        width: 32px;
-        height: 32px;
-        font-size: 0.7rem;
+        width: 30px;
+        height: 30px;
+        font-size: 0.65rem;
+      }
+
+      .chat-message {
+        gap: 8px;
       }
 
       .chat-input-container {
         border-radius: 0;
-        padding: 12px 16px;
-        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        padding: 10px 12px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+        flex-shrink: 0;
+        background: #ffffff;
+        border-top: 1px solid #e5e5e5;
       }
 
       .chat-input {
         padding: 12px 14px;
         font-size: 16px; /* Prevents zoom on iOS */
+        border-radius: 10px;
       }
 
       .chat-options {
         gap: 6px;
+        flex-wrap: wrap;
       }
 
       .chat-option {
-        padding: 12px 16px;
+        padding: 10px 14px;
         font-size: 0.85rem;
-        min-height: 44px; /* Touch target */
+        min-height: 44px;
+        flex: 0 1 auto;
       }
 
       .chat-send-btn {
+        padding: 12px;
+        font-size: 0.9rem;
+        min-height: 44px;
+        margin-top: 8px;
+      }
+
+      /* OTP input mobile */
+      .otp-input-wrapper {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .otp-input-wrapper .chat-input {
+        letter-spacing: 4px;
+        font-size: 1.1rem;
         padding: 14px;
-        font-size: 0.95rem;
-        min-height: 48px;
+      }
+
+      .otp-input-wrapper .chat-send-btn {
+        width: 100%;
+        margin-top: 0;
+      }
+
+      .resend-otp-btn {
+        padding: 12px;
+        font-size: 0.85rem;
       }
 
       /* Success Modal Mobile */
@@ -881,19 +1014,27 @@
         width: 100%;
         max-width: none;
         border-radius: 20px 20px 0 0;
-        padding: 32px 24px;
-        padding-bottom: max(32px, env(safe-area-inset-bottom));
+        padding: 28px 20px;
+        padding-bottom: max(28px, env(safe-area-inset-bottom));
       }
 
       .success-icon {
-        font-size: 3rem;
+        font-size: 2.5rem;
+        margin-bottom: 12px;
       }
 
       .success-title {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
+        margin-bottom: 8px;
       }
 
       .success-text {
+        font-size: 0.85rem;
+        margin-bottom: 16px;
+      }
+
+      .success-btn {
+        padding: 12px 24px;
         font-size: 0.9rem;
       }
     }
@@ -902,22 +1043,42 @@
     @media (max-width: 380px) {
       .nav-link {
         padding: 6px 8px;
-        font-size: 0.75rem;
+        font-size: 0.72rem;
       }
 
       .title {
-        font-size: 1.75rem;
+        font-size: 1.6rem;
+      }
+
+      .subtitle {
+        font-size: 0.88rem;
       }
 
       .info-chip {
         padding: 6px 10px;
-        font-size: 0.75rem;
+        font-size: 0.72rem;
       }
 
       .chat-option {
-        padding: 10px 14px;
+        padding: 10px 12px;
         font-size: 0.8rem;
       }
+
+      .chat-bubble {
+        font-size: 0.85rem;
+        padding: 10px 12px;
+      }
+    }
+
+    /* Keyboard open state - applied via JS */
+    .keyboard-open .chat-modal {
+      height: auto;
+      max-height: 100%;
+    }
+
+    .keyboard-open .chat-messages {
+      flex: 1;
+      min-height: 100px;
     }
   </style>
 </head>
@@ -1631,6 +1792,79 @@
           window.scrollTo(0, 0);
         });
       });
+
+      // Mobile keyboard handling
+      setupKeyboardHandling();
+    });
+
+    // Handle virtual keyboard on mobile
+    function setupKeyboardHandling() {
+      if (!window.visualViewport) return;
+
+      const chatModal = document.querySelector('.chat-modal');
+      const chatMessages = document.getElementById('chatMessages');
+      const chatInputContainer = document.getElementById('chatInputContainer');
+      
+      let initialHeight = window.visualViewport.height;
+
+      window.visualViewport.addEventListener('resize', () => {
+        const modal = document.getElementById('chatModal');
+        if (!modal || !modal.classList.contains('show')) return;
+
+        const currentHeight = window.visualViewport.height;
+        const keyboardHeight = initialHeight - currentHeight;
+        
+        if (keyboardHeight > 100) {
+          // Keyboard is open
+          document.body.classList.add('keyboard-open');
+          
+          // Adjust chat modal height to account for keyboard
+          const chatModalEl = document.querySelector('.chat-modal');
+          if (chatModalEl) {
+            chatModalEl.style.height = `${currentHeight}px`;
+          }
+          
+          // Scroll messages to bottom
+          setTimeout(() => {
+            const messages = document.getElementById('chatMessages');
+            if (messages) {
+              messages.scrollTop = messages.scrollHeight;
+            }
+          }, 100);
+        } else {
+          // Keyboard is closed
+          document.body.classList.remove('keyboard-open');
+          
+          const chatModalEl = document.querySelector('.chat-modal');
+          if (chatModalEl) {
+            chatModalEl.style.height = '';
+          }
+        }
+      });
+
+      // Update initial height on orientation change
+      window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+          initialHeight = window.visualViewport.height;
+        }, 300);
+      });
+    }
+
+    // Scroll to input when focused
+    function scrollToInput() {
+      const messages = document.getElementById('chatMessages');
+      if (messages) {
+        setTimeout(() => {
+          messages.scrollTop = messages.scrollHeight;
+        }, 300);
+      }
+    }
+
+    // Add focus listener to inputs
+    document.addEventListener('focusin', (e) => {
+      if (e.target.classList.contains('chat-input')) {
+        scrollToInput();
+      }
     });
   </script>
 </body>

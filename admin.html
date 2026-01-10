@@ -1788,17 +1788,107 @@
                     ` : ''}
                 </div>
                 
+                ${applicant.status === 'pending' || applicant.status === 'reviewed' ? `
                 <div class="detail-section" style="background: #f0f9ff; padding: 1.5rem; border-radius: 12px;">
-                    <h3>Quick Actions</h3>
+                    <h3>🎯 Admission Decision</h3>
+                    <p style="color: #666; margin-bottom: 1rem;">Accepting or rejecting will send an email to the applicant.</p>
                     <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
-                        <button class="btn-send-invite" onclick="updateMapsStatus(${applicant.id}, 'accepted'); closeModal();" style="background: linear-gradient(135deg, #10b981, #34d399);">✅ Accept</button>
-                        <button class="btn-send-invite" onclick="updateMapsStatus(${applicant.id}, 'rejected'); closeModal();" style="background: linear-gradient(135deg, #ef4444, #f87171);">❌ Reject</button>
-                        <button class="btn-send-invite" onclick="updateMapsStatus(${applicant.id}, 'enrolled'); closeModal();" style="background: linear-gradient(135deg, #6366f1, #818cf8);">📚 Mark Enrolled</button>
+                        <button class="btn-send-invite" onclick="showMapsAcceptModal(${applicant.id}, '${applicant.name.replace(/'/g, "\\'")}')"; style="background: linear-gradient(135deg, #10b981, #34d399);">✅ Accept & Send Email</button>
+                        <button class="btn-send-invite" onclick="showMapsRejectModal(${applicant.id}, '${applicant.name.replace(/'/g, "\\'")}')" style="background: linear-gradient(135deg, #ef4444, #f87171);">❌ Reject & Send Email</button>
+                        <button class="btn-send-invite" onclick="updateMapsStatus(${applicant.id}, 'reviewed'); closeModal();" style="background: linear-gradient(135deg, #6b7280, #9ca3af);">👁️ Mark as Reviewed</button>
                     </div>
                 </div>
+                ` : ''}
+                
+                ${applicant.status === 'accepted' ? `
+                <div class="detail-section" style="background: #d1fae5; padding: 1.5rem; border-radius: 12px;">
+                    <h3 style="color: #065f46;">✅ Accepted</h3>
+                    <p>This applicant has been accepted. Acceptance email was sent.</p>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn-send-invite" onclick="updateMapsStatus(${applicant.id}, 'enrolled'); closeModal();" style="background: linear-gradient(135deg, #6366f1, #818cf8);">📚 Mark as Enrolled</button>
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${applicant.status === 'rejected' ? `
+                <div class="detail-section" style="background: #fee2e2; padding: 1.5rem; border-radius: 12px;">
+                    <h3 style="color: #991b1b;">❌ Rejected</h3>
+                    <p>This applicant has been rejected. Rejection email was sent.</p>
+                </div>
+                ` : ''}
+                
+                ${applicant.status === 'enrolled' ? `
+                <div class="detail-section" style="background: #e0e7ff; padding: 1.5rem; border-radius: 12px;">
+                    <h3 style="color: #3730a3;">📚 Enrolled</h3>
+                    <p>This student is enrolled in the program.</p>
+                </div>
+                ` : ''}
             `;
             
             document.getElementById('applicantModal').classList.add('active');
+        }
+        
+        function showMapsAcceptModal(applicationId, applicantName) {
+            const startDate = prompt(`Accept ${applicantName} to the MAPS AI Builder Lab.\n\nEnter program start date (optional):`, '');
+            const customMessage = prompt('Add a custom message (optional):', '');
+            
+            if (confirm(`Confirm acceptance of ${applicantName}?\n\nAn acceptance email will be sent to them.`)) {
+                acceptMapsApplicant(applicationId, startDate, customMessage);
+            }
+        }
+        
+        async function acceptMapsApplicant(applicationId, startDate, customMessage) {
+            try {
+                const response = await fetch('/api/accept-maps-applicant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ applicationId, startDate, customMessage })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('🎉 Applicant accepted and acceptance email sent!');
+                    closeModal();
+                    loadMapsApplicants();
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to accept applicant. Please try again.');
+            }
+        }
+        
+        function showMapsRejectModal(applicationId, applicantName) {
+            const reason = prompt(`Reject ${applicantName}.\n\nEnter a reason (optional - will be included in the email):`, '');
+            
+            if (confirm(`Confirm rejection of ${applicantName}?\n\nA rejection email will be sent to them.`)) {
+                rejectMapsApplicant(applicationId, reason);
+            }
+        }
+        
+        async function rejectMapsApplicant(applicationId, reason) {
+            try {
+                const response = await fetch('/api/reject-maps-applicant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ applicationId, reason })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Application rejected and email sent.');
+                    closeModal();
+                    loadMapsApplicants();
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to reject applicant. Please try again.');
+            }
         }
     </script>
 </body>

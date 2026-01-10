@@ -683,47 +683,52 @@
     /* RESPONSIVE */
     @media (max-width: 768px) {
       .header {
-        padding: 16px 24px;
+        padding: 12px 16px;
+        flex-direction: column;
+        gap: 12px;
       }
 
       .nav {
         gap: 2px;
+        flex-wrap: wrap;
+        justify-content: center;
       }
 
       .nav-link {
-        padding: 8px 12px;
-        font-size: 0.85rem;
+        padding: 8px 10px;
+        font-size: 0.8rem;
       }
 
       .main {
-        padding: 32px 24px 48px;
+        padding: 24px 16px 40px;
       }
 
       .title {
-        font-size: 2.25rem;
+        font-size: 2rem;
       }
 
       .subtitle {
-        font-size: 1rem;
+        font-size: 0.95rem;
       }
 
       .cta-button {
-        padding: 18px 48px;
+        padding: 16px 40px;
         width: 100%;
-        max-width: 320px;
+        max-width: 300px;
+        font-size: 1.1rem;
       }
 
       .info-bar {
-        gap: 8px;
+        gap: 6px;
       }
 
       .info-chip {
-        padding: 10px 16px;
-        font-size: 0.85rem;
+        padding: 8px 12px;
+        font-size: 0.8rem;
       }
 
       .features {
-        gap: 32px;
+        gap: 24px;
       }
 
       .feature {
@@ -731,11 +736,11 @@
       }
 
       .faq-view {
-        padding: 32px 24px;
+        padding: 24px 16px;
       }
 
       .faq-title {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
       }
 
       .faq-cards {
@@ -747,23 +752,125 @@
       }
 
       .footer {
-        padding: 20px 24px;
+        padding: 16px;
         flex-direction: column;
-        gap: 12px;
+        gap: 8px;
+        text-align: center;
+      }
+
+      /* Chat Modal Mobile */
+      .modal {
+        align-items: flex-end;
       }
 
       .chat-modal {
-        height: 90vh;
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
         max-height: none;
         border-radius: 0;
       }
 
       .chat-header {
         border-radius: 0;
+        padding: 16px;
+        position: sticky;
+        top: 0;
+      }
+
+      .chat-title {
+        font-size: 1rem;
+      }
+
+      .chat-subtitle {
+        font-size: 0.8rem;
+      }
+
+      .chat-messages {
+        padding: 16px;
+        gap: 12px;
+      }
+
+      .chat-bubble {
+        max-width: 85%;
+        padding: 12px 14px;
+        font-size: 0.9rem;
+      }
+
+      .chat-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.7rem;
       }
 
       .chat-input-container {
         border-radius: 0;
+        padding: 12px 16px;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+      }
+
+      .chat-input {
+        padding: 12px 14px;
+        font-size: 16px; /* Prevents zoom on iOS */
+      }
+
+      .chat-options {
+        gap: 6px;
+      }
+
+      .chat-option {
+        padding: 12px 16px;
+        font-size: 0.85rem;
+        min-height: 44px; /* Touch target */
+      }
+
+      .chat-send-btn {
+        padding: 14px;
+        font-size: 0.95rem;
+        min-height: 48px;
+      }
+
+      /* Success Modal Mobile */
+      .success-modal {
+        width: 100%;
+        max-width: none;
+        border-radius: 20px 20px 0 0;
+        padding: 32px 24px;
+        padding-bottom: max(32px, env(safe-area-inset-bottom));
+      }
+
+      .success-icon {
+        font-size: 3rem;
+      }
+
+      .success-title {
+        font-size: 1.3rem;
+      }
+
+      .success-text {
+        font-size: 0.9rem;
+      }
+    }
+
+    /* Extra small screens */
+    @media (max-width: 380px) {
+      .nav-link {
+        padding: 6px 8px;
+        font-size: 0.75rem;
+      }
+
+      .title {
+        font-size: 1.75rem;
+      }
+
+      .info-chip {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+      }
+
+      .chat-option {
+        padding: 10px 14px;
+        font-size: 0.8rem;
       }
     }
   </style>

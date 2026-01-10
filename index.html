@@ -26,86 +26,247 @@
 </head>
 <body>
     <!-- Header -->
-    <header class="header minimal-header">
+    <header class="header">
         <nav class="nav">
             <div class="nav-container">
                 <div class="logo">
                     <img src="assets/edai-logo.png" alt="EdAI Accelerator" class="logo-image">
-                    <span class="logo-text">EdAI Accelerator</span>
+                    <span class="logo-text">Accelerator</span>
                 </div>
-                <div class="nav-links minimal-nav-links">
-                    <span class="nav-pill nav-pill-active">Home</span>
-                    <span class="nav-pill">Program</span>
-                    <span class="nav-pill">About</span>
+                <div class="nav-links">
+                    <a href="#program" class="nav-link">Program</a>
+                    <a href="#apply" class="nav-link">Apply</a>
+                    <a href="#program-details" class="nav-link">Program Details</a>
+                    <a href="#faq" class="nav-link">FAQ</a>
+                    <a href="#contact" class="nav-link">Contact</a>
                 </div>
+                <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
         </nav>
     </header>
 
-    <main class="landing-shell">
-        <section class="landing-grid">
-            <!-- Visual side -->
-            <div class="landing-image" aria-hidden="true">
-                <div class="landing-art"></div>
-            </div>
+    <!-- Partnership Banner -->
+    <div style="background: linear-gradient(90deg, #2563eb 0%, #1e40af 100%); padding: 16px 0; text-align: center; color: white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); font-family: 'Outfit', sans-serif; position: sticky; top: 0; z-index: 999;">
+        <div class="container">
+            <p style="margin: 0; font-size: 1.125rem; font-weight: 600; line-height: 1.5;">
+                🕌 <strong style="font-weight: 700;">Proudly Partnered with MAPS Redmond</strong> • Washington's Largest Islamic Center • <a href="#partnership" style="color: #f97316; text-decoration: underline; font-weight: 700; transition: color 0.3s ease;">Learn More</a>
+            </p>
+        </div>
+    </div>
 
-            <!-- Content side -->
-            <div class="landing-content">
-                <p class="eyebrow">EdAI • Global AI Accelerator for Muslim Teens</p>
-                <h1 class="hero-headline">
-                    Empowering the next generation of
-                    <span class="gradient-text">Muslim AI leaders.</span>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="badge">📝 Now Accepting Applications for 2026 Batch</span>
+                </div>
+                <h1 class="hero-title">
+                    Empowering Muslim Teen 
+                    <span class="gradient-text">AI Innovators</span>
                 </h1>
-                <p class="hero-body">
-                    We help Muslim middle and high school students design, build, and deploy real AI products — grounded
-                    in Islamic values and real-world impact.
+                <p class="hero-subtitle" style="font-family: 'Outfit', sans-serif;">
+                    Where Muslim youth create, test, and deploy real-world value through AI. 
+                    From passive learners to entrepreneurial builders. <strong style="font-weight: 700;">In partnership with MAPS Redmond.</strong>
                 </p>
-
-                <div class="cta-row">
-                    <button class="btn btn-primary cta-button" id="primaryCtaBtn">Apply for the next cohort</button>
-                    <span class="cta-note">Limited seats • Rolling interviews</span>
-                </div>
-
-                <div class="tabs" role="tablist" aria-label="EdAI overview">
-                    <button class="tab tab--active" role="tab" aria-selected="true" aria-controls="tab-program" data-tab="program">Program</button>
-                    <button class="tab" role="tab" aria-selected="false" aria-controls="tab-parents" data-tab="parents">For Parents</button>
-                    <button class="tab" role="tab" aria-selected="false" aria-controls="tab-teens" data-tab="teens">For Teens</button>
-                </div>
-
-                <div class="tab-panels">
-                    <div id="tab-program" class="tab-panel tab-panel--active" role="tabpanel" data-tab-panel="program">
-                        <p>
-                            An 8‑week, hands-on accelerator where each student ships a real AI-powered product, tests it with
-                            real users, and presents at a final demo day.
-                        </p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">2026</span>
+                        <span class="stat-label">Next Batch</span>
                     </div>
-                    <div id="tab-parents" class="tab-panel" role="tabpanel" hidden data-tab-panel="parents">
-                        <p>
-                            Give your teen more than grades: structured mentorship, a portfolio project, and a story that
-                            stands out on college and internship applications.
-                        </p>
+                    <div class="stat">
+                        <span class="stat-number">TBD</span>
+                        <span class="stat-label">Start Date</span>
                     </div>
-                    <div id="tab-teens" class="tab-panel" role="tabpanel" hidden data-tab-panel="teens">
-                        <p>
-                            Build something real with friends, learn AI the fun way, and see people actually use what you
-                            create — all while staying true to your values.
-                        </p>
+                    <div class="stat">
+                        <span class="stat-number">TBD</span>
+                        <span class="stat-label">Investment</span>
                     </div>
                 </div>
-
-                <div class="meta-row">
-                    <div class="meta-block">
-                        <span class="meta-label">Location</span>
-                        <span class="meta-value">Redmond, WA • In-person at MAPS</span>
+                <div style="background: rgba(37, 99, 235, 0.1); border: 2px solid var(--primary-blue); border-radius: 12px; padding: 1.25rem; margin: 1.5rem 0; text-align: center;">
+                    <p style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-weight: 700; font-size: 1.05rem;">
+                        🔒 <strong>December 2025 Cohort is Now Closed</strong>
+                    </p>
+                    <p style="margin: 0; color: var(--text-secondary); font-size: 0.95rem;">
+                        Apply now for 2026 batch. We'll follow up with program details, dates, and pricing, in shaa Allah.
+                    </p>
+                </div>
+                <div class="hero-cta">
+                    <button class="btn btn-primary" id="heroApplyBtn">Apply for 2026 Batch</button>
+                    <a href="#program" class="btn btn-secondary">Learn More</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-graphic">
+                    <div class="floating-card">
+                        <h3>💡 Ideation</h3>
+                        <p>Turn ideas into reality</p>
                     </div>
-                    <div class="meta-block">
-                        <span class="meta-label">Contact</span>
-                        <a href="mailto:aidris@edai.fun" class="meta-link">aidris@edai.fun</a>
+                    <div class="floating-card">
+                        <h3>⚡ ForgeFlow</h3>
+                        <p>Patent-pending orchestrator</p>
+                    </div>
+                    <div class="floating-card">
+                        <h3>🌟 Impact</h3>
+                        <p>Real-world value creation</p>
                     </div>
                 </div>
             </div>
-        </section>
-    </main>
+        </div>
+    </section>
+
+    <!-- Program Overview -->
+    <section id="program" class="program">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Beyond Learning. <span class="highlight">Creating Real Value.</span></h2>
+                <p class="section-subtitle">
+                    Has your teen ever asked when learning will matter? At EdAI, we turn knowledge into action—helping 
+                    teens transform their learning into real-world products, ventures, and innovations that impact 
+                    communities and economies.
+                </p>
+            </div>
+            
+            <div class="program-highlights">
+                <div class="highlight-card">
+                    <div class="card-icon">🤖</div>
+                    <h3>Deploy AI Products</h3>
+                    <p>Every participant launches a working AI app with real users — not classroom demos, but apps tested with friends, families, and community partners.</p>
+                </div>
+                <div class="highlight-card">
+                    <div class="card-icon">🌍</div>
+                    <h3>Real-World Skills</h3>
+                    <p>Develop resilience, creativity, public speaking, coding, business fundamentals, and marketing — skills that last a lifetime.</p>
+                </div>
+                <div class="highlight-card">
+                    <div class="card-icon">📚</div>
+                    <h3>Islamic Values</h3>
+                    <p>Guided by Islamic values of service, fairness, and ambition. Build with Amanah & Ihsan, becoming Muslim founders ready to shape the future.</p>
+                </div>
+            </div>
+
+            <div class="journey-section">
+                <h3 class="journey-title">8-Week AI Builder Journey</h3>
+                <p style="text-align: center; margin-bottom: var(--spacing-2xl); color: var(--text-secondary);">2026 Batch • Dates TBD (in shaa Allah) • Hosted at MAPS Redmond</p>
+                <div class="curriculum-grid">
+                    <div class="curriculum-week">
+                        <div class="week-number">Week 1-2</div>
+                        <h4>Foundation & Discovery</h4>
+                        <p>Muslim builder identity, AI literacy, problem discovery, and user interviews</p>
+                    </div>
+                    <div class="curriculum-week">
+                        <div class="week-number">Week 3-4</div>
+                        <h4>Build & Launch</h4>
+                        <p>Prototyping, MVP development, landing pages, and first product launches</p>
+                    </div>
+                    <div class="curriculum-week">
+                        <div class="week-number">Week 5-6</div>
+                        <h4>Test & Refine</h4>
+                        <p>User testing, feedback integration, value proposition refinement, and iteration</p>
+                    </div>
+                    <div class="curriculum-week">
+                        <div class="week-number">Week 7-8</div>
+                        <h4>Scale & Present</h4>
+                        <p>Growth experiments, financial planning, pitch preparation, and public Demo Day</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Apply Section -->
+    <section id="apply" class="apply-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Transform Your Teen Into a <span class="highlight">Muslim Founder</span></h2>
+                <p class="section-subtitle">
+                    Beyond grades and test scores — give your teenager the real-world experience, 
+                    skills, and confidence to shape the future through technology and innovation.
+                </p>
+            </div>
+            
+            <div class="apply-content">
+                <!-- Teen Benefits Side -->
+                <div class="teen-benefits">
+                    <h3 class="benefits-title">What Your Teen Will Achieve</h3>
+                    <p class="benefits-subtitle">Real outcomes that matter for their future</p>
+                    
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <div class="icon-circle">🚀</div>
+                        </div>
+                        <div class="benefit-content">
+                            <h4>Build Ideas Into Real-World Value-Creating Products</h4>
+                            <p>Transform creative concepts into actual AI applications with real users — not school projects, but genuine solutions tested by friends, family, and community.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <div class="icon-circle">🎓</div>
+                        </div>
+                        <div class="benefit-content">
+                            <h4>Unlock College Opportunities Through Proven Impact</h4>
+                            <p>Stand out in college applications with documented real-world projects and entrepreneurial achievements. Admissions officers rarely see students who've built actual products that create value.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <div class="icon-circle">💼</div>
+                        </div>
+                        <div class="benefit-content">
+                            <h4>Gain Experience That Opens Elite Internship Doors</h4>
+                            <p>Develop skills that top tech companies seek: product development, user research, AI implementation, and business strategy. Interview for internships with a portfolio of real work, not just theoretical knowledge.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="benefits-highlight">
+                        <div class="highlight-content">
+                            <h5>🌟 Guided by Islamic Values</h5>
+                            <p>Built with Amanah (trust), Ihsan (excellence), and service to the Ummah — becoming not just successful, but principled Muslim leaders in technology.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Application Form Side -->
+                <div class="application-form-container">
+                    <div class="chat-application-intro">
+                        <div class="application-header">
+                            <h3>Apply for Next Cohort</h3>
+                            <div class="availability-badge">
+                                <span class="badge-dot"></span>
+                                <span>Rolling Admissions</span>
+                            </div>
+                            <p class="application-description">
+                                Join a conversation-style application that helps us understand your teen's interests and goals — designed to be personal and meaningful.
+                            </p>
+                        </div>
+                        
+                        <div class="application-features">
+                            <div class="feature">
+                                <span class="feature-icon">💬</span>
+                                <span>Conversational & Personal</span>
+                            </div>
+                            <div class="feature">
+                                <span class="feature-icon">🕌</span>
+                                <span>Islamic Values Centered</span>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary btn-large" id="startChatApplication">
+                            <span>🚀</span>
+                            Start Application Chat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Program Investment Section -->
     <section class="investment">
@@ -196,18 +357,143 @@
         </div>
     </section>
 
-    <!-- Compact footer to keep page minimal -->
-    <footer id="contact" class="footer minimal-footer">
+    <!-- Program Details Section -->
+    <section id="program-details" class="program-details">
         <div class="container">
-            <div class="footer-bottom">
-                <p>&copy; 2025 EdAI Accelerator. All rights reserved.</p>
-                <div class="footer-links">
-                    <a href="mailto:aidris@edai.fun">Email</a>
-                    <a href="https://www.linkedin.com/in/azibit" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <div class="program-details-content">
+                <div class="program-info">
+                    <h2 class="section-title">Ready to Secure 1 of 15 <span class="highlight">Exclusive Spots?</span></h2>
+                    <p class="section-subtitle" style="font-family: 'Outfit', sans-serif;">
+                        Only 15 exceptional Muslim middle and high school students will be selected for our premier AI accelerator program. 
+                        Transform your teen from passive learner to Muslim founder who shapes the future with technology. <strong style="font-weight: 700;">In partnership with MAPS Redmond.</strong>
+                    </p>
+                    
+                    <div class="info-cards">
+                        <div class="info-card">
+                            <div class="info-icon">📅</div>
+                            <div class="info-content">
+                                <h4>Program Details</h4>
+                                <p>Dec 2025 (or earlier)<br><strong>Hosted at:</strong> MAPS Redmond<br>Laptop Required for all students.</p>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-icon">💰</div>
+                            <div class="info-content">
+                                <h4>Investment</h4>
+                                <p>$800 for complete 8-week program</p>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-icon">👥</div>
+                            <div class="info-content">
+                                <h4>Rolling Admissions</h4>
+                                <p>Priority review for next cohort.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Application Process Section -->
+                <div class="application-process">
+                    <h3 class="process-title">Application Process</h3>
+                    <p class="process-subtitle">Competitive selection • Only 15 exceptional students will be chosen</p>
+                    
+                    <div class="process-steps">
+                        <div class="process-step">
+                            <div class="step-icon">
+                                <div class="step-circle">1</div>
+                            </div>
+                            <div class="step-content">
+                                <h4>Submit Application</h4>
+                                <p>Complete the form below with detailed information about your teen's interests and goals.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="process-step">
+                            <div class="step-icon">
+                                <div class="step-circle">2</div>
+                            </div>
+                            <div class="step-content">
+                                <h4>Interview Process</h4>
+                                <p>Selected candidates will be invited for a personal interview to assess fit and commitment.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="process-step">
+                            <div class="step-icon">
+                                <div class="step-circle">3</div>
+                            </div>
+                            <div class="step-content">
+                                <h4>Selection & Enrollment</h4>
+                                <p>Only 15 students will be accepted. Successful candidates secure their spot with program investment.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="urgency-banner">
+                        <div class="urgency-icon">⚡</div>
+                        <div class="urgency-content">
+                            <h4>Rolling Admissions Open - Apply for Dec 2025 (or earlier)</h4>
+                            <p>Applications reviewed on a rolling basis. <button class="btn btn-secondary" id="programDetailsApplyBtn">Apply Now</button></p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </footer>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="faq">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Frequently Asked <span class="highlight">Questions</span></h2>
+                <p class="section-subtitle">Quick answers about the cohort, schedule, and how we may split tracks if there’s enough interest.</p>
+            </div>
+
+            <div class="faq-accordion" style="max-width: 900px; margin: 0 auto;">
+                <details class="faq-item" open>
+                    <summary style="cursor: pointer; font-weight: 600; font-size: var(--font-size-lg); padding: var(--spacing-md) 0;">🧑‍🎓 Who is this for?</summary>
+                    <div class="faq-body" style="color: var(--text-secondary); line-height: 1.7;">
+                        <p>Middle (Grade 5+) and High School students. We explicitly welcome late elementary students (5th grade) who are ready to build.</p>
+                    </div>
+                </details>
+
+
+                <details class="faq-item">
+                    <summary style="cursor: pointer; font-weight: 600; font-size: var(--font-size-lg); padding: var(--spacing-md) 0;">🔀 Will there be separate batches for Middle and High School?</summary>
+                    <div class="faq-body" style="color: var(--text-secondary); line-height: 1.7;">
+                        <p><strong>Possibly.</strong> If we receive enough interest from both groups, we’ll create separate batches for Middle School and High School.</p>
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary style="cursor: pointer; font-weight: 600; font-size: var(--font-size-lg); padding: var(--spacing-md) 0;">⏰ What are the weekly hours?</summary>
+                    <div class="faq-body" style="color: var(--text-secondary); line-height: 1.7;">
+                        <p><strong>First Cohort - Nov 2025:</strong></p>
+                        <ul style="margin: 0 0 var(--spacing-md) 0; padding-left: 1.25rem;">
+                            <li>Saturdays <strong>9 AM – 12 PM</strong> at MAPS Redmond</li>
+                            <li>Total of <strong>24 hours</strong> across 8 weeks</li>
+                        </ul>
+                        <p><strong>Dec 2025 Cohort:</strong> Schedule to be decided based on demand and parent preferences.</p>
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary style="cursor: pointer; font-weight: 600; font-size: var(--font-size-lg); padding: var(--spacing-md) 0;">📅 When does the program start?</summary>
+                    <div class="faq-body" style="color: var(--text-secondary); line-height: 1.7;">
+                        <p><strong>December 2025</strong> (Tentative). If spots fill up and demand is high, we may launch an earlier cohort. We are accepting rolling admissions now.</p>
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary style="cursor: pointer; font-weight: 600; font-size: var(--font-size-lg); padding: var(--spacing-md) 0;">💸 How much does it cost?</summary>
+                    <div class="faq-body" style="color: var(--text-secondary); line-height: 1.7;">
+                        <p><strong>$800 total</strong> for the full 8-week accelerator. <strong>Students must bring their own laptop.</strong></p>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </section>
 
     <!-- Footer -->
     <footer id="contact" class="footer">

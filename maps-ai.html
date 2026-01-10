@@ -2,65 +2,58 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>EdAI · MAPS AI Builder Lab – Adults</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="EdAI: Build AI Apps with Vibe Coding at MAPS Redmond. A 3‑week, in‑person builder lab for college students and working professionals." />
+  <title>EdAI · MAPS AI Builder Lab</title>
+  <meta
+    name="description"
+    content="EdAI · MAPS AI Builder Lab – a focused space to explore how AI can empower your next chapter."
+  />
 
   <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
 
-  <!-- Reuse existing fonts -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet"
   />
 
-  <!-- Use existing CSS variables but custom layout -->
   <style>
     :root {
-      --primary-blue: #2563eb;
-      --accent-orange: #f97316;
-      --text-primary: #0f172a;
-      --text-secondary: #6b7280;
-      --bg-deep: #020617;
-      --bg-card: rgba(15, 23, 42, 0.92);
-      --radius-lg: 16px;
-      --radius-md: 12px;
-      --spacing-md: 1rem;
-      --spacing-lg: 1.5rem;
-      --spacing-xl: 2rem;
+      --bg-page: #f5f5f4;
+      --bg-card: #ffffff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --accent: #111827;
+      --border-subtle: #e5e7eb;
+      --radius-lg: 32px;
+      --radius-md: 18px;
+      --shadow-soft: 0 24px 80px rgba(15, 23, 42, 0.08);
     }
 
     * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
     }
 
     body {
-      font-family: "Outfit", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      color: #e5e7eb;
-      background: radial-gradient(circle at 0% 0%, #1d4ed8 0, transparent 55%),
-        radial-gradient(circle at 100% 0%, #f97316 0, transparent 55%),
-        radial-gradient(circle at 50% 100%, #22c55e 0, transparent 55%),
-        #020617;
-      height: 100vh;
-      overflow: hidden; /* key: no page scroll */
+      font-family: "Outfit", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
     }
 
-    .page-shell {
-      position: relative;
-      z-index: 1;
-      max-width: 1200px;
-      margin: 0 auto;
-      height: 100vh;
-      padding: 1.25rem 1.5rem 1.5rem;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      gap: 0.75rem;
+    .page {
+      width: 100%;
+      max-width: 1120px;
+      padding: 24px 24px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
     }
 
     /* Header */
@@ -68,463 +61,185 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: rgba(15, 23, 42, 0.9);
-      border-radius: 999px;
-      padding: 0.5rem 1rem;
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      backdrop-filter: blur(12px);
+      font-size: 0.9rem;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .brand img {
-      height: 30px;
-      width: 30px;
-      object-fit: contain;
-    }
-
-    .brand-text {
-      display: flex;
-      flex-direction: column;
-      font-size: 0.75rem;
-      line-height: 1.2;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #e5e7eb;
-    }
-
-    .brand-text span:last-child {
+    .name {
       font-weight: 700;
-      color: var(--accent-orange);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
-    .header-badge {
-      font-size: 0.75rem;
-      color: #e5e7eb;
+    .nav-links {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
     }
 
-    .pill {
-      padding: 0.2rem 0.6rem;
+    .nav-dot {
+      width: 4px;
+      height: 4px;
       border-radius: 999px;
-      background: rgba(37, 99, 235, 0.2);
-      border: 1px solid rgba(37, 99, 235, 0.6);
-      font-weight: 600;
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #bfdbfe;
+      background: var(--text-muted);
     }
 
-    /* Main content layout */
-    .main-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.1fr);
-      gap: 1.25rem;
-      height: 100%;
-      min-height: 0;
+    .nav-socials {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
     }
 
-    .hero-card,
-    .panel-card {
+    .nav-socials a {
+      color: var(--text-main);
+      text-decoration: none;
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+
+    .nav-socials a:hover {
+      background: rgba(17, 24, 39, 0.04);
+    }
+
+    /* Hero */
+    .hero-card {
       background: var(--bg-card);
       border-radius: var(--radius-lg);
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.5);
-      padding: var(--spacing-xl);
+      box-shadow: var(--shadow-soft);
+      padding: 32px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      gap: 32px;
+      align-items: stretch;
+    }
+
+    .hero-image-shell {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      position: relative;
+      background: radial-gradient(circle at 0% 0%, #f97316 0, #facc15 35%, transparent 70%),
+        radial-gradient(circle at 100% 0%, #4b5563 0, #111827 45%, transparent 75%),
+        #e5e5e5;
+      min-height: 320px;
+    }
+
+    .hero-image-shell::after {
+      content: "";
+      position: absolute;
+      inset: 12%;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.35);
+      mix-blend-mode: screen;
+      filter: blur(18px);
+    }
+
+    .hero-copy {
       display: flex;
       flex-direction: column;
-      min-height: 0;
+      justify-content: center;
+      gap: 20px;
     }
 
-    .hero-eyebrow {
+    .eyebrow {
       font-size: 0.8rem;
-      color: #a5b4fc;
-      display: flex;
-      align-items: center;
-      gap: 0.45rem;
-      margin-bottom: 0.4rem;
-    }
-
-    .hero-eyebrow span {
-      padding: 0.18rem 0.55rem;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      font-size: 0.7rem;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
+      color: var(--text-muted);
     }
 
-    .hero-title {
-      font-size: 2.1rem;
-      line-height: 1.15;
-      margin-bottom: 0.75rem;
-      color: #f9fafb;
+    .title {
+      font-size: 2.7rem;
+      line-height: 1.05;
+      font-weight: 700;
     }
 
-    .hero-title span {
-      background: linear-gradient(120deg, #f97316, #22c55e, #38bdf8);
+    .title span {
+      background: linear-gradient(130deg, #111827, #4b5563);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
 
-    .hero-subtitle {
-      font-size: 0.95rem;
+    .subtitle {
+      font-size: 1rem;
       line-height: 1.6;
-      color: #cbd5f5;
-      margin-bottom: 1rem;
+      color: var(--text-muted);
     }
 
-    .hero-subtitle strong {
-      color: #e5e7eb;
-    }
-
-    .hero-meta {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0.75rem;
-      margin-bottom: 1rem;
-    }
-
-    .meta-chip {
-      border-radius: var(--radius-md);
-      padding: 0.75rem;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-    }
-
-    .meta-label {
-      font-size: 0.7rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: #9ca3af;
-    }
-
-    .meta-value {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #e5e7eb;
-    }
-
-    .hero-highlight {
-      background: rgba(37, 99, 235, 0.15);
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(59, 130, 246, 0.6);
-      padding: 0.75rem 0.9rem;
-      font-size: 0.85rem;
-      color: #dbeafe;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      margin-bottom: 1.1rem;
-    }
-
-    .hero-highlight strong {
-      color: #f9fafb;
-    }
-
-    .hero-cta-row {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 1rem;
-    }
-
-    .btn-primary {
-      appearance: none;
-      border: none;
-      border-radius: 999px;
-      padding: 0.7rem 1.35rem;
-      font-weight: 600;
-      letter-spacing: 0.03em;
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      color: white;
-      background: linear-gradient(120deg, #f97316, #ef4444, #eab308);
-      box-shadow: 0 16px 40px rgba(248, 113, 22, 0.5);
-      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
-      white-space: nowrap;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.03);
-      box-shadow: 0 20px 55px rgba(248, 113, 22, 0.65);
-    }
-
-    .btn-ghost {
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      padding: 0.45rem 0.95rem;
-      font-size: 0.8rem;
-      color: #e5e7eb;
-      background: rgba(15, 23, 42, 0.9);
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .hero-footer-note {
-      font-size: 0.75rem;
-      color: #9ca3af;
-    }
-
-    .hero-footer-note strong {
-      color: #e5e7eb;
-    }
-
-    /* Right side: panel/tabs */
-    .panel-card {
-      padding: 1.1rem 1.1rem 1rem;
-    }
-
-    .tab-nav {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      margin-bottom: 0.7rem;
-      padding: 0.2rem;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(55, 65, 81, 0.9);
-    }
-
-    .tab-btn {
-      flex: 1;
-      border: none;
-      border-radius: 999px;
-      background: transparent;
-      color: #9ca3af;
-      font-size: 0.8rem;
-      padding: 0.35rem 0.6rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.35rem;
-      white-space: nowrap;
-      transition: background 0.12s, color 0.12s;
-    }
-
-    .tab-btn span.icon {
-      font-size: 0.9rem;
-    }
-
-    .tab-btn--active {
-      background: linear-gradient(120deg, rgba(37, 99, 235, 0.9), rgba(59, 130, 246, 0.95));
-      color: #eff6ff;
-      font-weight: 600;
-    }
-
-    .panel-body {
-      margin-top: 0.4rem;
-      background: radial-gradient(circle at 0 0, rgba(8, 47, 73, 0.5), transparent 55%),
-        radial-gradient(circle at 100% 100%, rgba(6, 78, 59, 0.5), transparent 55%),
-        rgba(15, 23, 42, 0.96);
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(55, 65, 81, 0.85);
-      padding: 0.9rem 0.95rem;
-      height: 100%;
-      min-height: 0;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .panel-scroll {
-      overflow-y: auto;
-      padding-right: 0.3rem;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(148, 163, 184, 0.8) transparent;
-    }
-
-    .panel-scroll::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .panel-scroll::-webkit-scrollbar-thumb {
-      background: rgba(148, 163, 184, 0.8);
-      border-radius: 999px;
-    }
-
-    .panel-section-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #e5e7eb;
-      margin-bottom: 0.4rem;
-    }
-
-    .panel-section-subtitle {
-      font-size: 0.8rem;
-      color: #cbd5f5;
-      margin-bottom: 0.75rem;
-    }
-
-    .pill-row {
+    .cta-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.3rem;
-      margin-bottom: 0.7rem;
+      gap: 12px;
+      align-items: center;
     }
 
-    .mini-pill {
-      font-size: 0.7rem;
-      padding: 0.18rem 0.55rem;
+    .cta-input {
+      flex: 1 1 180px;
       border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      color: #cbd5f5;
+      border: 1px solid var(--border-subtle);
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .cta-input::placeholder {
+      color: #9ca3af;
+    }
+
+    .cta-button {
+      border-radius: 999px;
+      border: none;
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: #111827;
+      color: #f9fafb;
+      cursor: pointer;
       white-space: nowrap;
     }
 
-    .panel-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.7rem;
-      margin-bottom: 0.7rem;
+    .cta-button:hover {
+      background: #020617;
     }
 
-    .panel-card-item {
-      border-radius: 0.9rem;
-      padding: 0.6rem 0.65rem;
-      background: rgba(15, 23, 42, 0.96);
-      border: 1px solid rgba(55, 65, 81, 0.85);
-      font-size: 0.8rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-
-    .panel-card-item strong {
-      color: #e5e7eb;
-      font-size: 0.8rem;
-    }
-
-    .panel-card-item p {
-      color: #9ca3af;
-      font-size: 0.77rem;
-      line-height: 1.5;
-    }
-
-    .timeline {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.55rem;
-      margin-bottom: 0.7rem;
-    }
-
-    .timeline-step {
-      border-radius: 0.8rem;
-      padding: 0.55rem 0.6rem;
-      background: rgba(15, 23, 42, 0.96);
-      border: 1px dashed rgba(148, 163, 184, 0.8);
-      font-size: 0.78rem;
-    }
-
-    .timeline-step span.badge {
-      display: inline-block;
-      font-size: 0.65rem;
-      margin-bottom: 0.2rem;
-      padding: 0.15rem 0.4rem;
-      border-radius: 999px;
-      background: rgba(37, 99, 235, 0.2);
-      color: #bfdbfe;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .timeline-step strong {
-      display: block;
-      margin-bottom: 0.15rem;
-      color: #e5e7eb;
-    }
-
-    .timeline-step p {
-      color: #9ca3af;
-      line-height: 1.5;
-    }
-
-    .bot-card {
-      border-radius: 0.9rem;
-      padding: 0.7rem 0.75rem;
-      background: radial-gradient(circle at 0 0, rgba(59, 130, 246, 0.4), transparent 60%),
-        rgba(15, 23, 42, 0.96);
-      border: 1px solid rgba(59, 130, 246, 0.9);
-      display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
-      font-size: 0.8rem;
-      margin-top: auto;
-    }
-
-    .bot-card-header {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .bot-avatar {
-      height: 26px;
-      width: 26px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 0, #facc15, #f97316);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.9rem;
-    }
-
-    .bot-name {
-      font-weight: 600;
-      font-size: 0.8rem;
-      color: #e5e7eb;
-    }
-
-    .bot-role {
-      font-size: 0.7rem;
-      color: #c4b5fd;
-    }
-
-    .bot-body {
-      color: #e5e7eb;
-      font-size: 0.78rem;
-      line-height: 1.5;
-    }
-
-    .bot-footer {
-      font-size: 0.7rem;
-      color: #cbd5f5;
+    .cta-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
     }
 
     /* Footer strip */
     .footer {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
-      align-items: center;
-      font-size: 0.75rem;
-      color: #9ca3af;
-      gap: 0.75rem;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      padding: 0 4px;
+    }
+
+    .footer-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .footer-label {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.7rem;
+    }
+
+    .footer-main {
+      color: var(--text-main);
     }
 
     .footer a {
-      color: #93c5fd;
+      color: var(--text-main);
       text-decoration: none;
     }
 
@@ -532,411 +247,92 @@
       text-decoration: underline;
     }
 
-    .footer-pill {
-      padding: 0.2rem 0.6rem;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      background: rgba(15, 23, 42, 0.95);
-      color: #e5e7eb;
-    }
-
-    /* Mobile-ish breakpoint: keep non-scrolling but stack vertically */
     @media (max-width: 900px) {
-      .page-shell {
-        padding: 0.85rem;
+      .hero-card {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 24px;
       }
-      .main-grid {
-        grid-template-columns: 1fr;
+
+      .hero-image-shell {
+        order: 2;
+        min-height: 260px;
       }
-      .hero-card,
-      .panel-card {
-        padding: 0.9rem;
+
+      .hero-copy {
+        order: 1;
       }
-      .hero-title {
-        font-size: 1.7rem;
-      }
-      .hero-meta {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+      .title {
+        font-size: 2.2rem;
       }
     }
 
     @media (max-width: 640px) {
-      body {
-        font-size: 14px;
+      .page {
+        padding: 20px 16px 28px;
       }
-      .hero-meta {
-        grid-template-columns: 1fr;
+
+      .cta-row {
+        flex-direction: column;
+        align-items: stretch;
       }
-      .tab-nav {
-        flex-wrap: wrap;
-      }
-      .tab-btn {
-        flex: 0 1 calc(50% - 0.2rem);
+
+      .cta-button {
+        width: 100%;
       }
     }
   </style>
 </head>
 <body>
-  <div class="page-shell">
-    <!-- Header -->
+  <div class="page">
     <header class="header">
-      <div class="brand">
-        <img src="assets/edai-logo.png" alt="EdAI logo" />
-        <div class="brand-text">
-          <span>EdAI · MAPS Redmond</span>
-          <span>Adult AI Builder Lab</span>
-        </div>
-      </div>
-      <div class="header-badge">
-        <span class="pill">Cohort 1 · Adults</span>
-        <span>Assalamu alaikum — build with ihsan, not hustle culture.</span>
+      <div class="name">EdAI · MAPS AI Builder Lab</div>
+      <div class="nav-socials">
+        <a href="https://www.linkedin.com/in/azibit" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <span class="nav-dot"></span>
+        <a href="mailto:aidris@edai.fun">Contact</a>
       </div>
     </header>
 
-    <!-- Main two-column grid -->
-    <main class="main-grid" aria-label="EdAI MAPS AI Program">
-      <!-- Left: hero / primary info -->
-      <section class="hero-card" aria-label="Program overview">
-        <div class="hero-eyebrow">
-          <span>New · College & Professionals</span>
-          <span>Limited to 7 seats</span>
-        </div>
-        <h1 class="hero-title">
-          Build AI apps with vibe coding —
-          <span>for your work, studies, and ummah.</span>
+    <section class="hero-card">
+      <div class="hero-image-shell" aria-hidden="true"></div>
+
+      <div class="hero-copy">
+        <p class="eyebrow">MAPS Redmond · Adult & College Cohort</p>
+        <h1 class="title">
+          Empowering the next generation of
+          <span>AI leaders.</span>
         </h1>
-        <p class="hero-subtitle">
-          A 3‑week, in‑person builder lab at <strong>MAPS Redmond</strong> where college students
-          and working professionals ship AI‑powered apps and sites — without needing a CS
-          background.
+        <p class="subtitle">
+          A focused space to explore how AI can support your work, studies, and community —
+          without the noise, overwhelm, or hype.
         </p>
 
-        <div class="hero-meta">
-          <div class="meta-chip">
-            <span class="meta-label">Start</span>
-            <span class="meta-value">Tue, Jan 27, 2026</span>
-            <span style="font-size: 0.75rem; color: #9ca3af;">3 weeks · Tue & Wed</span>
-          </div>
-          <div class="meta-chip">
-            <span class="meta-label">Schedule</span>
-            <span class="meta-value">6:00–8:00 PM</span>
-            <span style="font-size: 0.75rem; color: #9ca3af;">In-person at MAPS (Redmond)</span>
-          </div>
-          <div class="meta-chip">
-            <span class="meta-label">Tuition</span>
-            <span class="meta-value">$850</span>
-            <span style="font-size: 0.75rem; color: #9ca3af;">Max 7 participants</span>
-          </div>
+        <div class="cta-row">
+          <input
+            type="email"
+            class="cta-input"
+            placeholder="Email address"
+            aria-label="Email address"
+          />
+          <button class="cta-button" type="button">Get in touch</button>
         </div>
-
-        <div class="hero-highlight">
-          <div><strong>What we ask from you:</strong></div>
-          <div>
-            Bring one real situation from work, school, or your community — we’ll help you turn it
-            into a working AI‑powered tool you can actually use.
-          </div>
-        </div>
-
-        <div class="hero-cta-row">
-          <button id="applyChatBtn" class="btn-primary">
-            <span>🤖</span>
-            <span>Apply with Chatbot</span>
-          </button>
-          <button class="btn-ghost" data-tab-target="tab-curriculum">
-            <span>📚</span>
-            <span>See 3‑week plan</span>
-          </button>
-        </div>
-
-        <p class="hero-footer-note">
-          No coding experience required. <strong>We start from plain language</strong> and use AI
-          as your co‑builder — you focus on clarity, impact, and values.
-        </p>
-      </section>
-
-      <!-- Right: tabbed panel -->
-      <section class="panel-card" aria-label="Program details">
-        <nav class="tab-nav" aria-label="Program sections">
-          <button class="tab-btn tab-btn--active" data-tab="tab-overview">
-            <span class="icon">✨</span>
-            <span>Overview</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-who">
-            <span class="icon">🧕🏽</span>
-            <span>Who it’s for</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-curriculum">
-            <span class="icon">📚</span>
-            <span>Curriculum</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-apply">
-            <span class="icon">💬</span>
-            <span>How to apply</span>
-          </button>
-        </nav>
-
-        <div class="panel-body">
-          <!-- Overview -->
-          <div class="panel-scroll tab-panel" id="tab-overview" aria-label="Overview" role="tabpanel">
-            <h2 class="panel-section-title">What you’ll actually do here</h2>
-            <p class="panel-section-subtitle">
-              This is a builder lab — each session mixes a short concept with guided building so
-              you leave every night with something working.
-            </p>
-
-            <div class="pill-row">
-              <span class="mini-pill">AI‑assisted coding</span>
-              <span class="mini-pill">Front end + back end basics</span>
-              <span class="mini-pill">Real portfolio pieces</span>
-            </div>
-
-            <div class="panel-grid">
-              <article class="panel-card-item">
-                <strong>Ship multiple small apps</strong>
-                <p>
-                  A personal portfolio site, a topic‑based or homework‑helper chatbot, a simple
-                  store/showcase, and a planner or journal tool.
-                </p>
-              </article>
-              <article class="panel-card-item">
-                <strong>Build one project that matters to you</strong>
-                <p>
-                  Take what you learn and build a tool for your job, studies, or masjid/community:
-                  dashboards, intake forms, study helpers, or internal tools.
-                </p>
-              </article>
-              <article class="panel-card-item">
-                <strong>Think like a modern builder</strong>
-                <p>
-                  Learn how apps fit together (front end, back end, data) and where AI models plug
-                  in — without drowning in theory.
-                </p>
-              </article>
-              <article class="panel-card-item">
-                <strong>Build with Islamic values</strong>
-                <p>
-                  We frame decisions with amanah, ihsan, and service: what is useful, fair, and
-                  beneficial to the people you’re serving.
-                </p>
-              </article>
-            </div>
-          </div>
-
-          <!-- Who it's for -->
-          <div
-            class="panel-scroll tab-panel"
-            id="tab-who"
-            aria-label="Who this is for"
-            role="tabpanel"
-            hidden
-          >
-            <h2 class="panel-section-title">Is this a good fit for you?</h2>
-            <p class="panel-section-subtitle">
-              This cohort is for people who already have responsibilities — at work, in school, or
-              in the community — and want AI to help them carry that amanah better.
-            </p>
-
-            <div class="panel-grid">
-              <article class="panel-card-item">
-                <strong>Working professionals (tech‑adjacent)</strong>
-                <p>
-                  PMs, analysts, ops, designers, engineers‑in‑practice who want to spin up internal
-                  dashboards, workflow automations, or client tools quickly.
-                </p>
-              </article>
-              <article class="panel-card-item">
-                <strong>Working professionals (non‑tech)</strong>
-                <p>
-                  Teachers, health & finance staff, non‑profit and masjid leaders who want planners,
-                  intake flows, or simple apps that keep people organized.
-                </p>
-              </article>
-              <article class="panel-card-item">
-                <strong>College students</strong>
-                <p>
-                  CS‑adjacent or completely non‑technical students who want real projects in their
-                  portfolio, not just course assignments and club positions.
-                </p>
-              </article>
-              <article class="panel-card-item">
-                <strong>Probably not for you if…</strong>
-                <p>
-                  You already ship full‑stack apps comfortably, or you’re looking for deep CS
-                  theory, heavy math, or production engineering.
-                </p>
-              </article>
-            </div>
-          </div>
-
-          <!-- Curriculum -->
-          <div
-            class="panel-scroll tab-panel"
-            id="tab-curriculum"
-            aria-label="Curriculum"
-            role="tabpanel"
-            hidden
-          >
-            <h2 class="panel-section-title">3‑week builder journey</h2>
-            <p class="panel-section-subtitle">
-              Each week has two focused sessions. Every class: one clear concept, one pattern, one
-              piece of your projects shipped or upgraded.
-            </p>
-
-            <div class="timeline">
-              <div class="timeline-step">
-                <span class="badge">Week 1</span>
-                <strong>First app + portfolio</strong>
-                <p>
-                  Ship a mini app on day 1, then build your personal portfolio site with AI
-                  assisting on layout, copy, and cleanup.
-                </p>
-              </div>
-              <div class="timeline-step">
-                <span class="badge">Week 2</span>
-                <strong>Chatbots + showcase apps</strong>
-                <p>
-                  Build a chatbot (homework helper or topic guide) and a simple store/showcase for
-                  activities, services, or a side hustle.
-                </p>
-              </div>
-              <div class="timeline-step">
-                <span class="badge">Week 3</span>
-                <strong>Planner/journal + polish</strong>
-                <p>
-                  Create a planner/journal tool with AI support, then polish, deploy, and document
-                  your projects for resumes, LinkedIn, or promotion docs.
-                </p>
-              </div>
-              <div class="timeline-step">
-                <span class="badge">Always</span>
-                <strong>Lightweight AI foundations</strong>
-                <p>
-                  Intuitive walkthroughs of how neural networks and transformers work — enough to
-                  reason about tools, not enough to drown you in math.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- How to apply -->
-          <div
-            class="panel-scroll tab-panel"
-            id="tab-apply"
-            aria-label="How to apply"
-            role="tabpanel"
-            hidden
-          >
-            <h2 class="panel-section-title">How the application works</h2>
-            <p class="panel-section-subtitle">
-              No long forms. You’ll chat with an Islamic, slightly playful bot that collects what
-              we actually need to know.
-            </p>
-
-            <div class="panel-grid">
-              <article class="panel-card-item">
-                <strong>Step 1 — Say salaam to the bot</strong>
-                <p>
-                  Click <em>Apply with Chatbot</em>. Our MAPS‑flavored guide will greet you,
-                  explain the program briefly, and ask a few relaxed questions.
-                </p>
-              </article>
-              <article class="panel-card-item">
-                <strong>Step 2 — Share your context</strong>
-                <p>
-                  In 5–8 minutes, you’ll describe your current role (student or professional),
-                  what you hope to build, and how you’d like it to serve your work or community.
-                </p>
-              </article>
-              <article class="panel-card-item">
-                <strong>Step 3 — We review & select</strong>
-                <p>
-                  We review applications for motivation and fit, not credentials. With only 7
-                  seats, we prioritize people ready to experiment and ship.
-                </p>
-              </article>
-              <article class="panel-card-item">
-                <strong>Step 4 — Decision & next steps</strong>
-                <p>
-                  If accepted, you’ll receive an email and SMS with payment details, logistics, and
-                  how to prepare your first idea in shaa Allah.
-                </p>
-              </article>
-            </div>
-
-            <div class="bot-card" id="chatPreviewCard">
-              <div class="bot-card-header">
-                <div class="bot-avatar">🕌</div>
-                <div>
-                  <div class="bot-name">MAPS AI Guide</div>
-                  <div class="bot-role">Islamic & friendly application chatbot</div>
-                </div>
-              </div>
-              <div class="bot-body">
-                “Assalamu alaikum! I’ll walk with you step‑by‑step. We’ll talk about what you’re
-                building, who it helps, and how this cohort can serve your dunya and akhira goals,
-                in shaa Allah.”
-              </div>
-              <div class="bot-footer">
-                Click <strong>Apply with Chatbot</strong> whenever you’re ready — no essay, no upload,
-                just a short guided conversation.
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <div>
-        EdAI · Building with purpose, guided by values. Hosted at MAPS Redmond.
+        <p class="cta-note">No spam. Just one thoughtful reply with next steps, in shaa Allah.</p>
       </div>
-      <div class="footer-pill">
-        Questions? <a href="mailto:aidris@edai.fun">aidris@edai.fun</a>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-block">
+        <span class="footer-label">Location</span>
+        <span class="footer-main">Redmond, WA · MAPS Redmond</span>
+        <span>United States</span>
+      </div>
+      <div class="footer-block">
+        <span class="footer-label">Contact</span>
+        <span class="footer-main"><a href="mailto:aidris@edai.fun">aidris@edai.fun</a></span>
+        <span><a href="https://www.linkedin.com/in/azibit" target="_blank" rel="noopener noreferrer">linkedin.com/in/azibit</a></span>
       </div>
     </footer>
   </div>
-
-  <script>
-    // Simple tab switching logic
-    (function () {
-      const tabButtons = document.querySelectorAll(".tab-btn");
-      const panels = document.querySelectorAll(".tab-panel");
-
-      tabButtons.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const targetId = btn.dataset.tab;
-          // Update active tab button
-          tabButtons.forEach((b) => b.classList.remove("tab-btn--active"));
-          btn.classList.add("tab-btn--active");
-          // Show correct panel
-          panels.forEach((panel) => {
-            if (panel.id === targetId) {
-              panel.hidden = false;
-            } else {
-              panel.hidden = true;
-            }
-          });
-        });
-      });
-
-      // Apply with Chatbot button - currently just focuses "How to apply" panel.
-      const applyBtn = document.getElementById("applyChatBtn");
-      if (applyBtn) {
-        applyBtn.addEventListener("click", () => {
-          // Switch to "How to apply" tab for now
-          const applyTabBtn = document.querySelector('.tab-btn[data-tab="tab-apply"]');
-          if (applyTabBtn) applyTabBtn.click();
-
-          // TODO (next step): hook this into an Islamic chatbot flow
-          // For now, you can also scroll the panel body to the chat preview card.
-          const previewCard = document.getElementById("chatPreviewCard");
-          if (previewCard) {
-            previewCard.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
-        });
-      }
-    })();
-  </script>
 </body>
 </html>

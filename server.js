@@ -770,11 +770,8 @@ app.get('/api/get-maps-applications', async (req, res) => {
     try {
         const result = await pool.query(`
             SELECT 
-                id, name, email, phone, background, field, 
-                coding_experience, motivation, has_laptop, 
-                schedule_confirm, referral_source, email_verified,
-                application_status as status,
-                submitted_at, updated_at
+                *,
+                application_status as status
             FROM maps_applications 
             ORDER BY submitted_at DESC
         `);
@@ -787,7 +784,7 @@ app.get('/api/get-maps-applications', async (req, res) => {
         console.error('Error fetching MAPS applications:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to fetch applications'
+            error: 'Failed to fetch applications: ' + error.message
         });
     }
 });

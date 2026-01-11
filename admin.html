@@ -1803,8 +1803,9 @@
                 ${applicant.status === 'accepted' ? `
                 <div class="detail-section" style="background: #d1fae5; padding: 1.5rem; border-radius: 12px;">
                     <h3 style="color: #065f46;">✅ Accepted</h3>
-                    <p>This applicant has been accepted. Acceptance email was sent.</p>
-                    <div style="margin-top: 1rem;">
+                    <p>This applicant has been accepted.</p>
+                    <div style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <button class="btn-send-invite" onclick="resendMapsAcceptanceEmail(${applicant.id}, '${applicant.name.replace(/'/g, "\\'")}')" style="background: linear-gradient(135deg, #10b981, #34d399);">📧 Resend Acceptance Email</button>
                         <button class="btn-send-invite" onclick="updateMapsStatus(${applicant.id}, 'enrolled'); closeModal();" style="background: linear-gradient(135deg, #6366f1, #818cf8);">📚 Mark as Enrolled</button>
                     </div>
                 </div>
@@ -1813,7 +1814,10 @@
                 ${applicant.status === 'rejected' ? `
                 <div class="detail-section" style="background: #fee2e2; padding: 1.5rem; border-radius: 12px;">
                     <h3 style="color: #991b1b;">❌ Rejected</h3>
-                    <p>This applicant has been rejected. Rejection email was sent.</p>
+                    <p>This applicant has been rejected.</p>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn-send-invite" onclick="resendMapsRejectionEmail(${applicant.id}, '${applicant.name.replace(/'/g, "\\'")}')" style="background: linear-gradient(135deg, #ef4444, #f87171);">📧 Resend Rejection Email</button>
+                    </div>
                 </div>
                 ` : ''}
                 
@@ -1888,6 +1892,57 @@
             } catch (error) {
                 console.error('Error:', error);
                 alert('Failed to reject applicant. Please try again.');
+            }
+        }
+        
+        async function resendMapsAcceptanceEmail(applicationId, applicantName) {
+            const startDate = prompt(`Resend acceptance email to ${applicantName}.\n\nEnter program start date (optional):`, '');
+            const customMessage = prompt('Add a custom message (optional):', '');
+            
+            if (!confirm(`Resend acceptance email to ${applicantName}?`)) return;
+            
+            try {
+                const response = await fetch('/api/resend-maps-acceptance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ applicationId, startDate, customMessage })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('📧 Acceptance email resent successfully!');
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to resend email. Please try again.');
+            }
+        }
+        
+        async function resendMapsRejectionEmail(applicationId, applicantName) {
+            const reason = prompt(`Resend rejection email to ${applicantName}.\n\nEnter a reason (optional):`, '');
+            
+            if (!confirm(`Resend rejection email to ${applicantName}?`)) return;
+            
+            try {
+                const response = await fetch('/api/resend-maps-rejection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ applicationId, reason })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('📧 Rejection email resent successfully!');
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to resend email. Please try again.');
             }
         }
     </script>

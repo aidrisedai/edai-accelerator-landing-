@@ -902,12 +902,18 @@ app.post('/api/accept-maps-applicant', async (req, res) => {
                         
                         <h3>📝 Next Steps</h3>
                         <ol>
-                            <li><strong>Confirm Your Spot:</strong> Reply to this email to confirm your enrollment</li>
-                            <li><strong>Payment:</strong> We'll send payment details once you confirm</li>
-                            <li><strong>Preparation:</strong> Make sure you have a laptop ready</li>
+                            <li><strong>Make Payment:</strong> Complete your $850 payment to secure your spot</li>
+                            <li><strong>Confirm:</strong> Reply to this email after payment to confirm enrollment</li>
+                            <li><strong>Preparation:</strong> Make sure you have a laptop ready for class</li>
                         </ol>
                         
-                        <p><strong>⚠️ Important:</strong> Spots are limited to 7 students. Please confirm within 48 hours to secure your seat.</p>
+                        <div style="background: #10b981; padding: 20px; border-radius: 12px; text-align: center; margin: 25px 0;">
+                            <p style="color: white; margin: 0 0 15px 0; font-size: 16px;"><strong>💳 Complete Your Payment</strong></p>
+                            <a href="https://myvanco.io/VEI9M" style="display: inline-block; background: white; color: #10b981; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Pay $850 via MAPS Payment Portal</a>
+                            <p style="color: rgba(255,255,255,0.9); margin: 12px 0 0 0; font-size: 13px;">Secure payment processed by MAPS Redmond</p>
+                        </div>
+                        
+                        <p><strong>⚠️ Important:</strong> Spots are limited to 7 students. Please complete payment within 48 hours to secure your seat.</p>
                         
                         <p>Questions? Reply to this email or contact us at <a href="mailto:aidris@edai.fun" style="color: #10b981;">aidris@edai.fun</a> or call/text <a href="tel:+15153570454" style="color: #10b981;">+1 (515) 357-0454</a>.</p>
                         
@@ -1034,6 +1040,212 @@ app.post('/api/reject-maps-applicant', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to update application'
+        });
+    }
+});
+
+// API endpoint to resend MAPS acceptance email
+app.post('/api/resend-maps-acceptance', async (req, res) => {
+    try {
+        const { applicationId, startDate, customMessage } = req.body;
+        
+        if (!applicationId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Application ID is required'
+            });
+        }
+        
+        // Get applicant details
+        const applicantResult = await pool.query(
+            'SELECT * FROM maps_applications WHERE id = $1',
+            [applicationId]
+        );
+        
+        if (applicantResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Application not found'
+            });
+        }
+        
+        const applicant = applicantResult.rows[0];
+        
+        // Send acceptance email
+        const settings = await getSettings();
+        const { Resend } = require('resend');
+        const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
+        
+        await resend.emails.send({
+            from: settings.email_from_address || 'EdAI <noreply@edaiaccelerator.com>',
+            to: applicant.email,
+            subject: '🎉 Congratulations! You\'ve Been Accepted - MAPS AI Builder Lab',
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: 'Outfit', -apple-system, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
+                        .header { background: linear-gradient(135deg, #10b981, #34d399); color: white; padding: 40px 30px; text-align: center; }
+                        .content { background: #f9f9f9; padding: 40px 30px; }
+                        .info-box { background: white; padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #10b981; }
+                        .footer { padding: 20px; text-align: center; color: #999; font-size: 14px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1 style="margin: 0; font-size: 28px;">🎉 Congratulations!</h1>
+                        <p style="margin: 10px 0 0 0; font-size: 18px;">You've Been Accepted!</p>
+                    </div>
+                    <div class="content">
+                        <p><strong>Assalamu Alaikum ${applicant.name},</strong></p>
+                        <p>Alhamdulillah! We are thrilled to inform you that you have been <strong>accepted</strong> into the MAPS AI Builder Lab!</p>
+                        
+                        ${customMessage ? `<div class="info-box"><p style="margin: 0;">${customMessage}</p></div>` : ''}
+                        
+                        <div class="info-box">
+                            <h3 style="margin: 0 0 15px 0; color: #10b981;">📋 Program Details</h3>
+                            <p style="margin: 5px 0;"><strong>Duration:</strong> 3 weeks (6 sessions)</p>
+                            <p style="margin: 5px 0;"><strong>Schedule:</strong> Tuesdays & Wednesdays, 6–8 PM</p>
+                            <p style="margin: 5px 0;"><strong>Location:</strong> MAPS Redmond, WA</p>
+                            <p style="margin: 5px 0;"><strong>Investment:</strong> $850</p>
+                            ${startDate ? `<p style="margin: 5px 0;"><strong>Start Date:</strong> ${startDate}</p>` : ''}
+                        </div>
+                        
+                        <h3>📝 Next Steps</h3>
+                        <ol>
+                            <li><strong>Make Payment:</strong> Complete your $850 payment to secure your spot</li>
+                            <li><strong>Confirm:</strong> Reply to this email after payment to confirm enrollment</li>
+                            <li><strong>Preparation:</strong> Make sure you have a laptop ready for class</li>
+                        </ol>
+                        
+                        <div style="background: #10b981; padding: 20px; border-radius: 12px; text-align: center; margin: 25px 0;">
+                            <p style="color: white; margin: 0 0 15px 0; font-size: 16px;"><strong>💳 Complete Your Payment</strong></p>
+                            <a href="https://myvanco.io/VEI9M" style="display: inline-block; background: white; color: #10b981; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Pay $850 via MAPS Payment Portal</a>
+                            <p style="color: rgba(255,255,255,0.9); margin: 12px 0 0 0; font-size: 13px;">Secure payment processed by MAPS Redmond</p>
+                        </div>
+                        
+                        <p><strong>⚠️ Important:</strong> Spots are limited to 7 students. Please complete payment within 48 hours to secure your seat.</p>
+                        
+                        <p>Questions? Reply to this email or contact us at <a href="mailto:aidris@edai.fun" style="color: #10b981;">aidris@edai.fun</a> or call/text <a href="tel:+15153570454" style="color: #10b981;">+1 (515) 357-0454</a>.</p>
+                        
+                        <p style="margin-top: 30px;">We can't wait to start building with you!</p>
+                        <p><strong>— The EdAI Team</strong></p>
+                    </div>
+                    <div class="footer">
+                        <p>© ${new Date().getFullYear()} EdAI · MAPS Redmond, WA</p>
+                    </div>
+                </body>
+                </html>
+            `
+        });
+        
+        console.log(`Acceptance email resent to ${applicant.email}`);
+        
+        res.status(200).json({
+            success: true,
+            message: 'Acceptance email resent'
+        });
+        
+    } catch (error) {
+        console.error('Error resending acceptance email:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to resend email'
+        });
+    }
+});
+
+// API endpoint to resend MAPS rejection email
+app.post('/api/resend-maps-rejection', async (req, res) => {
+    try {
+        const { applicationId, reason } = req.body;
+        
+        if (!applicationId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Application ID is required'
+            });
+        }
+        
+        // Get applicant details
+        const applicantResult = await pool.query(
+            'SELECT * FROM maps_applications WHERE id = $1',
+            [applicationId]
+        );
+        
+        if (applicantResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Application not found'
+            });
+        }
+        
+        const applicant = applicantResult.rows[0];
+        
+        // Send rejection email
+        const settings = await getSettings();
+        const { Resend } = require('resend');
+        const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
+        
+        await resend.emails.send({
+            from: settings.email_from_address || 'EdAI <noreply@edaiaccelerator.com>',
+            to: applicant.email,
+            subject: 'MAPS AI Builder Lab Application Update',
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: 'Outfit', -apple-system, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
+                        .header { background: #0a0a0a; color: white; padding: 40px 30px; text-align: center; }
+                        .content { background: #f9f9f9; padding: 40px 30px; }
+                        .info-box { background: white; padding: 20px; border-radius: 12px; margin: 20px 0; }
+                        .footer { padding: 20px; text-align: center; color: #999; font-size: 14px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1 style="margin: 0; font-size: 24px;">Application Update</h1>
+                        <p style="margin: 10px 0 0 0; opacity: 0.9;">MAPS AI Builder Lab</p>
+                    </div>
+                    <div class="content">
+                        <p><strong>Assalamu Alaikum ${applicant.name},</strong></p>
+                        <p>Thank you for your interest in the MAPS AI Builder Lab. After careful review of all applications, we regret to inform you that we are unable to offer you a spot in the upcoming cohort.</p>
+                        
+                        ${reason ? `<div class="info-box"><p style="margin: 0;"><strong>Note:</strong> ${reason}</p></div>` : ''}
+                        
+                        <p>This was a difficult decision as we received many qualified applications. Due to limited class size (7 students), we could not accommodate everyone.</p>
+                        
+                        <div class="info-box">
+                            <h3 style="margin: 0 0 10px 0;">🔄 Future Opportunities</h3>
+                            <p style="margin: 0;">We encourage you to apply again for future cohorts. You can also reach out to us directly at <a href="mailto:aidris@edai.fun" style="color: #0a0a0a;">aidris@edai.fun</a> to be notified when new cohorts open.</p>
+                        </div>
+                        
+                        <p>We appreciate your interest and wish you success in your learning journey!</p>
+                        
+                        <p style="margin-top: 30px;"><strong>— The EdAI Team</strong></p>
+                    </div>
+                    <div class="footer">
+                        <p>© ${new Date().getFullYear()} EdAI · MAPS Redmond, WA</p>
+                    </div>
+                </body>
+                </html>
+            `
+        });
+        
+        console.log(`Rejection email resent to ${applicant.email}`);
+        
+        res.status(200).json({
+            success: true,
+            message: 'Rejection email resent'
+        });
+        
+    } catch (error) {
+        console.error('Error resending rejection email:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to resend email'
         });
     }
 });

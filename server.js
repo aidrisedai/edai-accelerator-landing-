@@ -769,7 +769,13 @@ app.post('/api/submit-maps-application', async (req, res) => {
 app.get('/api/get-maps-applications', async (req, res) => {
     try {
         const result = await pool.query(`
-            SELECT * FROM maps_applications 
+            SELECT 
+                id, name, email, phone, background, field, 
+                coding_experience, motivation, has_laptop, 
+                schedule_confirm, referral_source, email_verified,
+                application_status as status,
+                submitted_at, updated_at
+            FROM maps_applications 
             ORDER BY submitted_at DESC
         `);
         

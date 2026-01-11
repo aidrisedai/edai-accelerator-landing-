@@ -869,10 +869,171 @@
       }
 
       .footer {
-        padding: 16px;
-        flex-direction: column;
+        padding: 12px 16px;
+        flex-direction: row;
+        justify-content: space-between;
         gap: 8px;
-        text-align: center;
+        font-size: 0.75rem;
+      }
+
+      /* HOME VIEW - No scroll on mobile */
+      #view-home {
+        height: calc(100vh - 85px); /* Subtract header height */
+        overflow: hidden;
+      }
+
+      #view-home .main {
+        height: 100%;
+        padding: 12px 16px 8px;
+        justify-content: space-evenly;
+        overflow: hidden;
+      }
+
+      #view-home .eyebrow {
+        margin-bottom: 4px;
+        font-size: 0.65rem;
+      }
+
+      #view-home .title {
+        font-size: 1.6rem;
+        margin-bottom: 6px;
+      }
+
+      #view-home .subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+        line-height: 1.4;
+      }
+
+      #view-home .cta-area {
+        margin-bottom: 12px;
+        gap: 6px;
+      }
+
+      #view-home .cta-button {
+        padding: 14px 36px;
+        font-size: 1rem;
+      }
+
+      #view-home .price-tag {
+        font-size: 0.85rem;
+      }
+
+      #view-home .info-bar {
+        margin-bottom: 12px;
+        gap: 4px;
+      }
+
+      #view-home .info-chip {
+        padding: 6px 10px;
+        font-size: 0.7rem;
+      }
+
+      #view-home .features {
+        gap: 12px;
+        flex-wrap: nowrap;
+      }
+
+      #view-home .feature {
+        flex: 1;
+        gap: 6px;
+        padding: 0;
+      }
+
+      #view-home .feature-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+        border-radius: 10px;
+      }
+
+      #view-home .feature-title {
+        font-size: 0.75rem;
+      }
+
+      #view-home .feature-desc {
+        font-size: 0.68rem;
+        line-height: 1.3;
+      }
+
+      /* CONTACT VIEW - No scroll on mobile */
+      #view-contact {
+        height: calc(100vh - 85px);
+        overflow: hidden;
+      }
+
+      #view-contact .faq-view {
+        height: 100%;
+        padding: 12px 16px;
+        justify-content: space-evenly;
+        overflow: hidden;
+      }
+
+      #view-contact .faq-header {
+        margin-bottom: 8px;
+      }
+
+      #view-contact .faq-icon {
+        font-size: 1.5rem;
+        margin-bottom: 4px;
+      }
+
+      #view-contact .faq-title {
+        font-size: 1.15rem;
+      }
+
+      #view-contact .faq-subtitle {
+        font-size: 0.8rem;
+      }
+
+      #view-contact .faq-cards {
+        gap: 8px;
+      }
+
+      #view-contact .faq-card {
+        padding: 12px;
+      }
+
+      #view-contact .faq-card-icon {
+        font-size: 1.1rem;
+        margin-bottom: 4px;
+      }
+
+      #view-contact .faq-card h3 {
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+      }
+
+      #view-contact .faq-card p {
+        font-size: 0.75rem;
+        line-height: 1.3;
+        margin-bottom: 0;
+      }
+
+      #view-contact .faq-card a {
+        margin-top: 8px !important;
+        padding: 8px 16px !important;
+        font-size: 0.75rem !important;
+      }
+
+      #view-contact .highlight-box {
+        padding: 12px;
+        margin-top: 8px;
+      }
+
+      #view-contact .highlight-box h3 {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+      }
+
+      #view-contact .highlight-box p {
+        font-size: 0.75rem;
+        margin-bottom: 10px !important;
+      }
+
+      #view-contact .highlight-box .cta-button {
+        padding: 10px 24px;
+        font-size: 0.85rem;
       }
 
       /* Chat Modal Mobile - Critical keyboard fix */
@@ -1043,20 +1204,45 @@
     @media (max-width: 380px) {
       .nav-link {
         padding: 6px 8px;
-        font-size: 0.72rem;
+        font-size: 0.68rem;
       }
 
-      .title {
-        font-size: 1.6rem;
+      #view-home .title {
+        font-size: 1.4rem;
       }
 
-      .subtitle {
-        font-size: 0.88rem;
+      #view-home .subtitle {
+        font-size: 0.78rem;
       }
 
-      .info-chip {
-        padding: 6px 10px;
-        font-size: 0.72rem;
+      #view-home .info-chip {
+        padding: 5px 8px;
+        font-size: 0.65rem;
+      }
+
+      #view-home .feature-icon {
+        width: 34px;
+        height: 34px;
+      }
+
+      #view-home .feature-title {
+        font-size: 0.7rem;
+      }
+
+      #view-home .feature-desc {
+        font-size: 0.62rem;
+      }
+
+      #view-contact .faq-card {
+        padding: 10px;
+      }
+
+      #view-contact .faq-card h3 {
+        font-size: 0.8rem;
+      }
+
+      #view-contact .faq-card p {
+        font-size: 0.7rem;
       }
 
       .chat-option {
@@ -1067,6 +1253,30 @@
       .chat-bubble {
         font-size: 0.85rem;
         padding: 10px 12px;
+      }
+    }
+
+    /* Very short screens - hide feature descriptions */
+    @media (max-width: 768px) and (max-height: 650px) {
+      #view-home .feature-desc {
+        display: none;
+      }
+
+      #view-home .features {
+        gap: 8px;
+      }
+
+      #view-home .feature-icon {
+        width: 36px;
+        height: 36px;
+      }
+
+      #view-contact .faq-card p {
+        display: none;
+      }
+
+      #view-contact .faq-card a {
+        margin-top: 4px !important;
       }
     }
 

@@ -1374,6 +1374,67 @@ app.post('/api/migrate-database', async (req, res) => {
     }
 });
 
+// API endpoint to migrate MAPS applications table
+app.post('/api/migrate-maps-database', async (req, res) => {
+    try {
+        // Create the update_updated_at_column function if it doesn't exist
+        await pool.query(`
+            CREATE OR REPLACE FUNCTION update_updated_at_column()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                NEW.updated_at = CURRENT_TIMESTAMP;
+                RETURN NEW;
+            END;
+            $$ language 'plpgsql';
+        `);
+        
+        // Create MAPS applications table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS maps_applications (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                phone VARCHAR(50) NOT NULL,
+                background VARCHAR(100) NOT NULL,
+                field VARCHAR(255),
+                coding_experience VARCHAR(100),
+                motivation TEXT NOT NULL,
+                has_laptop VARCHAR(50),
+                schedule_confirm VARCHAR(100),
+                referral_source VARCHAR(100),
+                application_status VARCHAR(50) DEFAULT 'pending',
+                submitted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        
+        // Create indexes
+        await pool.query(`CREATE INDEX IF NOT EXISTS idx_maps_applications_email ON maps_applications(email);`);
+        await pool.query(`CREATE INDEX IF NOT EXISTS idx_maps_applications_status ON maps_applications(application_status);`);
+        await pool.query(`CREATE INDEX IF NOT EXISTS idx_maps_applications_submitted ON maps_applications(submitted_at);`);
+        
+        // Create trigger for updated_at (drop first if exists to avoid error)
+        await pool.query(`DROP TRIGGER IF EXISTS update_maps_applications_updated_at ON maps_applications;`);
+        await pool.query(`
+            CREATE TRIGGER update_maps_applications_updated_at 
+                BEFORE UPDATE ON maps_applications 
+                FOR EACH ROW 
+                EXECUTE FUNCTION update_updated_at_column();
+        `);
+        
+        res.status(200).json({
+            success: true,
+            message: 'MAPS applications table created successfully'
+        });
+    } catch (error) {
+        console.error('MAPS migration error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 // API endpoint to get all settings
 app.get('/api/get-settings', async (req, res) => {
     try {

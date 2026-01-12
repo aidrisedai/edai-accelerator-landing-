@@ -1034,39 +1034,38 @@
                     ${getInterviewSection(applicant)}
                 </div>
                 
+                ${getNotesSection(applicant)}
+                
                 ${getDecisionSection(applicant)}
             `;
             
             document.getElementById('applicantModal').classList.add('active');
         }
         
+        function getNotesSection(applicant) {
+            return `
+                <div class="detail-section" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
+                    <h3>📝 Interview / Application Notes</h3>
+                    <textarea id="interviewNotes-${applicant.id}" style="width: 100%; min-height: 120px; padding: 0.75rem; border: 2px solid #f59e0b; border-radius: 8px; font-family: 'Outfit', sans-serif;" placeholder="Add notes from the interview or application review...">${applicant.interview_notes || ''}</textarea>
+                    <button class="btn-send-invite" onclick="saveInterviewNotes(${applicant.id})" style="margin-top: 0.5rem;">💾 Save Notes</button>
+                </div>
+            `;
+        }
+        
         function getDecisionSection(applicant) {
             const status = applicant.application_status;
             
-            // Show notes textarea after interview is completed
-            if (applicant.interview_status === 'confirmed' || applicant.interview_status === 'completed' || status === 'interview_completed') {
-                const notesSection = `
-                    <div class="detail-section" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
-                        <h3>📝 Interview Notes</h3>
-                        <textarea id="interviewNotes-${applicant.id}" style="width: 100%; min-height: 120px; padding: 0.75rem; border: 2px solid #f59e0b; border-radius: 8px; font-family: 'Outfit', sans-serif;" placeholder="Add notes from the interview...">${applicant.interview_notes || ''}</textarea>
-                        <button class="btn-send-invite" onclick="saveInterviewNotes(${applicant.id})" style="margin-top: 0.5rem;">💾 Save Notes</button>
+            // Show Accept/Reject buttons if not already decided
+            if (status !== 'accepted' && status !== 'rejected' && status !== 'enrolled') {
+                return `
+                    <div class="detail-section" style="background: #f0f9ff;">
+                        <h3>🎯 Decision</h3>
+                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                            <button class="btn-send-invite" onclick="showAcceptModal(${applicant.id}, '${applicant.teen_name.replace(/'/g, "\\'")}', '${applicant.parent_email}')" style="background: linear-gradient(135deg, #10b981, #34d399); flex: 1;">✅ Accept Applicant</button>
+                            <button class="btn-send-invite" onclick="showRejectModal(${applicant.id}, '${applicant.teen_name.replace(/'/g, "\\'")}', '${applicant.parent_email}')" style="background: linear-gradient(135deg, #ef4444, #f87171); flex: 1;">❌ Reject Applicant</button>
+                        </div>
                     </div>
                 `;
-                
-                // Show Accept/Reject buttons if not already decided
-                if (status !== 'accepted' && status !== 'rejected') {
-                    return notesSection + `
-                        <div class="detail-section" style="background: #f0f9ff;">
-                            <h3>🎯 Decision</h3>
-                            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                                <button class="btn-send-invite" onclick="showAcceptModal(${applicant.id}, '${applicant.teen_name}', '${applicant.parent_email}')" style="background: linear-gradient(135deg, #10b981, #34d399); flex: 1;">✅ Accept Applicant</button>
-                                <button class="btn-send-invite" onclick="showRejectModal(${applicant.id}, '${applicant.teen_name}', '${applicant.parent_email}')" style="background: linear-gradient(135deg, #ef4444, #f87171); flex: 1;">❌ Reject Applicant</button>
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                return notesSection;
             }
             
             // Show decision result if already decided
@@ -1083,7 +1082,7 @@
                             <div class="detail-value">${applicant.decision_date ? new Date(applicant.decision_date).toLocaleString() : 'N/A'}</div>
                         </div>
                         <div style="margin-top: 1rem;">
-                            <button class="btn-send-invite" onclick="showEnrollModal(${applicant.id}, '${applicant.teen_name}')" style="background: linear-gradient(135deg, #2563eb, #3b82f6);">
+                            <button class="btn-send-invite" onclick="showEnrollModal(${applicant.id}, '${applicant.teen_name.replace(/'/g, "\\'")}')" style="background: linear-gradient(135deg, #2563eb, #3b82f6);">
                                 📚 Enroll in Program
                             </button>
                         </div>
@@ -1387,27 +1386,110 @@
         }
         
         function showAcceptModal(applicantId, teenName, parentEmail) {
-            const startDate = prompt(`Accept ${teenName} to the program.\n\nEnter program start date (YYYY-MM-DD):`, new Date().toISOString().split('T')[0]);
+            const today = new Date().toISOString().split('T')[0];
             
-            if (!startDate) return;
+            const modalContent = document.createElement('div');
+            modalContent.innerHTML = `
+                <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%;">
+                    <h3 style="margin-bottom: 1rem; color: #10b981;">Accept ${teenName}</h3>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Program Start Date</label>
+                        <input type="date" id="acceptStartDate" value="${today}" style="width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem;">
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" id="sendAcceptEmail" checked style="width: 18px; height: 18px;">
+                            <span>Send acceptance email to ${parentEmail}</span>
+                        </label>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button onclick="closeDecisionModal()" style="padding: 0.75rem 1.5rem; background: #f3f4f6; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+                        <button onclick="submitAcceptance(${applicantId})" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #10b981, #34d399); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Confirm Acceptance</button>
+                    </div>
+                </div>
+            `;
             
-            if (confirm(`Confirm acceptance of ${teenName}?\n\nProgram Start Date: ${startDate}\n\nAn acceptance email will be sent to ${parentEmail}`)) {
-                acceptApplicant(applicantId, startDate);
+            const modal = document.createElement('div');
+            modal.id = 'decisionModal';
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000;';
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+        }
+        
+        function showRejectModal(applicantId, teenName, parentEmail) {
+            const modalContent = document.createElement('div');
+            modalContent.innerHTML = `
+                <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%;">
+                    <h3 style="margin-bottom: 1rem; color: #ef4444;">Reject ${teenName}</h3>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Rejection Reason</label>
+                        <textarea id="rejectReason" placeholder="Enter reason for rejection..." style="width: 100%; min-height: 100px; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; font-family: 'Outfit', sans-serif;"></textarea>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">This will be saved in records.</p>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" id="sendRejectEmail" checked style="width: 18px; height: 18px;">
+                            <span>Send rejection email to ${parentEmail}</span>
+                        </label>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button onclick="closeDecisionModal()" style="padding: 0.75rem 1.5rem; background: #f3f4f6; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+                        <button onclick="submitRejection(${applicantId})" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #ef4444, #f87171); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Confirm Rejection</button>
+                    </div>
+                </div>
+            `;
+            
+            const modal = document.createElement('div');
+            modal.id = 'decisionModal';
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000;';
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+        }
+        
+        function closeDecisionModal() {
+            const modal = document.getElementById('decisionModal');
+            if (modal) {
+                modal.remove();
             }
         }
         
-        async function acceptApplicant(applicantId, programStartDate) {
+        async function submitAcceptance(applicantId) {
+            const startDate = document.getElementById('acceptStartDate').value;
+            const sendEmail = document.getElementById('sendAcceptEmail').checked;
+            
+            if (!startDate) {
+                alert('Please select a start date');
+                return;
+            }
+            
+            acceptApplicant(applicantId, startDate, sendEmail);
+        }
+        
+        async function submitRejection(applicantId) {
+            const reason = document.getElementById('rejectReason').value;
+            const sendEmail = document.getElementById('sendRejectEmail').checked;
+            
+            if (!reason.trim()) {
+                alert('Please enter a rejection reason');
+                return;
+            }
+            
+            rejectApplicant(applicantId, reason, sendEmail);
+        }
+        
+        async function acceptApplicant(applicantId, programStartDate, sendEmail) {
             try {
                 const response = await fetch('/api/accept-applicant', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ applicantId, programStartDate })
+                    body: JSON.stringify({ applicantId, programStartDate, sendEmail })
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    alert('Applicant accepted and email sent!');
+                    alert(data.message);
+                    closeDecisionModal();
                     closeModal();
                     loadApplicants();
                 } else {
@@ -1419,28 +1501,19 @@
             }
         }
         
-        function showRejectModal(applicantId, teenName, parentEmail) {
-            const reason = prompt(`Reject ${teenName} from the program.\n\nEnter rejection reason (this will be sent to the parent):`, '');
-            
-            if (!reason || !reason.trim()) return;
-            
-            if (confirm(`Confirm rejection of ${teenName}?\n\nReason: ${reason}\n\nA rejection email will be sent to ${parentEmail}`)) {
-                rejectApplicant(applicantId, reason);
-            }
-        }
-        
-        async function rejectApplicant(applicantId, rejectionReason) {
+        async function rejectApplicant(applicantId, rejectionReason, sendEmail) {
             try {
                 const response = await fetch('/api/reject-applicant', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ applicantId, rejectionReason })
+                    body: JSON.stringify({ applicantId, rejectionReason, sendEmail })
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    alert('Applicant rejected and email sent!');
+                    alert(data.message);
+                    closeDecisionModal();
                     closeModal();
                     loadApplicants();
                 } else {

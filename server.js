@@ -2104,9 +2104,11 @@ app.post('/api/save-interview-notes', async (req, res) => {
             });
         }
         
+        // Just update the notes, don't change status automatically
+        // This allows adding notes at any stage (even after acceptance/rejection)
         await pool.query(
-            'UPDATE applications SET interview_notes = $1, application_status = $2 WHERE id = $3',
-            [notes, 'interview_completed', applicantId]
+            'UPDATE applications SET interview_notes = $1 WHERE id = $2',
+            [notes, applicantId]
         );
         
         res.status(200).json({
@@ -2126,7 +2128,7 @@ app.post('/api/save-interview-notes', async (req, res) => {
 // API endpoint to accept applicant
 app.post('/api/accept-applicant', async (req, res) => {
     try {
-        const { applicantId, programStartDate } = req.body;
+        const { applicantId, programStartDate, sendEmail = true } = req.body;
         
         if (!applicantId || !programStartDate) {
             return res.status(400).json({
@@ -2156,103 +2158,112 @@ app.post('/api/accept-applicant', async (req, res) => {
             ['accepted', programStartDate, applicantId]
         );
         
-        // Get settings for email template
-        const settings = await getSettings();
-        const { Resend } = require('resend');
-        const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
+        let message = 'Applicant accepted successfully';
         
-        // Template variables
-        const templateVars = {
-            parent_name: applicant.parent_name,
-            student_name: applicant.teen_name,
-            program_start_date: new Date(programStartDate).toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            })
-        };
-        
-        // Default acceptance email template
-        const defaultAcceptanceEmail = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <link rel="preconnect" href="https://fonts.googleapis.com">
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-                <style>
-                    body {
-                        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-                        line-height: 1.6;
-                        max-width: 600px;
-                        margin: 0 auto;
-                        padding: 20px;
-                    }
-                    .header {
-                        background: linear-gradient(135deg, #10b981, #34d399);
-                        color: white;
-                        padding: 40px 30px;
-                        border-radius: 12px 12px 0 0;
-                        text-align: center;
-                    }
-                    .content {
-                        background: #f9fafb;
-                        padding: 30px;
-                        border-radius: 0 0 12px 12px;
-                    }
-                    .highlight {
-                        background: #d1fae5;
-                        border-left: 4px solid #10b981;
-                        padding: 20px;
-                        margin: 20px 0;
-                        border-radius: 8px;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1 style="margin: 0; font-size: 2rem;">🎉 Congratulations!</h1>
-                    <p style="margin: 10px 0 0 0; font-size: 1.2rem;">You're Accepted to EdAI Accelerator</p>
-                </div>
-                <div class="content">
-                    <p style="font-size: 16px;"><strong>Assalamu Alaikum {{parent_name}},</strong></p>
-                    <p>We are thrilled to inform you that <strong>{{student_name}}</strong> has been accepted into the EdAI Accelerator program!</p>
-                    <div class="highlight">
-                        <p style="margin: 0;"><strong>📅 Program Start Date:</strong> {{program_start_date}}</p>
+        // Only send email if requested (default true)
+        if (sendEmail !== false) {
+            // Get settings for email template
+            const settings = await getSettings();
+            const { Resend } = require('resend');
+            const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
+            
+            // Template variables
+            const templateVars = {
+                parent_name: applicant.parent_name,
+                student_name: applicant.teen_name,
+                program_start_date: new Date(programStartDate).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                })
+            };
+            
+            // Default acceptance email template
+            const defaultAcceptanceEmail = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <link rel="preconnect" href="https://fonts.googleapis.com">
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+                    <style>
+                        body {
+                            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+                            line-height: 1.6;
+                            max-width: 600px;
+                            margin: 0 auto;
+                            padding: 20px;
+                        }
+                        .header {
+                            background: linear-gradient(135deg, #10b981, #34d399);
+                            color: white;
+                            padding: 40px 30px;
+                            border-radius: 12px 12px 0 0;
+                            text-align: center;
+                        }
+                        .content {
+                            background: #f9fafb;
+                            padding: 30px;
+                            border-radius: 0 0 12px 12px;
+                        }
+                        .highlight {
+                            background: #d1fae5;
+                            border-left: 4px solid #10b981;
+                            padding: 20px;
+                            margin: 20px 0;
+                            border-radius: 8px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1 style="margin: 0; font-size: 2rem;">🎉 Congratulations!</h1>
+                        <p style="margin: 10px 0 0 0; font-size: 1.2rem;">You're Accepted to EdAI Accelerator</p>
                     </div>
-                    <h3>What Happens Next?</h3>
-                    <ul>
-                        <li>You will receive detailed program information via email within 48 hours</li>
-                        <li>Program schedule, curriculum, and logistics</li>
-                        <li>Payment information and instructions</li>
-                        <li>Required materials and preparation</li>
-                    </ul>
-                    <p>If you have any questions, please contact us at contact@edaiaccelerator.com</p>
-                    <p style="margin-top: 30px;">Jazakallahu Khairan,<br><strong>The EdAI Accelerator Team</strong></p>
-                </div>
-            </body>
-            </html>
-        `;
-        
-        // Use custom template or default
-        let emailHtml = settings.acceptance_email_body || defaultAcceptanceEmail;
-        emailHtml = replaceTemplateVars(emailHtml, templateVars);
-        
-        // Send acceptance email
-        await resend.emails.send({
-            from: settings.email_from_address || 'EdAI Accelerator <noreply@edaiaccelerator.com>',
-            to: applicant.parent_email,
-            subject: replaceTemplateVars(
-                settings.acceptance_email_subject || 'Congratulations! You\'re Accepted to EdAI Accelerator',
-                templateVars
-            ),
-            html: emailHtml
-        });
+                    <div class="content">
+                        <p style="font-size: 16px;"><strong>Assalamu Alaikum {{parent_name}},</strong></p>
+                        <p>We are thrilled to inform you that <strong>{{student_name}}</strong> has been accepted into the EdAI Accelerator program!</p>
+                        <div class="highlight">
+                            <p style="margin: 0;"><strong>📅 Program Start Date:</strong> {{program_start_date}}</p>
+                        </div>
+                        <h3>What Happens Next?</h3>
+                        <ul>
+                            <li>You will receive detailed program information via email within 48 hours</li>
+                            <li>Program schedule, curriculum, and logistics</li>
+                            <li>Payment information and instructions</li>
+                            <li>Required materials and preparation</li>
+                        </ul>
+                        <p>If you have any questions, please contact us at contact@edaiaccelerator.com</p>
+                        <p style="margin-top: 30px;">Jazakallahu Khairan,<br><strong>The EdAI Accelerator Team</strong></p>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Use custom template or default
+            let emailHtml = settings.acceptance_email_body || defaultAcceptanceEmail;
+            emailHtml = replaceTemplateVars(emailHtml, templateVars);
+            
+            // Send acceptance email
+            await resend.emails.send({
+                from: settings.email_from_address || 'EdAI Accelerator <noreply@edaiaccelerator.com>',
+                to: applicant.parent_email,
+                subject: replaceTemplateVars(
+                    settings.acceptance_email_subject || 'Congratulations! You\'re Accepted to EdAI Accelerator',
+                    templateVars
+                ),
+                html: emailHtml
+            });
+            
+            message = 'Applicant accepted and email sent successfully';
+        } else {
+            message = 'Applicant accepted successfully (no email sent)';
+        }
         
         res.status(200).json({
             success: true,
-            message: 'Applicant accepted and email sent successfully'
+            message: message
         });
         
     } catch (error) {
@@ -2267,7 +2278,7 @@ app.post('/api/accept-applicant', async (req, res) => {
 // API endpoint to reject applicant
 app.post('/api/reject-applicant', async (req, res) => {
     try {
-        const { applicantId, rejectionReason } = req.body;
+        const { applicantId, rejectionReason, sendEmail = true } = req.body;
         
         if (!applicantId || !rejectionReason) {
             return res.status(400).json({
@@ -2297,94 +2308,103 @@ app.post('/api/reject-applicant', async (req, res) => {
             ['rejected', rejectionReason, applicantId]
         );
         
-        // Get settings for email template
-        const settings = await getSettings();
-        const { Resend } = require('resend');
-        const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
+        let message = 'Applicant rejected successfully';
         
-        // Template variables
-        const templateVars = {
-            parent_name: applicant.parent_name,
-            student_name: applicant.teen_name,
-            rejection_reason: rejectionReason
-        };
-        
-        // Default rejection email template
-        const defaultRejectionEmail = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <link rel="preconnect" href="https://fonts.googleapis.com">
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-                <style>
-                    body {
-                        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-                        line-height: 1.6;
-                        max-width: 600px;
-                        margin: 0 auto;
-                        padding: 20px;
-                    }
-                    .header {
-                        background: linear-gradient(135deg, #2563eb, #3b82f6);
-                        color: white;
-                        padding: 30px;
-                        border-radius: 12px 12px 0 0;
-                        text-align: center;
-                    }
-                    .content {
-                        background: #f9fafb;
-                        padding: 30px;
-                        border-radius: 0 0 12px 12px;
-                    }
-                    .info-box {
-                        background: #fef3c7;
-                        border-left: 4px solid #f59e0b;
-                        padding: 20px;
-                        margin: 20px 0;
-                        border-radius: 8px;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1 style="margin: 0;">📝 Update on Your Application</h1>
-                    <p style="margin: 10px 0 0 0;">EdAI Accelerator</p>
-                </div>
-                <div class="content">
-                    <p style="font-size: 16px;"><strong>Assalamu Alaikum {{parent_name}},</strong></p>
-                    <p>Thank you for your interest in the EdAI Accelerator program for <strong>{{student_name}}</strong>.</p>
-                    <p>After careful review of all applications, we regret to inform you that we are unable to offer a spot in this cohort.</p>
-                    <div class="info-box">
-                        <p style="margin: 0;"><strong>Feedback:</strong></p>
-                        <p style="margin: 10px 0 0 0;">{{rejection_reason}}</p>
+        // Only send email if requested
+        if (sendEmail !== false) {
+            // Get settings for email template
+            const settings = await getSettings();
+            const { Resend } = require('resend');
+            const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
+            
+            // Template variables
+            const templateVars = {
+                parent_name: applicant.parent_name,
+                student_name: applicant.teen_name,
+                rejection_reason: rejectionReason
+            };
+            
+            // Default rejection email template
+            const defaultRejectionEmail = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <link rel="preconnect" href="https://fonts.googleapis.com">
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+                    <style>
+                        body {
+                            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+                            line-height: 1.6;
+                            max-width: 600px;
+                            margin: 0 auto;
+                            padding: 20px;
+                        }
+                        .header {
+                            background: linear-gradient(135deg, #2563eb, #3b82f6);
+                            color: white;
+                            padding: 30px;
+                            border-radius: 12px 12px 0 0;
+                            text-align: center;
+                        }
+                        .content {
+                            background: #f9fafb;
+                            padding: 30px;
+                            border-radius: 0 0 12px 12px;
+                        }
+                        .info-box {
+                            background: #fef3c7;
+                            border-left: 4px solid #f59e0b;
+                            padding: 20px;
+                            margin: 20px 0;
+                            border-radius: 8px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1 style="margin: 0;">📝 Update on Your Application</h1>
+                        <p style="margin: 10px 0 0 0;">EdAI Accelerator</p>
                     </div>
-                    <p>We encourage you to apply again in the future. Many successful applicants have applied multiple times as they developed their skills and experience.</p>
-                    <p>If you have any questions, please contact us at contact@edaiaccelerator.com</p>
-                    <p style="margin-top: 30px;">Jazakallahu Khairan,<br><strong>The EdAI Accelerator Team</strong></p>
-                </div>
-            </body>
-            </html>
-        `;
-        
-        // Use custom template or default
-        let emailHtml = settings.rejection_email_body || defaultRejectionEmail;
-        emailHtml = replaceTemplateVars(emailHtml, templateVars);
-        
-        // Send rejection email
-        await resend.emails.send({
-            from: settings.email_from_address || 'EdAI Accelerator <noreply@edaiaccelerator.com>',
-            to: applicant.parent_email,
-            subject: replaceTemplateVars(
-                settings.rejection_email_subject || 'Update on Your EdAI Accelerator Application',
-                templateVars
-            ),
-            html: emailHtml
-        });
+                    <div class="content">
+                        <p style="font-size: 16px;"><strong>Assalamu Alaikum {{parent_name}},</strong></p>
+                        <p>Thank you for your interest in the EdAI Accelerator program for <strong>{{student_name}}</strong>.</p>
+                        <p>After careful review of all applications, we regret to inform you that we are unable to offer a spot in this cohort.</p>
+                        <div class="info-box">
+                            <p style="margin: 0;"><strong>Feedback:</strong></p>
+                            <p style="margin: 10px 0 0 0;">{{rejection_reason}}</p>
+                        </div>
+                        <p>We encourage you to apply again in the future. Many successful applicants have applied multiple times as they developed their skills and experience.</p>
+                        <p>If you have any questions, please contact us at contact@edaiaccelerator.com</p>
+                        <p style="margin-top: 30px;">Jazakallahu Khairan,<br><strong>The EdAI Accelerator Team</strong></p>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Use custom template or default
+            let emailHtml = settings.rejection_email_body || defaultRejectionEmail;
+            emailHtml = replaceTemplateVars(emailHtml, templateVars);
+            
+            // Send rejection email
+            await resend.emails.send({
+                from: settings.email_from_address || 'EdAI Accelerator <noreply@edaiaccelerator.com>',
+                to: applicant.parent_email,
+                subject: replaceTemplateVars(
+                    settings.rejection_email_subject || 'Update on Your EdAI Accelerator Application',
+                    templateVars
+                ),
+                html: emailHtml
+            });
+            
+            message = 'Applicant rejected and email sent successfully';
+        } else {
+            message = 'Applicant rejected successfully (no email sent)';
+        }
         
         res.status(200).json({
             success: true,
-            message: 'Applicant rejected and email sent successfully'
+            message: message
         });
         
     } catch (error) {

@@ -1512,33 +1512,37 @@ app.get('/api/get-applications', async (req, res) => {
     try {
         const result = await pool.query(`
             SELECT 
-                id,
-                parent_name,
-                parent_email,
-                parent_phone,
-                teen_name,
-                teen_age,
-                teen_grade,
-                teen_interests,
-                parent_expectations,
-                agrees_terms,
-                agrees_contact,
-                application_status,
-                submitted_at,
-                interview_status,
-                proposed_interview_times,
-                confirmed_interview_date,
-                to_char(manual_interview_date, 'YYYY-MM-DD"T"HH24:MI') as manual_interview_date,
-                interview_notes,
-                parent_response,
-                parent_response_date,
-                interview_link,
-                interview_meeting_link,
-                rejection_reason,
-                program_start_date,
-                decision_date
-            FROM applications
-            ORDER BY submitted_at DESC
+                a.id,
+                a.parent_name,
+                a.parent_email,
+                a.parent_phone,
+                a.teen_name,
+                a.teen_age,
+                a.teen_grade,
+                a.teen_interests,
+                a.parent_expectations,
+                a.agrees_terms,
+                a.agrees_contact,
+                a.application_status,
+                a.submitted_at,
+                a.interview_status,
+                a.proposed_interview_times,
+                a.confirmed_interview_date,
+                to_char(a.manual_interview_date, 'YYYY-MM-DD"T"HH24:MI') as manual_interview_date,
+                a.interview_notes,
+                a.parent_response,
+                a.parent_response_date,
+                a.interview_link,
+                a.interview_meeting_link,
+                a.rejection_reason,
+                a.program_start_date,
+                a.decision_date,
+                es.program_id as enrolled_program_id,
+                p.name as enrolled_program_name
+            FROM applications a
+            LEFT JOIN enrolled_students es ON a.id = es.application_id
+            LEFT JOIN programs p ON es.program_id = p.id
+            ORDER BY a.submitted_at DESC
         `);
 
         res.status(200).json({
@@ -2757,6 +2761,12 @@ app.post('/api/enroll-from-application', async (req, res) => {
             app.parent_phone,
             'application'
         ]);
+        
+        // Update application status to enrolled
+        await pool.query(
+            "UPDATE applications SET application_status = 'enrolled' WHERE id = $1",
+            [applicationId]
+        );
         
         res.status(201).json({
             success: true,

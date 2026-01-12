@@ -619,7 +619,14 @@
         let needsMigration = false;
         
         // Load programs on page load
-        loadPrograms();
+        loadPrograms().then(() => {
+            // Check for program ID in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const programId = urlParams.get('id');
+            if (programId) {
+                viewProgram(programId);
+            }
+        });
         
         async function runMigration() {
             if (!confirm('This will create the necessary database tables. Continue?')) {

@@ -595,6 +595,11 @@
         }
         
         /* Status Dropdown */
+        .status-enrolled {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+        
         .status-select {
             padding: 0.375rem 0.75rem;
             border: 2px solid #e5e7eb;
@@ -1078,6 +1083,28 @@
                         <div style="display: flex; gap: 1rem; margin-top: 1rem;">
                             <button class="btn-send-invite" onclick="showAcceptModal(${applicant.id}, '${applicant.teen_name.replace(/'/g, "\\'")}', '${applicant.parent_email}')" style="background: linear-gradient(135deg, #10b981, #34d399); flex: 1;">✅ Accept Applicant</button>
                             <button class="btn-send-invite" onclick="showRejectModal(${applicant.id}, '${applicant.teen_name.replace(/'/g, "\\'")}', '${applicant.parent_email}')" style="background: linear-gradient(135deg, #ef4444, #f87171); flex: 1;">❌ Reject Applicant</button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Show enrolled status
+            if (status === 'enrolled') {
+                return `
+                    <div class="detail-section" style="background: #e0e7ff; border-left: 4px solid #3730a3;">
+                        <h3 style="color: #3730a3;">✅ Enrolled</h3>
+                        <div class="detail-row">
+                            <div class="detail-label">Program</div>
+                            <div class="detail-value"><strong>${applicant.enrolled_program_name || 'Unknown Program'}</strong></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Decision Date</div>
+                            <div class="detail-value">${applicant.decision_date ? new Date(applicant.decision_date).toLocaleString() : 'N/A'}</div>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <a href="/programs?id=${applicant.enrolled_program_id}" class="btn-send-invite" style="background: linear-gradient(135deg, #4f46e5, #4338ca); text-decoration: none; display: inline-block; text-align: center;">
+                                👁️ View Program
+                            </a>
                         </div>
                     </div>
                 `;

@@ -702,18 +702,13 @@
                             
                             <div class="program-dates">
                                 <div class="date-item">
-                                    📅 ${formatDate(program.start_date)}
+                                    📅 ${formatDate(program.start_date)} ${program.end_date ? ` <span style="margin: 0 0.5rem">→</span> ${formatDate(program.end_date)}` : ''}
                                 </div>
-                                ${program.end_date ? `
-                                    <div class="date-item">
-                                        → ${formatDate(program.end_date)}
-                                    </div>
-                                ` : ''}
                             </div>
                             
                             <div class="program-stats">
                                 <div class="stat">
-                                    <div class="stat-value">0</div>
+                                    <div class="stat-value">${program.enrolled_count || 0}</div>
                                     <div class="stat-label">Enrolled</div>
                                 </div>
                                 <div class="stat">

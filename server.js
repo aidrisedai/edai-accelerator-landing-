@@ -2481,8 +2481,10 @@ app.post('/api/create-program', async (req, res) => {
 app.get('/api/get-programs', async (req, res) => {
     try {
         const result = await pool.query(`
-            SELECT * FROM programs
-            ORDER BY created_at DESC
+            SELECT p.*, 
+            (SELECT COUNT(*)::int FROM enrolled_students WHERE program_id = p.id) as enrolled_count
+            FROM programs p
+            ORDER BY p.created_at DESC
         `);
         
         res.status(200).json({

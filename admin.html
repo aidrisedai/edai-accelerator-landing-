@@ -1043,27 +1043,28 @@
         }
         
         function getNotesSection(applicant) {
-            // Format existing date for input if available
-            let dateValue = '';
-            if (applicant.manual_interview_date) {
-                // Convert to format YYYY-MM-DDThh:mm for datetime-local input
-                const date = new Date(applicant.manual_interview_date);
-                // Adjust for timezone offset to show correct local time
-                const offset = date.getTimezoneOffset() * 60000;
-                dateValue = new Date(date.getTime() - offset).toISOString().slice(0, 16);
-            }
-            
             return `
                 <div class="detail-section" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
                     <h3>📝 Interview / Application Notes</h3>
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.875rem;">Interview Date & Time (Optional)</label>
-                        <input type="datetime-local" id="interviewDate-${applicant.id}" value="${dateValue}" style="padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 6px; font-family: 'Outfit', sans-serif;">
+                        <input type="datetime-local" id="interviewDate-${applicant.id}" value="${applicant.manual_interview_date || ''}" style="padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 6px; font-family: 'Outfit', sans-serif;">
                     </div>
                     <textarea id="interviewNotes-${applicant.id}" style="width: 100%; min-height: 120px; padding: 0.75rem; border: 2px solid #f59e0b; border-radius: 8px; font-family: 'Outfit', sans-serif;" placeholder="Add notes from the interview or application review...">${applicant.interview_notes || ''}</textarea>
                     <button class="btn-send-invite" onclick="saveInterviewNotes(${applicant.id})" style="margin-top: 0.5rem;">💾 Save Notes</button>
                 </div>
             `;
+        }
+        
+        function formatDateUTC(dateString) {
+            if (!dateString) return 'Not set';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                month: 'numeric',
+                day: 'numeric',
+                year: 'numeric',
+                timeZone: 'UTC'
+            });
         }
         
         function getDecisionSection(applicant) {
@@ -1089,7 +1090,7 @@
                         <h3 style="color: #065f46;">🎉 Accepted</h3>
                         <div class="detail-row">
                             <div class="detail-label">Program Start Date</div>
-                            <div class="detail-value"><strong>${applicant.program_start_date ? new Date(applicant.program_start_date).toLocaleDateString() : 'Not set'}</strong></div>
+                            <div class="detail-value"><strong>${formatDateUTC(applicant.program_start_date)}</strong></div>
                         </div>
                         <div class="detail-row">
                             <div class="detail-label">Decision Date</div>

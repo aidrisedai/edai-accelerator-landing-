@@ -1528,7 +1528,7 @@ app.get('/api/get-applications', async (req, res) => {
                 interview_status,
                 proposed_interview_times,
                 confirmed_interview_date,
-                manual_interview_date,
+                to_char(manual_interview_date, 'YYYY-MM-DD"T"HH24:MI') as manual_interview_date,
                 interview_notes,
                 parent_response,
                 parent_response_date,

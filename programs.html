@@ -615,6 +615,7 @@
     <script>
         let allPrograms = [];
         let editingProgramId = null;
+        let editingStudentId = null;
         let needsMigration = false;
         
         // Load programs on page load
@@ -936,9 +937,15 @@
                                                     ${student.enrollment_source}
                                                 </span>
                                             </td>
-                                            <td style="padding: 1rem;">
-                                                <button onclick="showProgressModal(${student.id}, '${student.student_name}')" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
-                                                    📝 Log Progress
+                                            <td style="padding: 1rem; display: flex; gap: 0.5rem;">
+                                                <button onclick="showProgressModal(${student.id}, '${student.student_name.replace(/'/g, "\\'")}')" style="padding: 0.5rem 0.75rem; background: #e0f2fe; color: #0369a1; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
+                                                    📝 Progress
+                                                </button>
+                                                <button onclick="editStudent(${student.id})" style="padding: 0.5rem 0.75rem; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
+                                                    👁️ View/Edit
+                                                </button>
+                                                <button onclick="deleteStudent(${student.id}, '${student.student_name.replace(/'/g, "\\'")}')" style="padding: 0.5rem 0.75rem; background: #fee2e2; color: #dc2626; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
+                                                    🗑️
                                                 </button>
                                             </td>
                                         </tr>
@@ -958,12 +965,59 @@
         }
         
         function showAddStudentModal() {
+            editingStudentId = null;
+            document.querySelector('#addStudentModal .modal-title').textContent = 'Add Student to Program';
+            document.querySelector('#addStudentModal .btn-primary').textContent = 'Add Student';
             document.getElementById('addStudentForm').reset();
             document.getElementById('addStudentModal').classList.add('active');
         }
         
+        function editStudent(studentId) {
+            const student = currentProgramStudents.find(s => s.id === studentId);
+            if (!student) return;
+            
+            editingStudentId = studentId;
+            document.querySelector('#addStudentModal .modal-title').textContent = 'View/Edit Student';
+            document.querySelector('#addStudentModal .btn-primary').textContent = 'Update Student';
+            
+            document.getElementById('studentName').value = student.student_name || '';
+            document.getElementById('studentAge').value = student.student_age || '';
+            document.getElementById('studentGrade').value = student.student_grade || '';
+            document.getElementById('parentName').value = student.parent_name || '';
+            document.getElementById('parentEmail').value = student.parent_email || '';
+            document.getElementById('parentPhone').value = student.parent_phone || '';
+            document.getElementById('studentNotes').value = student.notes || '';
+            
+            document.getElementById('addStudentModal').classList.add('active');
+        }
+        
+        async function deleteStudent(studentId, studentName) {
+            if (!confirm(`Are you sure you want to remove ${studentName} from this program?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/remove-student/${studentId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Student removed successfully!');
+                    viewProgram(currentProgramId); // Reload
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to remove student. Please try again.');
+            }
+        }
+        
         function closeAddStudentModal() {
             document.getElementById('addStudentModal').classList.remove('active');
+            editingStudentId = null;
         }
         
         async function saveStudent(event) {
@@ -981,8 +1035,14 @@
             };
             
             try {
-                const response = await fetch('/api/enroll-student', {
-                    method: 'POST',
+                const url = editingStudentId 
+                    ? `/api/update-student/${editingStudentId}`
+                    : '/api/enroll-student';
+                    
+                const method = editingStudentId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(studentData)
                 });
@@ -990,7 +1050,7 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    alert('Student enrolled successfully!');
+                    alert(editingStudentId ? 'Student updated successfully!' : 'Student enrolled successfully!');
                     closeAddStudentModal();
                     viewProgram(currentProgramId); // Reload program detail
                 } else {
@@ -998,7 +1058,7 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to enroll student. Please try again.');
+                alert('Failed to save student. Please try again.');
             }
         }
         

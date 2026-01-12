@@ -1262,6 +1262,7 @@ app.post('/api/migrate-database', async (req, res) => {
             ADD COLUMN IF NOT EXISTS interview_status VARCHAR(50) DEFAULT 'not_scheduled',
             ADD COLUMN IF NOT EXISTS proposed_interview_times TEXT,
             ADD COLUMN IF NOT EXISTS confirmed_interview_date TIMESTAMP,
+            ADD COLUMN IF NOT EXISTS manual_interview_date TIMESTAMP,
             ADD COLUMN IF NOT EXISTS interview_notes TEXT,
             ADD COLUMN IF NOT EXISTS parent_response TEXT,
             ADD COLUMN IF NOT EXISTS parent_response_date TIMESTAMP,
@@ -1527,6 +1528,7 @@ app.get('/api/get-applications', async (req, res) => {
                 interview_status,
                 proposed_interview_times,
                 confirmed_interview_date,
+                manual_interview_date,
                 interview_notes,
                 parent_response,
                 parent_response_date,
@@ -2095,7 +2097,7 @@ app.post('/api/save-meeting-link', async (req, res) => {
 // API endpoint to save interview notes
 app.post('/api/save-interview-notes', async (req, res) => {
     try {
-        const { applicantId, notes } = req.body;
+        const { applicantId, notes, interviewDate } = req.body;
         
         if (!applicantId || !notes) {
             return res.status(400).json({
@@ -2107,8 +2109,8 @@ app.post('/api/save-interview-notes', async (req, res) => {
         // Just update the notes, don't change status automatically
         // This allows adding notes at any stage (even after acceptance/rejection)
         await pool.query(
-            'UPDATE applications SET interview_notes = $1 WHERE id = $2',
-            [notes, applicantId]
+            'UPDATE applications SET interview_notes = $1, manual_interview_date = $2 WHERE id = $3',
+            [notes, interviewDate || null, applicantId]
         );
         
         res.status(200).json({

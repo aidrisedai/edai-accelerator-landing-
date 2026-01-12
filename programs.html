@@ -1180,11 +1180,20 @@
                 if (data.success) {
                     const message = currentProgressUpdateId ? 'Progress updated successfully! ✅' : 'Progress logged successfully! ✅';
                     alert(message);
-                    currentProgressUpdateId = data.update.id;
-                    document.getElementById('progressUpdateId').value = data.update.id;
                     
-                    // Show send to parent button
-                    document.getElementById('sendToParentBtn').style.display = 'block';
+                    // Reset form to allow adding new content
+                    document.getElementById('progressForm').reset();
+                    currentProgressUpdateId = null;
+                    document.getElementById('progressUpdateId').value = '';
+                    
+                    // Reset date to today
+                    document.getElementById('classDate').valueAsDate = new Date();
+                    
+                    // Update modal title back to "Log Progress"
+                    document.getElementById('progressModalTitle').textContent = `Log Progress: ${currentProgressStudentName}`;
+                    
+                    // Hide send button since form is empty
+                    document.getElementById('sendToParentBtn').style.display = 'none';
                     
                     // Reload history
                     await loadUpdateHistory(currentProgressStudentId);

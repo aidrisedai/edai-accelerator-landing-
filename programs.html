@@ -508,6 +508,13 @@
                 </div>
                 
                 <div class="form-group">
+                    <label>Select Class (Optional)</label>
+                    <select id="classSelect" onchange="onClassSelected()">
+                        <option value="">-- Manual Entry --</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
                     <label>Class Topic</label>
                     <input type="text" id="classTopic" placeholder="e.g., Introduction to Python Programming">
                 </div>
@@ -612,10 +619,51 @@
         </div>
     </div>
     
+    <!-- Create/Edit Class Modal -->
+    <div id="classModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="classModalTitle">Add Class</h3>
+                <button class="close-btn" onclick="closeClassModal()">&times;</button>
+            </div>
+            
+            <form id="classForm" onsubmit="saveClass(event)">
+                <div class="form-group">
+                    <label>Class Title *</label>
+                    <input type="text" id="classTitle" required placeholder="e.g., Intro to Neural Networks">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sequence Order</label>
+                        <input type="number" id="classOrder" placeholder="e.g., 1">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="classDescription" placeholder="What is this class about?"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Learning Objectives</label>
+                    <textarea id="classObjectives" placeholder="What will the student achieve?"></textarea>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 2rem;">
+                    <button type="button" class="btn-secondary" onclick="closeClassModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Class</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         let allPrograms = [];
         let editingProgramId = null;
         let editingStudentId = null;
+        let editingClassId = null;
+        let currentProgramClasses = [];
         let needsMigration = false;
         
         // Load programs on page load
@@ -824,8 +872,6 @@
                 const programResponse = await fetch(`/api/get-program/${programId}`);
                 const programData = await programResponse.json();
                 
-                console.log('Program response:', programData);
-                
                 if (!programData.success) {
                     alert(`Error loading program: ${programData.error}`);
                     return;
@@ -834,8 +880,6 @@
                 // Fetch students in program
                 const studentsResponse = await fetch(`/api/get-program-students/${programId}`);
                 const studentsData = await studentsResponse.json();
-                
-                console.log('Students response:', studentsData);
                 
                 if (!studentsData.success) {
                     // Show migration notice
@@ -846,14 +890,13 @@
                     return;
                 }
                 
-                // Check if migration message is present
-                if (studentsData.message && studentsData.message.includes('migration')) {
-                    needsMigration = true;
-                    document.getElementById('migrationNotice').style.display = 'block';
-                }
+                // Fetch program classes (curriculum)
+                const classesResponse = await fetch(`/api/get-program-classes/${programId}`);
+                const classesData = await classesResponse.json();
+                currentProgramClasses = classesData.success ? classesData.classes : [];
                 
                 currentProgramStudents = studentsData.students || [];
-                displayProgramDetail(programData.program, studentsData.students || []);
+                displayProgramDetail(programData.program, currentProgramStudents, currentProgramClasses);
                 
             } catch (error) {
                 console.error('Error:', error);
@@ -861,7 +904,7 @@
             }
         }
         
-        function displayProgramDetail(program, students) {
+        function displayProgramDetail(program, students, classes) {
             const container = document.getElementById('programsContainer');
             
             container.innerHTML = `
@@ -880,94 +923,248 @@
                                 <span class="status-badge status-${program.status}">${program.status}</span>
                             </div>
                         </div>
-                        <button class="btn-primary" onclick="showAddStudentModal()" style="white-space: nowrap;">
-                            ➕ Add Student
-                        </button>
-                    </div>
-                    
-                    ${program.description ? `
-                        <p style="color: #6b7280; margin-bottom: 1.5rem;">${program.description}</p>
-                    ` : ''}
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
-                        <div>
-                            <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.25rem;">Start Date</div>
-                            <div style="font-weight: 600; color: #1f2937;">${formatDate(program.start_date)}</div>
-                        </div>
-                        ${program.end_date ? `
-                            <div>
-                                <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.25rem;">End Date</div>
-                                <div style="font-weight: 600; color: #1f2937;">${formatDate(program.end_date)}</div>
-                            </div>
-                        ` : ''}
-                        ${program.schedule_info ? `
-                            <div>
-                                <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.25rem;">Schedule</div>
-                                <div style="font-weight: 600; color: #1f2937;">${program.schedule_info}</div>
-                            </div>
-                        ` : ''}
-                        <div>
-                            <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.25rem;">Enrolled</div>
-                            <div style="font-weight: 600; color: #2563eb;">${students.length}${program.max_students ? ' / ' + program.max_students : ''}</div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn-secondary" onclick="showAddClassModal()">➕ Add Class</button>
+                            <button class="btn-primary" onclick="showAddStudentModal()">➕ Add Student</button>
                         </div>
                     </div>
-                </div>
-                
-                <div style="background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);">
-                    <h3 style="font-size: 1.5rem; color: #1f2937; margin-bottom: 1.5rem;">Enrolled Students (${students.length})</h3>
                     
-                    ${students.length === 0 ? `
-                        <div class="empty-state" style="padding: 2rem;">
-                            <div class="empty-state-icon">👥</div>
-                            <p>No students enrolled yet</p>
-                            <p style="font-size: 0.875rem; color: #9ca3af;">Click "Add Student" to enroll your first student</p>
+                    <div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 1.5rem; display: flex; gap: 1.5rem;">
+                        <button class="tab-link active" onclick="switchDetailTab('overview')" id="tab-overview" style="background: none; border: none; padding-bottom: 0.75rem; border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 700; cursor: pointer;">Overview</button>
+                        <button class="tab-link" onclick="switchDetailTab('curriculum')" id="tab-curriculum" style="background: none; border: none; padding-bottom: 0.75rem; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600; cursor: pointer;">Curriculum (${classes.length})</button>
+                        <button class="tab-link" onclick="switchDetailTab('students')" id="tab-students" style="background: none; border: none; padding-bottom: 0.75rem; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600; cursor: pointer;">Students (${students.length})</button>
+                    </div>
+                    
+                    <!-- Overview Tab -->
+                    <div id="content-overview" class="detail-content">
+                        ${program.description ? `
+                            <p style="color: #6b7280; margin-bottom: 1.5rem;">${program.description}</p>
+                        ` : ''}
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+                            <div>
+                                <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.25rem;">Start Date</div>
+                                <div style="font-weight: 600; color: #1f2937;">${formatDate(program.start_date)}</div>
+                            </div>
+                            ${program.end_date ? `
+                                <div>
+                                    <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.25rem;">End Date</div>
+                                    <div style="font-weight: 600; color: #1f2937;">${formatDate(program.end_date)}</div>
+                                </div>
+                            ` : ''}
+                            ${program.schedule_info ? `
+                                <div>
+                                    <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.25rem;">Schedule</div>
+                                    <div style="font-weight: 600; color: #1f2937;">${program.schedule_info}</div>
+                                </div>
+                            ` : ''}
+                            <div>
+                                <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.25rem;">Enrolled</div>
+                                <div style="font-weight: 600; color: #2563eb;">${students.length}${program.max_students ? ' / ' + program.max_students : ''}</div>
+                            </div>
                         </div>
-                    ` : `
-                        <div style="overflow-x: auto;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <thead>
-                                    <tr style="border-bottom: 2px solid #e5e7eb;">
-                                        <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Student Name</th>
-                                        <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Grade</th>
-                                        <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Parent Name</th>
-                                        <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Parent Email</th>
-                                        <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Enrolled</th>
-                                        <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Source</th>
-                                        <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${students.map(student => `
-                                        <tr style="border-bottom: 1px solid #e5e7eb;">
-                                            <td style="padding: 1rem; font-weight: 600; color: #1f2937;">${student.student_name}</td>
-                                            <td style="padding: 1rem; color: #4b5563;">${student.student_grade ? student.student_grade + 'th' : '-'}</td>
-                                            <td style="padding: 1rem; color: #4b5563;">${student.parent_name}</td>
-                                            <td style="padding: 1rem; color: #4b5563;">${student.parent_email}</td>
-                                            <td style="padding: 1rem; color: #4b5563;">${formatDate(student.enrollment_date)}</td>
-                                            <td style="padding: 1rem;">
-                                                <span style="padding: 0.25rem 0.75rem; background: ${student.enrollment_source === 'application' ? '#dbeafe' : '#f3e8ff'}; color: ${student.enrollment_source === 'application' ? '#1e40af' : '#6b21a8'}; border-radius: 12px; font-size: 0.75rem; font-weight: 600; text-transform: capitalize;">
-                                                    ${student.enrollment_source}
-                                                </span>
-                                            </td>
-                                            <td style="padding: 1rem; display: flex; gap: 0.5rem;">
-                                                <button onclick="showProgressModal(${student.id}, '${student.student_name.replace(/'/g, "\\'")}')" style="padding: 0.5rem 0.75rem; background: #e0f2fe; color: #0369a1; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
-                                                    📝 Progress
-                                                </button>
-                                                <button onclick="editStudent(${student.id})" style="padding: 0.5rem 0.75rem; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
-                                                    👁️ View/Edit
-                                                </button>
-                                                <button onclick="deleteStudent(${student.id}, '${student.student_name.replace(/'/g, "\\'")}')" style="padding: 0.5rem 0.75rem; background: #fee2e2; color: #dc2626; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
-                                                    🗑️
-                                                </button>
-                                            </td>
+                    </div>
+                    
+                    <!-- Curriculum Tab -->
+                    <div id="content-curriculum" class="detail-content" style="display: none;">
+                        ${classes.length === 0 ? `
+                            <div class="empty-state" style="padding: 2rem;">
+                                <div class="empty-state-icon">📚</div>
+                                <p>No classes defined yet</p>
+                                <p style="font-size: 0.875rem; color: #9ca3af;">Add classes to structure your program curriculum</p>
+                                <button onclick="showAddClassModal()" class="btn-secondary" style="margin-top: 1rem;">Add First Class</button>
+                            </div>
+                        ` : `
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                ${classes.map((cls, index) => `
+                                    <div style="background: #f9fafb; padding: 1.5rem; border-radius: 12px; border: 1px solid #e5e7eb;">
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                            <div>
+                                                <div style="font-size: 0.75rem; text-transform: uppercase; color: #6b7280; font-weight: 700; margin-bottom: 0.25rem;">
+                                                    Class ${cls.sequence_order || index + 1}
+                                                </div>
+                                                <h4 style="font-size: 1.125rem; color: #1f2937; margin: 0;">${cls.title}</h4>
+                                            </div>
+                                            <div style="display: flex; gap: 0.5rem;">
+                                                <button onclick="editClass(${cls.id})" style="padding: 0.25rem 0.5rem; background: none; border: none; cursor: pointer; color: #6b7280;">✎️</button>
+                                                <button onclick="deleteClass(${cls.id})" style="padding: 0.25rem 0.5rem; background: none; border: none; cursor: pointer; color: #dc2626;">🗑️</button>
+                                            </div>
+                                        </div>
+                                        ${cls.description ? `<p style="color: #4b5563; font-size: 0.95rem; margin-bottom: 0.75rem;">${cls.description}</p>` : ''}
+                                        ${cls.objectives ? `
+                                            <div style="background: white; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                                                <div style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">🎯 Objectives</div>
+                                                <div style="font-size: 0.875rem; color: #6b7280;">${cls.objectives}</div>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `}
+                    </div>
+                    
+                    <!-- Students Tab -->
+                    <div id="content-students" class="detail-content" style="display: none;">
+                        ${students.length === 0 ? `
+                            <div class="empty-state" style="padding: 2rem;">
+                                <div class="empty-state-icon">👥</div>
+                                <p>No students enrolled yet</p>
+                                <p style="font-size: 0.875rem; color: #9ca3af;">Click "Add Student" to enroll your first student</p>
+                            </div>
+                        ` : `
+                            <div style="overflow-x: auto;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="border-bottom: 2px solid #e5e7eb;">
+                                            <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Student Name</th>
+                                            <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Grade</th>
+                                            <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Parent Name</th>
+                                            <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Parent Email</th>
+                                            <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Enrolled</th>
+                                            <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Source</th>
+                                            <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Actions</th>
                                         </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    `}
+                                    </thead>
+                                    <tbody>
+                                        ${students.map(student => `
+                                            <tr style="border-bottom: 1px solid #e5e7eb;">
+                                                <td style="padding: 1rem; font-weight: 600; color: #1f2937;">${student.student_name}</td>
+                                                <td style="padding: 1rem; color: #4b5563;">${student.student_grade ? student.student_grade + 'th' : '-'}</td>
+                                                <td style="padding: 1rem; color: #4b5563;">${student.parent_name}</td>
+                                                <td style="padding: 1rem; color: #4b5563;">${student.parent_email}</td>
+                                                <td style="padding: 1rem; color: #4b5563;">${formatDate(student.enrollment_date)}</td>
+                                                <td style="padding: 1rem;">
+                                                    <span style="padding: 0.25rem 0.75rem; background: ${student.enrollment_source === 'application' ? '#dbeafe' : '#f3e8ff'}; color: ${student.enrollment_source === 'application' ? '#1e40af' : '#6b21a8'}; border-radius: 12px; font-size: 0.75rem; font-weight: 600; text-transform: capitalize;">
+                                                        ${student.enrollment_source}
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 1rem; display: flex; gap: 0.5rem;">
+                                                    <button onclick="showProgressModal(${student.id}, '${student.student_name.replace(/'/g, "\\'")}')" style="padding: 0.5rem 0.75rem; background: #e0f2fe; color: #0369a1; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
+                                                        📝 Progress
+                                                    </button>
+                                                    <button onclick="editStudent(${student.id})" style="padding: 0.5rem 0.75rem; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
+                                                        👁️ View/Edit
+                                                    </button>
+                                                    <button onclick="deleteStudent(${student.id}, '${student.student_name.replace(/'/g, "\\'")}')" style="padding: 0.5rem 0.75rem; background: #fee2e2; color: #dc2626; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
+                                                        🗑️
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `}
+                    </div>
                 </div>
             `;
+        }
+        
+        function switchDetailTab(tabName) {
+            // Update buttons
+            document.querySelectorAll('.tab-link').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.borderColor = 'transparent';
+                btn.style.color = '#6b7280';
+            });
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            activeBtn.classList.add('active');
+            activeBtn.style.borderColor = '#2563eb';
+            activeBtn.style.color = '#2563eb';
+            
+            // Update content
+            document.querySelectorAll('.detail-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(`content-${tabName}`).style.display = 'block';
+        }
+        
+        // --- Class Management Functions ---
+        
+        function showAddClassModal() {
+            editingClassId = null;
+            document.getElementById('classModalTitle').textContent = 'Add Class';
+            document.getElementById('classForm').reset();
+            // Auto-suggest next sequence order
+            const nextOrder = currentProgramClasses.length + 1;
+            document.getElementById('classOrder').value = nextOrder;
+            document.getElementById('classModal').classList.add('active');
+        }
+        
+        function closeClassModal() {
+            document.getElementById('classModal').classList.remove('active');
+            editingClassId = null;
+        }
+        
+        function editClass(classId) {
+            const cls = currentProgramClasses.find(c => c.id === classId);
+            if (!cls) return;
+            
+            editingClassId = classId;
+            document.getElementById('classModalTitle').textContent = 'Edit Class';
+            
+            document.getElementById('classTitle').value = cls.title || '';
+            document.getElementById('classOrder').value = cls.sequence_order || '';
+            document.getElementById('classDescription').value = cls.description || '';
+            document.getElementById('classObjectives').value = cls.objectives || '';
+            
+            document.getElementById('classModal').classList.add('active');
+        }
+        
+        async function saveClass(event) {
+            event.preventDefault();
+            
+            const classData = {
+                programId: currentProgramId,
+                title: document.getElementById('classTitle').value,
+                sequenceOrder: parseInt(document.getElementById('classOrder').value) || 0,
+                description: document.getElementById('classDescription').value,
+                objectives: document.getElementById('classObjectives').value
+            };
+            
+            try {
+                const url = editingClassId 
+                    ? `/api/update-class/${editingClassId}`
+                    : '/api/create-class';
+                const method = editingClassId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(classData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(editingClassId ? 'Class updated successfully!' : 'Class added successfully!');
+                    closeClassModal();
+                    viewProgram(currentProgramId); // Reload to show new class
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error saving class:', error);
+                alert('Failed to save class. Please try again.');
+            }
+        }
+        
+        async function deleteClass(classId) {
+            if (!confirm('Are you sure you want to delete this class?')) return;
+            
+            try {
+                const response = await fetch(`/api/delete-class/${classId}`, { method: 'DELETE' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    viewProgram(currentProgramId); // Reload
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error deleting class:', error);
+                alert('Failed to delete class.');
+            }
         }
         
         function backToPrograms() {
@@ -1097,7 +1294,35 @@
             // Load update history
             await loadUpdateHistory(studentId);
             
+            // Populate class dropdown
+            const classSelect = document.getElementById('classSelect');
+            classSelect.innerHTML = '<option value="">-- Manual Entry --</option>';
+            if (currentProgramClasses && currentProgramClasses.length > 0) {
+                currentProgramClasses.forEach(cls => {
+                    const option = document.createElement('option');
+                    option.value = cls.id;
+                    option.textContent = `Class ${cls.sequence_order}: ${cls.title}`;
+                    classSelect.appendChild(option);
+                });
+            }
+            
             document.getElementById('progressModal').classList.add('active');
+        }
+        
+        function onClassSelected() {
+            const classId = document.getElementById('classSelect').value;
+            if (!classId) return;
+            
+            const cls = currentProgramClasses.find(c => c.id == classId);
+            if (cls) {
+                const topicInput = document.getElementById('classTopic');
+                if (!topicInput.value) {
+                    topicInput.value = cls.title;
+                }
+                
+                // Optional: auto-fill other fields if empty?
+                // For now, let's just use it as a reference or topic filler.
+            }
         }
         
         function closeProgressModal() {
@@ -1156,6 +1381,7 @@
                 studentId: currentProgressStudentId,
                 classDate: document.getElementById('classDate').value,
                 classTopic: document.getElementById('classTopic').value,
+                classId: document.getElementById('classSelect').value || null,
                 studentProgress: document.getElementById('studentProgress').value,
                 instructorNotes: document.getElementById('instructorNotes').value,
                 skillsLearned: document.getElementById('skillsLearned').value,
@@ -1218,6 +1444,7 @@
                         // Populate form with existing data
                         document.getElementById('classDate').value = update.class_date.split('T')[0];
                         document.getElementById('classTopic').value = update.class_topic || '';
+                        document.getElementById('classSelect').value = update.class_id || '';
                         document.getElementById('studentProgress').value = update.student_progress || '';
                         document.getElementById('skillsLearned').value = update.skills_learned || '';
                         document.getElementById('instructorNotes').value = update.instructor_notes || '';

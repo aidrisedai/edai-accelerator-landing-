@@ -1331,6 +1331,25 @@ app.post('/api/migrate-database', async (req, res) => {
             );
         `);
         
+        // Create program_classes table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS program_classes (
+                id SERIAL PRIMARY KEY,
+                program_id INTEGER NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                objectives TEXT,
+                sequence_order INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+        `);
+
+        // Add class_id to progress_updates table
+        await pool.query(`
+            ALTER TABLE progress_updates
+            ADD COLUMN IF NOT EXISTS class_id INTEGER REFERENCES program_classes(id) ON DELETE SET NULL;
+        `);
+
         // Create settings table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS settings (
@@ -2940,6 +2959,134 @@ app.delete('/api/remove-student/:id', async (req, res) => {
 });
 
 // ============================================
+// PROGRAM CLASSES / CURRICULUM API ENDPOINTS
+// ============================================
+
+// API endpoint to create a class
+app.post('/api/create-class', async (req, res) => {
+    try {
+        const { programId, title, description, objectives, sequenceOrder } = req.body;
+        
+        if (!programId || !title) {
+            return res.status(400).json({
+                success: false,
+                error: 'Program ID and Title are required'
+            });
+        }
+        
+        const result = await pool.query(`
+            INSERT INTO program_classes (
+                program_id, title, description, objectives, sequence_order
+            ) VALUES ($1, $2, $3, $4, $5)
+            RETURNING *
+        `, [programId, title, description, objectives, sequenceOrder || 0]);
+        
+        res.status(201).json({
+            success: true,
+            message: 'Class created successfully',
+            class: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error creating class:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to create class: ' + error.message
+        });
+    }
+});
+
+// API endpoint to get classes for a program
+app.get('/api/get-program-classes/:programId', async (req, res) => {
+    try {
+        const { programId } = req.params;
+        
+        const result = await pool.query(`
+            SELECT * FROM program_classes
+            WHERE program_id = $1
+            ORDER BY sequence_order ASC, created_at ASC
+        `, [programId]);
+        
+        res.status(200).json({
+            success: true,
+            count: result.rows.length,
+            classes: result.rows
+        });
+    } catch (error) {
+        console.error('Error getting program classes:', error);
+        
+        // Handle missing table gracefully
+        if (error.message && error.message.includes('relation "program_classes" does not exist')) {
+            return res.status(200).json({
+                success: true,
+                count: 0,
+                classes: [],
+                message: 'Classes table not created yet'
+            });
+        }
+        
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve classes'
+        });
+    }
+});
+
+// API endpoint to update a class
+app.put('/api/update-class/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, description, objectives, sequenceOrder } = req.body;
+        
+        const result = await pool.query(`
+            UPDATE program_classes
+            SET title = $1, description = $2, objectives = $3, sequence_order = $4
+            WHERE id = $5
+            RETURNING *
+        `, [title, description, objectives, sequenceOrder, id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Class not found' });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Class updated successfully',
+            class: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error updating class:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update class'
+        });
+    }
+});
+
+// API endpoint to delete a class
+app.delete('/api/delete-class/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await pool.query('DELETE FROM program_classes WHERE id = $1 RETURNING *', [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Class not found' });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Class deleted successfully'
+        });
+    } catch (error) {
+        console.error('Error deleting class:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to delete class'
+        });
+    }
+});
+
+// ============================================
 // PROGRESS UPDATES API ENDPOINTS
 // ============================================
 
@@ -2951,6 +3098,7 @@ app.post('/api/create-update', async (req, res) => {
             studentId,
             classDate,
             classTopic,
+            classId, // New field
             studentProgress,
             instructorNotes,
             skillsLearned,
@@ -2972,18 +3120,20 @@ app.post('/api/create-update', async (req, res) => {
                 student_id,
                 class_date,
                 class_topic,
+                class_id,
                 student_progress,
                 instructor_notes,
                 skills_learned,
                 next_steps,
                 created_by
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             RETURNING *
         `, [
             programId,
             studentId,
             classDate,
             classTopic,
+            classId || null,
             studentProgress,
             instructorNotes,
             skillsLearned,
@@ -3012,10 +3162,11 @@ app.get('/api/get-student-updates/:studentId', async (req, res) => {
         const { studentId } = req.params;
         
         const result = await pool.query(`
-            SELECT pu.*, es.student_name, es.parent_email, p.name as program_name
+            SELECT pu.*, es.student_name, es.parent_email, p.name as program_name, pc.title as class_title
             FROM progress_updates pu
             JOIN enrolled_students es ON pu.student_id = es.id
             JOIN programs p ON pu.program_id = p.id
+            LEFT JOIN program_classes pc ON pu.class_id = pc.id
             WHERE pu.student_id = $1
             ORDER BY pu.class_date DESC, pu.created_at DESC
         `, [studentId]);

@@ -498,61 +498,69 @@
                 <button class="close-btn" onclick="closeProgressModal()">&times;</button>
             </div>
             
-            <form id="progressForm" onsubmit="saveProgress(event)">
-                <input type="hidden" id="progressStudentId">
-                <input type="hidden" id="progressUpdateId">
-                
-                <div class="form-group">
-                    <label>Class Date *</label>
-                    <input type="date" id="classDate" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Select Class (Optional)</label>
-                    <select id="classSelect" onchange="onClassSelected()">
-                        <option value="">-- Manual Entry --</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Class Topic</label>
-                    <input type="text" id="classTopic" placeholder="e.g., Introduction to Python Programming">
-                </div>
-                
-                <div class="form-group">
-                    <label>Student Progress *</label>
-                    <textarea id="studentProgress" required placeholder="Describe what the student accomplished in this class..." style="min-height: 100px;"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Skills Learned</label>
-                    <textarea id="skillsLearned" placeholder="List skills the student demonstrated or learned..." style="min-height: 80px;"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Instructor Notes</label>
-                    <textarea id="instructorNotes" placeholder="Any additional observations or notes..." style="min-height: 80px;"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Next Steps</label>
-                    <textarea id="nextSteps" placeholder="What should the student focus on next?" style="min-height: 80px;"></textarea>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; gap: 0.5rem; margin-top: 2rem;">
-                    <button type="button" class="btn-secondary" onclick="closeProgressModal()">Cancel</button>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button type="submit" class="btn-primary">Save Progress</button>
-                        <button type="button" id="sendToParentBtn" onclick="sendToParent()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; display: none;">
-                            📧 Send to Parent
-                        </button>
-                    </div>
-                </div>
-            </form>
+            <div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 1.5rem; display: flex; gap: 1.5rem;">
+                <button class="progress-tab-link active" onclick="switchProgressTab('log')" id="tab-progress-log" style="background: none; border: none; padding-bottom: 0.75rem; border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 700; cursor: pointer;">Log Update</button>
+                <button class="progress-tab-link" onclick="switchProgressTab('history')" id="tab-progress-history" style="background: none; border: none; padding-bottom: 0.75rem; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600; cursor: pointer;">View History</button>
+            </div>
             
-            <div id="updateHistory" style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e5e7eb; display: none;">
-                <h4 style="margin-bottom: 1rem; color: #1f2937;">Previous Updates</h4>
-                <div id="historyList"></div>
+            <div id="content-progress-log" class="progress-tab-content">
+                <form id="progressForm" onsubmit="saveProgress(event)">
+                    <input type="hidden" id="progressStudentId">
+                    <input type="hidden" id="progressUpdateId">
+                    
+                    <div class="form-group">
+                        <label>Class Date *</label>
+                        <input type="date" id="classDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Select Class (Optional)</label>
+                        <select id="classSelect" onchange="onClassSelected()">
+                            <option value="">-- Manual Entry --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Class Topic</label>
+                        <input type="text" id="classTopic" placeholder="e.g., Introduction to Python Programming">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Student Progress *</label>
+                        <textarea id="studentProgress" required placeholder="Describe what the student accomplished in this class..." style="min-height: 100px;"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Skills Learned</label>
+                        <textarea id="skillsLearned" placeholder="List skills the student demonstrated or learned..." style="min-height: 80px;"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Instructor Notes</label>
+                        <textarea id="instructorNotes" placeholder="Any additional observations or notes..." style="min-height: 80px;"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Next Steps</label>
+                        <textarea id="nextSteps" placeholder="What should the student focus on next?" style="min-height: 80px;"></textarea>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; gap: 0.5rem; margin-top: 2rem;">
+                        <button type="button" class="btn-secondary" onclick="closeProgressModal()">Cancel</button>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="submit" class="btn-primary">Save Progress</button>
+                            <button type="button" id="sendToParentBtn" onclick="sendToParent()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; display: none;">
+                                📧 Send to Parent
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div id="content-progress-history" class="progress-tab-content" style="display: none;">
+                <div id="historyList">
+                    <p style="color: #6b7280; text-align: center; padding: 2rem;">Loading history...</p>
+                </div>
             </div>
         </div>
     </div>
@@ -1079,6 +1087,25 @@
             document.getElementById(`content-${tabName}`).style.display = 'block';
         }
         
+        function switchProgressTab(tabName) {
+            // Update buttons
+            document.querySelectorAll('.progress-tab-link').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.borderColor = 'transparent';
+                btn.style.color = '#6b7280';
+            });
+            const activeBtn = document.getElementById(`tab-progress-${tabName}`);
+            activeBtn.classList.add('active');
+            activeBtn.style.borderColor = '#2563eb';
+            activeBtn.style.color = '#2563eb';
+            
+            // Update content
+            document.querySelectorAll('.progress-tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(`content-progress-${tabName}`).style.display = 'block';
+        }
+
         // --- Class Management Functions ---
         
         function showAddClassModal() {
@@ -1294,6 +1321,9 @@
             // Load update history
             await loadUpdateHistory(studentId);
             
+            // Switch to Log tab by default
+            switchProgressTab('log');
+            
             // Populate class dropdown
             const classSelect = document.getElementById('classSelect');
             classSelect.innerHTML = '<option value="">-- Manual Entry --</option>';
@@ -1338,13 +1368,12 @@
                 const data = await response.json();
                 
                 if (data.success && data.updates.length > 0) {
-                    document.getElementById('updateHistory').style.display = 'block';
-                    
                     const historyHtml = data.updates.map(update => {
                         const date = new Date(update.class_date).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
-                            year: 'numeric'
+                            year: 'numeric',
+                            timeZone: 'UTC'
                         });
                         const sentBadge = update.sent_to_parent 
                             ? '<span style="padding: 0.25rem 0.5rem; background: #d1fae5; color: #065f46; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">✓ Sent</span>'
@@ -1366,7 +1395,7 @@
                     
                     document.getElementById('historyList').innerHTML = historyHtml;
                 } else {
-                    document.getElementById('updateHistory').style.display = 'none';
+                    document.getElementById('historyList').innerHTML = '<p style="color: #6b7280; text-align: center; padding: 2rem;">No progress updates yet.</p>';
                 }
             } catch (error) {
                 console.error('Error loading update history:', error);
@@ -1463,6 +1492,9 @@
                         
                         // Update modal title
                         document.getElementById('progressModalTitle').textContent = `Edit Progress: ${currentProgressStudentName}`;
+                        
+                        // Switch to log tab to show form
+                        switchProgressTab('log');
                         
                         // Scroll to top of modal
                         document.querySelector('#progressModal .modal-content').scrollTop = 0;

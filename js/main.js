@@ -431,28 +431,7 @@ function moveToNextStep() {
             console.log(`Finished child ${chatState.currentChild} of ${chatState.totalChildren}. Moving to next child.`);
             
             // Store current child's data with child number prefix
-            const childPrefix = `child${chatState.currentChild}_`;
-            const childData = {};
-            
-            // Copy child-specific data with prefix (excluding agreeContact which is asked once at the end)
-            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'financialAid', 'agreeTerms', 'parentQuestions'].forEach(field => {
-                if (chatState.data[field]) {
-                    childData[childPrefix + field] = chatState.data[field];
-                    
-                    // Fix for agreeTerms: if the user had questions, the value might be "No, I have questions"
-                    // We need to ensure the backend sees a valid "Yes" if they are submitting
-                    if (field === 'agreeTerms' && chatState.data[field] === 'No, I have questions') {
-                        // If they have questions, we mark terms as accepted for the purpose of submission
-                        // The actual question text is preserved in parentQuestions
-                        childData[childPrefix + field] = 'Yes, I confirm';
-                    }
-                    
-                    delete chatState.data[field]; // Remove from temp storage
-                }
-            });
-            
-            // Add child data to main data object
-            Object.assign(chatState.data, childData);
+            saveCurrentChildData();
             
             // Move to next child
             chatState.currentChild++;
@@ -483,42 +462,125 @@ function moveToNextStep() {
             showInputForCurrentStep();
         } else {
             console.log('All questions completed, finishing application');
-            completeApplication();
+            // Save the last child's data
+            saveCurrentChildData();
+            // Show confirmation instead of immediate submission
+            showConfirmationSummary();
         }
     }, 1000);
 }
 
-function completeApplication() {
+function saveCurrentChildData() {
+    if (chatState.currentChild > chatState.totalChildren) return;
+    
+    const childPrefix = `child${chatState.currentChild}_`;
+    const childData = {};
+    
+    // Copy child-specific data with prefix
+    ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'financialAid', 'agreeTerms', 'parentQuestions'].forEach(field => {
+        if (chatState.data[field]) {
+            childData[childPrefix + field] = chatState.data[field];
+            
+            // Fix for agreeTerms: if the user had questions, the value might be "No, I have questions"
+            // We need to ensure the backend sees a valid "Yes" if they are submitting
+            if (field === 'agreeTerms' && chatState.data[field] === 'No, I have questions') {
+                // If they have questions, we mark terms as accepted for the purpose of submission
+                // The actual question text is preserved in parentQuestions
+                childData[childPrefix + field] = 'Yes, I confirm';
+            }
+            
+            delete chatState.data[field]; // Remove from temp storage
+        }
+    });
+    
+    // Add child data to main data object
+    Object.assign(chatState.data, childData);
+}
+
+function showConfirmationSummary() {
+    // If waitlist, skip summary and submit directly (or we can add summary later)
+    if (chatState.mode === 'waitlist') {
+        submitFinalApplication();
+        return;
+    }
+
+    // Build Summary HTML
+    let studentsSummary = '';
+    let totalPrice = 0;
+    let financialAidRequested = false;
+
+    for (let i = 1; i <= chatState.totalChildren; i++) {
+        const prefix = `child${i}_`;
+        const name = chatState.data[prefix + 'teenName'] || 'Student';
+        const grade = chatState.data[prefix + 'teenGrade'] || '';
+        const schedule = chatState.data[prefix + 'schedulePreference'] || 'Dec 2025';
+        const aid = chatState.data[prefix + 'financialAid'];
+        
+        if (aid && aid.includes('Yes')) financialAidRequested = true;
+        
+        studentsSummary += `
+            <div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
+                <strong>${name}</strong> (${grade})<br>
+                Schedule: ${schedule}
+            </div>
+        `;
+    }
+
+    const priceText = financialAidRequested 
+        ? "Financial Aid Application" 
+        : `$${chatState.totalChildren * 800} ($800/student)`;
+
+    const summaryMessage = `
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 10px;">
+            <h3 style="margin-top: 0; color: #2563eb;">Application Summary</h3>
+            <div style="margin-bottom: 15px;">
+                <strong>Parent:</strong> ${chatState.data.parentName}<br>
+                <strong>Email:</strong> ${chatState.data.parentEmail}<br>
+                <strong>Phone:</strong> ${chatState.data.parentPhone}
+            </div>
+            
+            <h4 style="margin: 10px 0 5px;">Students</h4>
+            ${studentsSummary}
+            
+            <div style="margin-top: 15px; padding-top: 10px; border-top: 2px solid #ddd;">
+                <strong>Total Program Cost:</strong><br>
+                <span style="font-size: 1.2em; color: #059669;">${priceText}</span>
+            </div>
+            
+            <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                By clicking submit, you confirm that the details above are correct and you understand the program commitments.
+            </p>
+        </div>
+    `;
+
+    addBotMessage("Almost there! Please review your application details and the program cost below.");
+    addBotMessage(summaryMessage);
+
+    // Show Submit Button
+    const container = document.getElementById('chatInputContainer');
+    container.innerHTML = `
+        <button class="chat-send-btn" style="width: 100%; background: #059669; margin-bottom: 10px;" onclick="submitFinalApplication()">✅ Confirm & Submit Application</button>
+        <button class="chat-option" style="width: 100%; text-align: center; border: 1px solid #ddd;" onclick="location.reload()">❌ Cancel / Restart</button>
+    `;
+    
+    // Scroll to show the summary
+    setTimeout(() => {
+        const inputContainer = document.getElementById('chatInputContainer');
+        if (inputContainer) {
+            inputContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+    }, 300);
+}
+
+function submitFinalApplication() {
     showTypingIndicator();
     
     setTimeout(() => {
         hideTypingIndicator();
         
-        // Store the last child's data if we haven't already
-        if (chatState.data.teenName && chatState.currentChild <= chatState.totalChildren) {
-            const childPrefix = `child${chatState.currentChild}_`;
-            const childData = {};
-            
-            // Copy child-specific data with prefix
-            ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'financialAid', 'agreeTerms', 'parentQuestions'].forEach(field => {
-                if (chatState.data[field]) {
-                    childData[childPrefix + field] = chatState.data[field];
-                    
-                    // Fix for agreeTerms: if the user had questions, the value might be "No, I have questions"
-                    // We need to ensure the backend sees a valid "Yes" if they are submitting
-                    if (field === 'agreeTerms' && chatState.data[field] === 'No, I have questions') {
-                        // If they have questions, we mark terms as accepted for the purpose of submission
-                        // The actual question text is preserved in parentQuestions
-                        childData[childPrefix + field] = 'Yes, I confirm';
-                    }
-                    
-                    delete chatState.data[field]; // Remove from temp storage
-                }
-            });
-            
-            // Add child data to main data object
-            Object.assign(chatState.data, childData);
-        }
+        // Disable buttons
+        const btns = document.querySelectorAll('#chatInputContainer button');
+        btns.forEach(b => b.disabled = true);
         
         const finishingLine = chatState.mode === 'waitlist' 
             ? "Barakallahu feekum! I have what I need to add you to the December 2025 waitlist. Submitting now..."
@@ -540,8 +602,6 @@ function completeApplication() {
         // Add all children data
         for (let i = 1; i <= chatState.totalChildren; i++) {
             const prefix = `child${i}_`;
-            console.log(`Building data for child ${i} with prefix '${prefix}'`);
-            console.log(`Available keys with this prefix:`, Object.keys(chatState.data).filter(key => key.startsWith(prefix)));
             
             const childData = {
                 name: chatState.data[prefix + 'teenName'],
@@ -555,24 +615,14 @@ function completeApplication() {
                 questions: chatState.data[prefix + 'parentQuestions']
             };
             
-            console.log(`Child ${i} constructed data:`, childData);
             applicationData[`child${i}`] = childData;
         }
         
-        console.log('=== DEBUGGING APPLICATION SUBMISSION ===');
-        console.log('Total children:', chatState.totalChildren);
-        console.log('Current child:', chatState.currentChild);
-        console.log('Chat state data keys:', Object.keys(chatState.data));
-        console.log('Complete application data:', applicationData);
-        
-        // Verify children data structure
-        for (let i = 1; i <= chatState.totalChildren; i++) {
-            console.log(`Child ${i} data:`, applicationData[`child${i}`]);
-        }
+        console.log('Submitting application data:', applicationData);
         
         // Submit application
         submitChatApplication(applicationData);
-    }, 2000);
+    }, 1000);
 }
 
 function openWaitlistChat() {

@@ -1774,13 +1774,58 @@
           addBotMessage(question.bot);
           showInput();
         } else {
-          completeApplication();
+          showConfirmationSummary();
         }
       }, 800);
     }
 
-    // OTP Functions
-    async function sendOTP(email) {
+    function showConfirmationSummary() {
+      const summaryMessage = `
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 10px; text-align: left;">
+            <h3 style="margin-top: 0; color: #0a0a0a; font-size: 1.1rem;">Application Summary</h3>
+            <div style="margin-bottom: 15px; font-size: 0.9rem;">
+                <strong>Name:</strong> ${chatState.data.name}<br>
+                <strong>Email:</strong> ${chatState.data.email}<br>
+                <strong>Phone:</strong> ${chatState.data.phone}
+            </div>
+            <div style="margin-bottom: 15px; font-size: 0.9rem;">
+                <strong>Type:</strong> ${chatState.data.background}<br>
+                <strong>Field:</strong> ${chatState.data.field}<br>
+                <strong>Motivation:</strong> ${chatState.data.motivation ? chatState.data.motivation.substring(0, 50) + '...' : '-'}
+            </div>
+            
+            <div style="margin-top: 15px; padding-top: 10px; border-top: 2px solid #ddd;">
+                <strong>Program Cost:</strong><br>
+                <span style="font-size: 1.2em; color: #059669; font-weight: 700;">$850</span>
+            </div>
+            
+            <p style="font-size: 0.85rem; color: #666; margin-top: 10px;">
+                By clicking submit, you confirm your details and readiness to join the MAPS AI Builder Lab.
+            </p>
+        </div>
+      `;
+
+      addBotMessage("Almost done! Please review your details and the program cost below.");
+      addBotMessage(summaryMessage);
+
+      const container = document.getElementById('chatInputContainer');
+      container.innerHTML = `
+        <button class="chat-send-btn" style="width: 100%; background: #0a0a0a; margin-bottom: 10px;" onclick="completeApplication(this)">✅ Confirm & Submit Application</button>
+        <button class="chat-option" style="width: 100%; text-align: center; border: 1px solid #ddd; background: white; color: #333;" onclick="closeChat()">❌ Cancel</button>
+      `;
+      
+      // Scroll to show
+      setTimeout(() => {
+        const inputContainer = document.getElementById('chatInputContainer');
+        if (inputContainer) {
+          inputContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+      }, 300);
+    }
+
+    function completeApplication(btnElement) {
+      if (btnElement) btnElement.disabled = true;
+      addBotMessage("Jazakallahu Khairan! Your application is being submitted...");
       if (chatState.otpSending) return;
       chatState.otpSending = true;
       

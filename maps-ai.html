@@ -1823,9 +1823,40 @@
       }, 300);
     }
 
-    function completeApplication(btnElement) {
+    async function completeApplication(btnElement) {
       if (btnElement) btnElement.disabled = true;
       addBotMessage("Jazakallahu Khairan! Your application is being submitted...");
+      
+      const applicationData = {
+        ...chatState.data,
+        program: 'MAPS AI Builder Lab',
+        submittedAt: new Date().toISOString()
+      };
+      
+      try {
+        const response = await fetch('/api/submit-maps-application', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(applicationData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            closeChat();
+            showSuccess();
+        } else {
+            addBotMessage('There was an issue submitting. Please try again or email us at aidris@edai.fun');
+            if (btnElement) btnElement.disabled = false;
+        }
+      } catch (error) {
+        console.error('Submission error:', error);
+        addBotMessage('Network error. Please try again.');
+        if (btnElement) btnElement.disabled = false;
+      }
+    }
+
+    async function sendOTP(email) {
       if (chatState.otpSending) return;
       chatState.otpSending = true;
       

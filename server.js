@@ -3477,11 +3477,6 @@ app.post('/api/send-update-to-parent/:id', async (req, res) => {
         });
     }
 });
-            success: false,
-            error: 'Failed to send update: ' + error.message
-        });
-    }
-});
 
 // Start server
 app.listen(port, () => {

@@ -3354,32 +3354,36 @@ app.post('/api/send-update-to-parent/:id', async (req, res) => {
             <head>
                 <link rel="preconnect" href="https://fonts.googleapis.com">
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+                <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
                 <style>
                     body { font-family: 'Outfit', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; background-color: #f3f4f6; }
                     .container { background-color: #ffffff; border-radius: 16px; overflow: hidden; margin: 20px auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
-                    .header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 40px 30px; text-align: center; color: white; }
-                    .header h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.025em; }
-                    .header p { margin: 8px 0 0 0; opacity: 0.9; font-size: 16px; font-weight: 400; }
+                    .header { background: #000000; padding: 40px 30px; text-align: center; color: white; position: relative; overflow: hidden; }
+                    .header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2563eb, #f97316); }
+                    .brand { font-size: 24px; font-weight: 800; letter-spacing: -0.025em; margin-bottom: 4px; }
+                    .tagline { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.7; margin-bottom: 24px; font-weight: 600; }
+                    .header-card { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 24px; backdrop-filter: blur(10px); }
+                    .header-title { margin: 12px 0 4px 0; font-size: 24px; font-weight: 700; letter-spacing: -0.025em; }
+                    .header-subtitle { margin: 0; opacity: 0.9; font-size: 16px; font-weight: 400; }
                     .content { padding: 40px 30px; }
                     .personal-note { background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px 20px; border-radius: 8px; margin-bottom: 30px; color: #1e40af; font-style: italic; }
                     .section { margin-bottom: 24px; }
-                    .section-title { font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; font-weight: 600; margin-bottom: 8px; }
+                    .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; font-weight: 700; margin-bottom: 8px; }
                     .section-card { background-color: #f9fafb; padding: 20px; border-radius: 12px; border: 1px solid #e5e7eb; }
-                    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-                    .info-item { background: #f9fafb; padding: 16px; border-radius: 12px; border: 1px solid #e5e7eb; }
-                    .info-label { font-size: 12px; color: #6b7280; margin-bottom: 4px; font-weight: 500; }
-                    .info-value { font-weight: 600; color: #111827; }
                     .footer { padding: 30px; text-align: center; background-color: #f9fafb; color: #6b7280; font-size: 14px; border-top: 1px solid #e5e7eb; }
-                    .highlight-badge { display: inline-block; padding: 4px 12px; background: #dbeafe; color: #1e40af; border-radius: 9999px; font-size: 12px; font-weight: 600; margin-bottom: 16px; }
+                    .highlight-badge { display: inline-block; padding: 4px 12px; background: #2563eb; color: white; border-radius: 9999px; font-size: 12px; font-weight: 600; }
                 </style>
             </head>
             <body>
                 <div class="container">
                     <div class="header">
-                        <div class="highlight-badge">Progress Update</div>
-                        <h1>${update.program_name}</h1>
-                        <p>Latest learning update for ${update.student_name}</p>
+                        <div class="brand">EdAI Accelerator</div>
+                        <div class="tagline">Empowering Future Innovators</div>
+                        <div class="header-card">
+                            <div class="highlight-badge">Progress Update</div>
+                            <h1 class="header-title">${update.program_name}</h1>
+                            <p class="header-subtitle">Learning Report for ${update.student_name}</p>
+                        </div>
                     </div>
                     
                     <div class="content">

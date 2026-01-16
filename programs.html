@@ -1518,9 +1518,14 @@
                 return;
             }
             
+            // Ask for optional personal message
+            const personalMessage = prompt("Would you like to add a personal message? (Optional, press OK to skip)", "");
+            
             try {
                 const response = await fetch(`/api/send-update-to-parent/${updateId}`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ personalMessage: personalMessage || '' })
                 });
                 
                 const data = await response.json();

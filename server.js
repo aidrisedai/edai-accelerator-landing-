@@ -3305,6 +3305,7 @@ app.delete('/api/delete-update/:id', async (req, res) => {
 app.post('/api/send-update-to-parent/:id', async (req, res) => {
     try {
         const { id } = req.params;
+        const { personalMessage } = req.body;
         
         // Get update with student and program details
         const result = await pool.query(`
@@ -3342,7 +3343,8 @@ app.post('/api/send-update-to-parent/:id', async (req, res) => {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
-            day: 'numeric'
+            day: 'numeric',
+            timeZone: 'UTC'
         });
         
         // Create email HTML
@@ -3350,97 +3352,131 @@ app.post('/api/send-update-to-parent/:id', async (req, res) => {
             <!DOCTYPE html>
             <html>
             <head>
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
                 <style>
-                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
-                    .header { background: linear-gradient(135deg, #2563eb, #3b82f6); padding: 30px; text-align: center; color: white; }
-                    .content { padding: 30px; background: #f9fafb; }
-                    .section { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                    .section-title { color: #2563eb; font-size: 16px; font-weight: 600; margin-bottom: 10px; }
-                    .section-content { color: #4b5563; margin-bottom: 15px; }
-                    .footer { padding: 20px; text-align: center; color: #6b7280; font-size: 14px; }
+                    body { font-family: 'Outfit', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; background-color: #f3f4f6; }
+                    .container { background-color: #ffffff; border-radius: 16px; overflow: hidden; margin: 20px auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+                    .header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 40px 30px; text-align: center; color: white; }
+                    .header h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.025em; }
+                    .header p { margin: 8px 0 0 0; opacity: 0.9; font-size: 16px; font-weight: 400; }
+                    .content { padding: 40px 30px; }
+                    .personal-note { background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px 20px; border-radius: 8px; margin-bottom: 30px; color: #1e40af; font-style: italic; }
+                    .section { margin-bottom: 24px; }
+                    .section-title { font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; font-weight: 600; margin-bottom: 8px; }
+                    .section-card { background-color: #f9fafb; padding: 20px; border-radius: 12px; border: 1px solid #e5e7eb; }
+                    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+                    .info-item { background: #f9fafb; padding: 16px; border-radius: 12px; border: 1px solid #e5e7eb; }
+                    .info-label { font-size: 12px; color: #6b7280; margin-bottom: 4px; font-weight: 500; }
+                    .info-value { font-weight: 600; color: #111827; }
+                    .footer { padding: 30px; text-align: center; background-color: #f9fafb; color: #6b7280; font-size: 14px; border-top: 1px solid #e5e7eb; }
+                    .highlight-badge { display: inline-block; padding: 4px 12px; background: #dbeafe; color: #1e40af; border-radius: 9999px; font-size: 12px; font-weight: 600; margin-bottom: 16px; }
                 </style>
             </head>
             <body>
-                <div class="header">
-                    <h1 style="margin: 0;">✨ Progress Update</h1>
-                    <p style="margin: 10px 0 0 0;">${update.program_name}</p>
-                </div>
-                
-                <div class="content">
-                    <p>Dear ${update.parent_name},</p>
-                    <p>Here's an update on <strong>${update.student_name}</strong>'s progress in class!</p>
-                    
-                    <div class="section">
-                        <div class="section-title">📅 Class Date</div>
-                        <div class="section-content">${classDate}</div>
+                <div class="container">
+                    <div class="header">
+                        <div class="highlight-badge">Progress Update</div>
+                        <h1>${update.program_name}</h1>
+                        <p>Latest learning update for ${update.student_name}</p>
                     </div>
                     
-                    ${update.class_topic ? `
+                    <div class="content">
+                        <p style="font-size: 18px; color: #111827; margin-bottom: 24px;">
+                            Assalamu Alaikum ${update.parent_name},
+                        </p>
+                        
+                        ${personalMessage ? `
+                            <div class="personal-note">
+                                "${personalMessage}"
+                            </div>
+                        ` : ''}
+                        
+                        <p style="margin-bottom: 30px; color: #4b5563;">
+                            Here is a summary of what <strong>${update.student_name}</strong> accomplished in our recent class on <strong>${classDate}</strong>.
+                        </p>
+                        
+                        ${update.class_topic ? `
+                            <div class="section">
+                                <div class="section-title">📚 Topic Covered</div>
+                                <div class="section-card" style="font-size: 18px; font-weight: 600; color: #111827;">
+                                    ${update.class_topic}
+                                </div>
+                            </div>
+                        ` : ''}
+                        
                         <div class="section">
-                            <div class="section-title">📚 Topic Covered</div>
-                            <div class="section-content">${update.class_topic}</div>
+                            <div class="section-title">💫 Student Progress</div>
+                            <div class="section-card">
+                                ${update.student_progress.replace(/\n/g, '<br>')}
+                            </div>
                         </div>
-                    ` : ''}
-                    
-                    <div class="section">
-                        <div class="section-title">💫 Progress</div>
-                        <div class="section-content">${update.student_progress.replace(/\n/g, '<br>')}</div>
+                        
+                        ${update.skills_learned ? `
+                            <div class="section">
+                                <div class="section-title">🎯 Skills Learned</div>
+                                <div class="section-card">
+                                    ${update.skills_learned.replace(/\n/g, '<br>')}
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        ${update.instructor_notes ? `
+                            <div class="section">
+                                <div class="section-title">📝 Instructor Feedback</div>
+                                <div class="section-card">
+                                    ${update.instructor_notes.replace(/\n/g, '<br>')}
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        ${update.next_steps ? `
+                            <div class="section">
+                                <div class="section-title">🚀 Next Steps</div>
+                                <div class="section-card">
+                                    ${update.next_steps.replace(/\n/g, '<br>')}
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <p style="margin-top: 40px; color: #6b7280; font-size: 14px;">
+                            We are proud of ${update.student_name}'s dedication and progress!
+                        </p>
                     </div>
                     
-                    ${update.skills_learned ? `
-                        <div class="section">
-                            <div class="section-title">🎯 Skills Learned</div>
-                            <div class="section-content">${update.skills_learned.replace(/\n/g, '<br>')}</div>
-                        </div>
-                    ` : ''}
-                    
-                    ${update.instructor_notes ? `
-                        <div class="section">
-                            <div class="section-title">📝 Instructor Notes</div>
-                            <div class="section-content">${update.instructor_notes.replace(/\n/g, '<br>')}</div>
-                        </div>
-                    ` : ''}
-                    
-                    ${update.next_steps ? `
-                        <div class="section">
-                            <div class="section-title">➡️ Next Steps</div>
-                            <div class="section-content">${update.next_steps.replace(/\n/g, '<br>')}</div>
-                        </div>
-                    ` : ''}
-                    
-                    <p>Keep up the great work! If you have any questions, please don't hesitate to reach out.</p>
-                </div>
-                
-                <div class="footer">
-                    <p>EdAI Accelerator Team<br>
-                    Building the next generation of Muslim innovators</p>
+                    <div class="footer">
+                        <p>© ${new Date().getFullYear()} EdAI Accelerator</p>
+                        <p>Empowering the next generation of Muslim innovators.</p>
+                    </div>
                 </div>
             </body>
             </html>
         `;
         
-        // Send email
         await resend.emails.send({
             from: settings.email_from_address || 'EdAI Accelerator <noreply@edaiaccelerator.com>',
             to: update.parent_email,
-            subject: `Progress Update: ${update.student_name} - ${update.program_name}`,
+            subject: `Progress Update: ${update.student_name} - ${update.class_topic || 'Class Update'}`,
             html: emailHtml
         });
         
-        // Mark as sent
-        await pool.query(
-            'UPDATE progress_updates SET sent_to_parent = TRUE, sent_at = NOW() WHERE id = $1',
-            [id]
-        );
+        // Update sent status
+        await pool.query('UPDATE progress_updates SET sent_to_parent = TRUE, sent_at = NOW() WHERE id = $1', [id]);
         
         res.status(200).json({
             success: true,
-            message: `Progress update sent to ${update.parent_email}`
+            message: 'Progress update sent successfully'
         });
         
     } catch (error) {
-        console.error('Error sending update to parent:', error);
+        console.error('Error sending update:', error);
         res.status(500).json({
+            success: false,
+            error: 'Failed to send update: ' + error.message
+        });
+    }
+});
             success: false,
             error: 'Failed to send update: ' + error.message
         });

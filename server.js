@@ -3619,7 +3619,6 @@ app.post('/api/verify-student-otp', async (req, res) => {
         res.status(200).json({
             success: true,
             student: {
-                id: student.id,
                 name: student.student_name,
                 email: student.student_email
             }
@@ -3637,19 +3636,19 @@ app.post('/api/verify-student-otp', async (req, res) => {
 // Get student programs
 app.get('/api/my-programs', async (req, res) => {
     try {
-        const { studentId } = req.query; // In real app, get from session/token
+        const { studentEmail } = req.query; // Get by email to support multiple enrollments
         
-        if (!studentId) {
-            return res.status(400).json({ success: false, error: 'Student ID required' });
+        if (!studentEmail) {
+            return res.status(400).json({ success: false, error: 'Student Email required' });
         }
         
         const result = await pool.query(`
             SELECT p.*, es.id as enrollment_id
             FROM programs p
             JOIN enrolled_students es ON p.id = es.program_id
-            WHERE es.id = $1
+            WHERE es.student_email = $1
             ORDER BY p.start_date DESC
-        `, [studentId]);
+        `, [studentEmail]);
         
         res.status(200).json({
             success: true,

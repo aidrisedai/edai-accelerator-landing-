@@ -244,6 +244,7 @@
     <script>
         let currentStudent = null;
         let currentProgramId = null;
+        let currentEnrollmentId = null;
 
         // Check session
         const storedStudent = localStorage.getItem('edaiStudent');
@@ -303,7 +304,7 @@
         }
 
         async function loadPrograms() {
-            const res = await fetch(`/api/my-programs?studentId=${currentStudent.id}`);
+            const res = await fetch(`/api/my-programs?studentEmail=${currentStudent.email}`);
             const data = await res.json();
             
             const container = document.getElementById('programsContainer');
@@ -313,15 +314,16 @@
             }
             
             container.innerHTML = data.programs.map(p => `
-                <div class="program-card" onclick="openProgram(${p.id})">
+                <div class="program-card" onclick="openProgram(${p.id}, ${p.enrollment_id})">
                     <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">${p.name}</h3>
                     <p style="color: var(--text-muted);">${p.program_type}</p>
                 </div>
             `).join('');
         }
 
-        async function openProgram(programId) {
+        async function openProgram(programId, enrollmentId) {
             currentProgramId = programId;
+            currentEnrollmentId = enrollmentId;
             document.getElementById('programsList').style.display = 'none';
             document.getElementById('programDetail').style.display = 'block';
             
@@ -329,10 +331,6 @@
             // For simplicity, just fetch classes
             const res = await fetch(`/api/get-program-classes/${programId}`);
             const data = await res.json();
-            
-            // Also fetch submissions status
-            // Note: In real app, we'd batch this. For now, we'll fetch individually or add a new endpoint.
-            // I'll fetch submissions when rendering the list.
             
             renderClasses(data.classes);
         }
@@ -347,7 +345,7 @@
             
             let html = '';
             for (const cls of classes) {
-                const subRes = await fetch(`/api/get-submission?studentId=${currentStudent.id}&classId=${cls.id}`);
+                const subRes = await fetch(`/api/get-submission?studentId=${currentEnrollmentId}&classId=${cls.id}`);
                 const subData = await subRes.json();
                 const submission = subData.submission;
                 
@@ -355,10 +353,13 @@
                 const statusLabel = submission ? (submission.status === 'submitted' ? 'Submitted' : 'Reviewed') : 'To Do';
                 const statusClass = submission ? (submission.status === 'submitted' ? 'status-submitted' : 'status-reviewed') : 'status-pending';
                 
+                // Determine week/class label
+                const weekLabel = cls.sequence_order ? `Week ${cls.sequence_order}: ` : '';
+                
                 html += `
                     <div class="class-item">
                         <div>
-                            <h4 style="font-size: 1.2rem; margin-bottom: 0.25rem;">${cls.title}</h4>
+                            <h4 style="font-size: 1.2rem; margin-bottom: 0.25rem;">${weekLabel}${cls.title}</h4>
                             <p style="font-size: 0.9rem; color: var(--text-muted);">${cls.objectives || ''}</p>
                         </div>
                         <div style="text-align: right;">
@@ -404,7 +405,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        studentId: currentStudent.id,
+                        studentId: currentEnrollmentId,
                         classId,
                         text,
                         link
@@ -415,7 +416,10 @@
                 if (data.success) {
                     alert('Work submitted successfully!');
                     closeModal();
-                    openProgram(currentProgramId); // Refresh list
+                    // Reload submissions
+                    const res = await fetch(`/api/get-program-classes/${currentProgramId}`);
+                    const data = await res.json();
+                    renderClasses(data.classes);
                 } else {
                     alert(data.error);
                 }

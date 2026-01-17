@@ -547,7 +547,8 @@
                     
                     <div style="display: flex; justify-content: space-between; gap: 0.5rem; margin-top: 2rem;">
                         <button type="button" class="btn-secondary" onclick="closeProgressModal()">Cancel</button>
-                        <div style="display: flex; gap: 0.5rem;">
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span id="emailSentStatus" style="font-size: 0.8rem; margin-right: 0.5rem;"></span>
                             <button type="submit" class="btn-primary">Save Progress</button>
                             <button type="button" id="sendToParentBtn" onclick="sendToParent()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; display: none;">
                                 📧 Send to Parent
@@ -1449,6 +1450,7 @@
                     
                     // Hide send button since form is empty
                     document.getElementById('sendToParentBtn').style.display = 'none';
+                    document.getElementById('emailSentStatus').innerHTML = '';
                     
                     // Reload history
                     await loadUpdateHistory(currentProgressStudentId);
@@ -1484,10 +1486,19 @@
                         document.getElementById('progressUpdateId').value = updateId;
                         
                         // Show send button if not sent yet
-                        if (!update.sent_to_parent) {
-                            document.getElementById('sendToParentBtn').style.display = 'block';
+                        const sendBtn = document.getElementById('sendToParentBtn');
+                        const statusSpan = document.getElementById('emailSentStatus');
+                        
+                        sendBtn.style.display = 'block';
+                        
+                        if (update.sent_to_parent) {
+                            statusSpan.innerHTML = '<span style="color: #059669; font-weight: 600;">✓ Email Sent</span>';
+                            sendBtn.textContent = '📧 Send Again';
+                            sendBtn.style.background = '#6b7280'; // Grey out slightly but keep enabled
                         } else {
-                            document.getElementById('sendToParentBtn').style.display = 'block';
+                            statusSpan.innerHTML = '<span style="color: #d97706; font-weight: 600;">Not Sent</span>';
+                            sendBtn.textContent = '📧 Send to Parent';
+                            sendBtn.style.background = '#10b981';
                         }
                         
                         // Update modal title

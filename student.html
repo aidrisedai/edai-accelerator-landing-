@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal - EdAI Accelerator</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --accent: #f97316;
+            --bg-light: #f3f4f6;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Login Screen */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        }
+        
+        .login-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        
+        .logo { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem; }
+        .logo span { color: var(--accent); }
+        
+        .input-group { margin-bottom: 1.5rem; text-align: left; }
+        .input-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main); }
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--primary); outline: none; }
+        
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        .btn-secondary { background: #e5e7eb; color: var(--text-main); }
+        .btn-secondary:hover { background: #d1d5db; }
+        
+        /* Dashboard */
+        .header {
+            background: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .program-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .program-card:hover { transform: translateY(-4px); }
+        
+        .class-list { margin-top: 2rem; }
+        .class-item {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status-pending { background: #fee2e2; color: #dc2626; }
+        .status-submitted { background: #dbeafe; color: #1e40af; }
+        .status-reviewed { background: #d1fae5; color: #065f46; }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .submission-history {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login View -->
+    <div id="loginView" class="login-container">
+        <div class="login-card">
+            <div class="logo">EdAI <span>Accelerator</span></div>
+            <h2 style="margin-bottom: 2rem;">Student Portal</h2>
+            
+            <div id="emailStep">
+                <div class="input-group">
+                    <label>Enter your Student Email</label>
+                    <input type="email" id="studentEmail" class="form-input" placeholder="student@example.com">
+                </div>
+                <button onclick="sendOTP()" class="btn">Continue</button>
+            </div>
+            
+            <div id="otpStep" style="display: none;">
+                <div class="input-group">
+                    <label>Enter 6-digit Code</label>
+                    <input type="text" id="otpCode" class="form-input" placeholder="123456" maxlength="6" style="text-align: center; letter-spacing: 0.5rem; font-size: 1.5rem;">
+                </div>
+                <button onclick="verifyOTP()" class="btn">Login</button>
+                <button onclick="backToEmail()" class="btn btn-secondary" style="margin-top: 1rem;">Back</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard View -->
+    <div id="dashboardView" style="display: none;">
+        <header class="header">
+            <div class="logo" style="font-size: 1.5rem;">EdAI <span>Student</span></div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span id="studentNameDisplay" style="font-weight: 600;"></span>
+                <button onclick="logout()" class="btn-secondary" style="padding: 0.5rem 1rem; border-radius: 8px; border: none; cursor: pointer;">Logout</button>
+            </div>
+        </header>
+        
+        <div class="container">
+            <div id="programsList">
+                <h2 style="margin-bottom: 1.5rem;">My Programs</h2>
+                <div id="programsContainer">Loading...</div>
+            </div>
+            
+            <div id="programDetail" style="display: none;">
+                <button onclick="showPrograms()" class="btn-secondary" style="margin-bottom: 1.5rem; padding: 0.5rem 1rem; border: none; border-radius: 8px; cursor: pointer;">← Back to Programs</button>
+                <h2 id="programTitle" style="margin-bottom: 0.5rem; font-size: 2rem;"></h2>
+                <p id="programDesc" style="color: var(--text-muted); margin-bottom: 2rem;"></p>
+                
+                <h3>Curriculum & Progress</h3>
+                <div id="classesList" class="class-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submission Modal -->
+    <div id="submissionModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalClassTitle" style="margin-bottom: 1rem;">Submit Work</h3>
+            <p id="modalClassObjectives" style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;"></p>
+            
+            <input type="hidden" id="submitClassId">
+            
+            <div class="input-group">
+                <label>What did you work on?</label>
+                <textarea id="submissionText" class="form-input" rows="4" placeholder="Describe your progress, challenges, and what you learned..."></textarea>
+            </div>
+            
+            <div class="input-group">
+                <label>Link to Work (Optional)</label>
+                <input type="url" id="submissionLink" class="form-input" placeholder="https://github.com/..." >
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
+                <button onclick="submitWork()" class="btn">Submit Work</button>
+            </div>
+            
+            <div id="feedbackSection" class="submission-history" style="display: none;">
+                <h4 style="margin-bottom: 0.5rem; color: var(--primary);">Instructor Feedback</h4>
+                <p id="feedbackText" style="background: #f0f9ff; padding: 1rem; border-radius: 8px; color: var(--text-main);"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStudent = null;
+        let currentProgramId = null;
+
+        // Check session
+        const storedStudent = localStorage.getItem('edaiStudent');
+        if (storedStudent) {
+            currentStudent = JSON.parse(storedStudent);
+            showDashboard();
+        }
+
+        async function sendOTP() {
+            const email = document.getElementById('studentEmail').value;
+            if (!email) return alert('Please enter your email');
+            
+            try {
+                const res = await fetch('/api/send-student-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById('emailStep').style.display = 'none';
+                    document.getElementById('otpStep').style.display = 'block';
+                } else {
+                    alert(data.error);
+                }
+            } catch (e) { alert('Error sending code'); }
+        }
+
+        async function verifyOTP() {
+            const email = document.getElementById('studentEmail').value;
+            const otp = document.getElementById('otpCode').value;
+            
+            try {
+                const res = await fetch('/api/verify-student-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    currentStudent = data.student;
+                    localStorage.setItem('edaiStudent', JSON.stringify(currentStudent));
+                    showDashboard();
+                } else {
+                    alert(data.error);
+                }
+            } catch (e) { alert('Login failed'); }
+        }
+
+        function showDashboard() {
+            document.getElementById('loginView').style.display = 'none';
+            document.getElementById('dashboardView').style.display = 'block';
+            document.getElementById('studentNameDisplay').textContent = currentStudent.name;
+            loadPrograms();
+        }
+
+        async function loadPrograms() {
+            const res = await fetch(`/api/my-programs?studentId=${currentStudent.id}`);
+            const data = await res.json();
+            
+            const container = document.getElementById('programsContainer');
+            if (data.programs.length === 0) {
+                container.innerHTML = '<p>No enrolled programs found.</p>';
+                return;
+            }
+            
+            container.innerHTML = data.programs.map(p => `
+                <div class="program-card" onclick="openProgram(${p.id})">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">${p.name}</h3>
+                    <p style="color: var(--text-muted);">${p.program_type}</p>
+                </div>
+            `).join('');
+        }
+
+        async function openProgram(programId) {
+            currentProgramId = programId;
+            document.getElementById('programsList').style.display = 'none';
+            document.getElementById('programDetail').style.display = 'block';
+            
+            // Get program info (reuse from list or fetch)
+            // For simplicity, just fetch classes
+            const res = await fetch(`/api/get-program-classes/${programId}`);
+            const data = await res.json();
+            
+            // Also fetch submissions status
+            // Note: In real app, we'd batch this. For now, we'll fetch individually or add a new endpoint.
+            // I'll fetch submissions when rendering the list.
+            
+            renderClasses(data.classes);
+        }
+
+        async function renderClasses(classes) {
+            const list = document.getElementById('classesList');
+            list.innerHTML = 'Loading...';
+            
+            // Fetch student submissions for this program (or all, filter client side)
+            // I need an endpoint for this. I'll use get-submission one by one or create a bulk one.
+            // For MVP, I'll fetch one by one in the loop (inefficient but works for small scale).
+            
+            let html = '';
+            for (const cls of classes) {
+                const subRes = await fetch(`/api/get-submission?studentId=${currentStudent.id}&classId=${cls.id}`);
+                const subData = await subRes.json();
+                const submission = subData.submission;
+                
+                const status = submission ? submission.status : 'pending';
+                const statusLabel = submission ? (submission.status === 'submitted' ? 'Submitted' : 'Reviewed') : 'To Do';
+                const statusClass = submission ? (submission.status === 'submitted' ? 'status-submitted' : 'status-reviewed') : 'status-pending';
+                
+                html += `
+                    <div class="class-item">
+                        <div>
+                            <h4 style="font-size: 1.2rem; margin-bottom: 0.25rem;">${cls.title}</h4>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">${cls.objectives || ''}</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="status-badge ${statusClass}" style="display: inline-block; margin-bottom: 0.5rem;">${statusLabel}</span><br>
+                            <button onclick='openSubmissionModal(${JSON.stringify(cls).replace(/'/g, "&#39;")}, ${JSON.stringify(submission || null).replace(/'/g, "&#39;")})' class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                                ${submission ? 'Edit / View' : 'Submit Work'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            list.innerHTML = html;
+        }
+
+        function openSubmissionModal(cls, submission) {
+            document.getElementById('modalClassTitle').textContent = cls.title;
+            document.getElementById('modalClassObjectives').textContent = cls.objectives || '';
+            document.getElementById('submitClassId').value = cls.id;
+            
+            document.getElementById('submissionText').value = submission ? submission.submission_text : '';
+            document.getElementById('submissionLink').value = submission ? submission.submission_link : '';
+            
+            const feedbackSection = document.getElementById('feedbackSection');
+            if (submission && submission.instructor_feedback) {
+                feedbackSection.style.display = 'block';
+                document.getElementById('feedbackText').textContent = submission.instructor_feedback;
+            } else {
+                feedbackSection.style.display = 'none';
+            }
+            
+            document.getElementById('submissionModal').classList.add('active');
+        }
+
+        async function submitWork() {
+            const classId = document.getElementById('submitClassId').value;
+            const text = document.getElementById('submissionText').value;
+            const link = document.getElementById('submissionLink').value;
+            
+            if (!text && !link) return alert('Please enter text or a link');
+            
+            try {
+                const res = await fetch('/api/submit-work', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentId: currentStudent.id,
+                        classId,
+                        text,
+                        link
+                    })
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    alert('Work submitted successfully!');
+                    closeModal();
+                    openProgram(currentProgramId); // Refresh list
+                } else {
+                    alert(data.error);
+                }
+            } catch (e) { alert('Submission failed'); }
+        }
+
+        function closeModal() {
+            document.getElementById('submissionModal').classList.remove('active');
+        }
+
+        function showPrograms() {
+            document.getElementById('programDetail').style.display = 'none';
+            document.getElementById('programsList').style.display = 'block';
+        }
+
+        function backToEmail() {
+            document.getElementById('otpStep').style.display = 'none';
+            document.getElementById('emailStep').style.display = 'block';
+        }
+
+        function logout() {
+            localStorage.removeItem('edaiStudent');
+            location.reload();
+        }
+    </script>
+</body>
+</html>

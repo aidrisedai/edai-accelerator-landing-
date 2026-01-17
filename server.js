@@ -80,6 +80,11 @@ app.get('/programs', (req, res) => {
     res.sendFile(path.join(__dirname, 'programs.html'));
 });
 
+// Serve student portal
+app.get('/student', (req, res) => {
+    res.sendFile(path.join(__dirname, 'student.html'));
+});
+
 // API endpoint for form submission
 app.post('/api/submit-application', async (req, res) => {
     try {
@@ -1356,6 +1361,27 @@ app.post('/api/migrate-database', async (req, res) => {
                 id SERIAL PRIMARY KEY,
                 setting_key VARCHAR(255) UNIQUE NOT NULL,
                 setting_value TEXT,
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+        `);
+
+        // Add student_email to enrolled_students
+        await pool.query(`
+            ALTER TABLE enrolled_students
+            ADD COLUMN IF NOT EXISTS student_email VARCHAR(255);
+        `);
+
+        // Create student_submissions table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS student_submissions (
+                id SERIAL PRIMARY KEY,
+                student_id INTEGER NOT NULL REFERENCES enrolled_students(id) ON DELETE CASCADE,
+                class_id INTEGER NOT NULL REFERENCES program_classes(id) ON DELETE CASCADE,
+                submission_text TEXT,
+                submission_link TEXT,
+                status VARCHAR(50) DEFAULT 'submitted',
+                instructor_feedback TEXT,
+                created_at TIMESTAMP DEFAULT NOW(),
                 updated_at TIMESTAMP DEFAULT NOW()
             );
         `);
@@ -2659,6 +2685,7 @@ app.post('/api/enroll-student', async (req, res) => {
         const {
             programId,
             studentName,
+            studentEmail, // New field
             studentAge,
             studentGrade,
             parentName,
@@ -2679,6 +2706,7 @@ app.post('/api/enroll-student', async (req, res) => {
             INSERT INTO enrolled_students (
                 program_id,
                 student_name,
+                student_email,
                 student_age,
                 student_grade,
                 parent_name,
@@ -2686,16 +2714,20 @@ app.post('/api/enroll-student', async (req, res) => {
                 parent_phone,
                 enrollment_source,
                 notes
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             RETURNING *
         `, [
             programId,
             studentName,
+            studentEmail || null,
             studentAge,
             studentGrade,
             parentName,
             parentEmail,
             parentPhone,
+            'manual',
+            notes
+        ]);
             'manual',
             notes
         ]);
@@ -2871,6 +2903,7 @@ app.put('/api/update-student/:id', async (req, res) => {
         const { id } = req.params;
         const {
             studentName,
+            studentEmail,
             studentAge,
             studentGrade,
             parentName,
@@ -2883,24 +2916,29 @@ app.put('/api/update-student/:id', async (req, res) => {
         const result = await pool.query(`
             UPDATE enrolled_students
             SET student_name = $1,
-                student_age = $2,
-                student_grade = $3,
-                parent_name = $4,
-                parent_email = $5,
-                parent_phone = $6,
-                status = $7,
-                notes = $8,
+                student_email = $2,
+                student_age = $3,
+                student_grade = $4,
+                parent_name = $5,
+                parent_email = $6,
+                parent_phone = $7,
+                status = $8,
+                notes = $9,
                 updated_at = NOW()
-            WHERE id = $9
+            WHERE id = $10
             RETURNING *
         `, [
             studentName,
+            studentEmail || null,
             studentAge,
             studentGrade,
             parentName,
             parentEmail,
             parentPhone,
             status,
+            notes,
+            id
+        ]);
             notes,
             id
         ]);
@@ -3479,6 +3517,215 @@ app.post('/api/send-update-to-parent/:id', async (req, res) => {
             success: false,
             error: 'Failed to send update: ' + error.message
         });
+    }
+});
+
+// ============================================
+// STUDENT PORTAL API ENDPOINTS
+// ============================================
+
+const studentOtpStore = new Map();
+
+// Send OTP for student login
+app.post('/api/send-student-otp', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ success: false, error: 'Email is required' });
+        }
+        
+        const cleanEmail = email.trim().toLowerCase();
+        
+        // Check if student exists
+        const result = await pool.query('SELECT * FROM enrolled_students WHERE student_email = $1', [cleanEmail]);
+        
+        if (result.rows.length === 0) {
+            // Check if it's a parent email, maybe allow login? 
+            // For now, require student_email to be set.
+            return res.status(404).json({ success: false, error: 'Email not found in student records' });
+        }
+        
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Store OTP with 10-minute expiry
+        studentOtpStore.set(cleanEmail, {
+            otp,
+            expires: Date.now() + 10 * 60 * 1000 // 10 minutes
+        });
+        
+        // Send OTP via email
+        const settings = await getSettings();
+        const { Resend } = require('resend');
+        const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
+        
+        await resend.emails.send({
+            from: settings.email_from_address || 'EdAI Accelerator <noreply@edaiaccelerator.com>',
+            to: cleanEmail,
+            subject: 'Your EdAI Student Portal Login Code',
+            html: `
+                <div style="font-family: 'Outfit', sans-serif; max-width: 500px; margin: 0 auto; padding: 40px 20px;">
+                    <h2 style="color: #0a0a0a; margin-bottom: 20px;">Student Login</h2>
+                    <p style="color: #666; margin-bottom: 30px;">Use this code to log in to your student portal:</p>
+                    <div style="background: #f8f8f8; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+                        <span style="font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #0a0a0a;">${otp}</span>
+                    </div>
+                    <p style="color: #999; font-size: 14px;">This code expires in 10 minutes.</p>
+                </div>
+            `
+        });
+        
+        res.status(200).json({
+            success: true,
+            message: 'Verification code sent'
+        });
+        
+    } catch (error) {
+        console.error('Error sending student OTP:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to send code'
+        });
+    }
+});
+
+// Verify student OTP
+app.post('/api/verify-student-otp', async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        
+        if (!email || !otp) {
+            return res.status(400).json({ success: false, error: 'Email and OTP are required' });
+        }
+        
+        const cleanEmail = email.trim().toLowerCase();
+        const stored = studentOtpStore.get(cleanEmail);
+        
+        if (!stored) {
+            return res.status(400).json({ success: false, error: 'Invalid or expired code' });
+        }
+        
+        if (Date.now() > stored.expires) {
+            studentOtpStore.delete(cleanEmail);
+            return res.status(400).json({ success: false, error: 'Code expired' });
+        }
+        
+        if (stored.otp !== otp.trim()) {
+            return res.status(400).json({ success: false, error: 'Invalid code' });
+        }
+        
+        // OTP verified
+        studentOtpStore.delete(cleanEmail);
+        
+        // Get student details
+        const result = await pool.query('SELECT * FROM enrolled_students WHERE student_email = $1', [cleanEmail]);
+        const student = result.rows[0];
+        
+        res.status(200).json({
+            success: true,
+            student: {
+                id: student.id,
+                name: student.student_name,
+                email: student.student_email
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error verifying student OTP:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Verification failed'
+        });
+    }
+});
+
+// Get student programs
+app.get('/api/my-programs', async (req, res) => {
+    try {
+        const { studentId } = req.query; // In real app, get from session/token
+        
+        if (!studentId) {
+            return res.status(400).json({ success: false, error: 'Student ID required' });
+        }
+        
+        const result = await pool.query(`
+            SELECT p.*, es.id as enrollment_id
+            FROM programs p
+            JOIN enrolled_students es ON p.id = es.program_id
+            WHERE es.id = $1
+            ORDER BY p.start_date DESC
+        `, [studentId]);
+        
+        res.status(200).json({
+            success: true,
+            programs: result.rows
+        });
+        
+    } catch (error) {
+        console.error('Error getting student programs:', error);
+        res.status(500).json({ success: false, error: 'Failed to load programs' });
+    }
+});
+
+// Submit work
+app.post('/api/submit-work', async (req, res) => {
+    try {
+        const { studentId, classId, text, link } = req.body;
+        
+        // Check existing submission
+        const existing = await pool.query(
+            'SELECT id FROM student_submissions WHERE student_id = $1 AND class_id = $2',
+            [studentId, classId]
+        );
+        
+        let result;
+        if (existing.rows.length > 0) {
+            // Update
+            result = await pool.query(`
+                UPDATE student_submissions
+                SET submission_text = $1, submission_link = $2, status = 'submitted', updated_at = NOW()
+                WHERE id = $3
+                RETURNING *
+            `, [text, link, existing.rows[0].id]);
+        } else {
+            // Insert
+            result = await pool.query(`
+                INSERT INTO student_submissions (student_id, class_id, submission_text, submission_link, status)
+                VALUES ($1, $2, $3, $4, 'submitted')
+                RETURNING *
+            `, [studentId, classId, text, link]);
+        }
+        
+        res.status(200).json({
+            success: true,
+            submission: result.rows[0]
+        });
+        
+    } catch (error) {
+        console.error('Error submitting work:', error);
+        res.status(500).json({ success: false, error: 'Failed to submit work' });
+    }
+});
+
+// Get submission for a class
+app.get('/api/get-submission', async (req, res) => {
+    try {
+        const { studentId, classId } = req.query;
+        
+        const result = await pool.query(
+            'SELECT * FROM student_submissions WHERE student_id = $1 AND class_id = $2',
+            [studentId, classId]
+        );
+        
+        res.status(200).json({
+            success: true,
+            submission: result.rows[0] || null
+        });
+        
+    } catch (error) {
+        console.error('Error getting submission:', error);
+        res.status(500).json({ success: false, error: 'Failed to load submission' });
     }
 });
 

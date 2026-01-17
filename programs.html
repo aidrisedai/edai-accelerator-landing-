@@ -448,6 +448,11 @@
                     <input type="text" id="studentName" required placeholder="e.g., Sarah Ahmed">
                 </div>
                 
+                <div class="form-group">
+                    <label>Student Email (for Portal Access)</label>
+                    <input type="email" id="studentEmail" placeholder="student@example.com">
+                </div>
+                
                 <div class="form-row">
                     <div class="form-group">
                         <label>Age</label>
@@ -1218,6 +1223,7 @@
             document.querySelector('#addStudentModal .btn-primary').textContent = 'Update Student';
             
             document.getElementById('studentName').value = student.student_name || '';
+            document.getElementById('studentEmail').value = student.student_email || '';
             document.getElementById('studentAge').value = student.student_age || '';
             document.getElementById('studentGrade').value = student.student_grade || '';
             document.getElementById('parentName').value = student.parent_name || '';
@@ -1263,6 +1269,7 @@
             const studentData = {
                 programId: currentProgramId,
                 studentName: document.getElementById('studentName').value,
+                studentEmail: document.getElementById('studentEmail').value,
                 studentAge: parseInt(document.getElementById('studentAge').value) || null,
                 studentGrade: parseInt(document.getElementById('studentGrade').value) || null,
                 parentName: document.getElementById('parentName').value,

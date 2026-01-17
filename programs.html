@@ -1519,7 +1519,7 @@
             }
             
             // Ask for optional personal message
-            const personalMessage = prompt("Would you like to add a personal message? (Optional, press OK to skip)", "");
+            const personalMessage = prompt("Add a personal note to the PARENT? (e.g. 'Sarah made great progress today!')\n\nLeave empty to skip.", "");
             
             try {
                 const response = await fetch(`/api/send-update-to-parent/${updateId}`, {

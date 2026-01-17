@@ -425,7 +425,7 @@ app.post('/api/submit-application', async (req, res) => {
                         </div>
                         
                         <div class="footer">
-                            <p>© 2025 EdAI Accelerator | Empowering Muslim youth through product innovation</p>
+                            <p>© 2025 EdAI Accelerator | Turning Teens into Founders Early</p>
                             <p style="font-size: 12px; color: #9ca3af;">This email was sent to ${parentEmail.trim().toLowerCase()} because you submitted an application to EdAI Accelerator.</p>
                         </div>
                     </body>
@@ -3378,7 +3378,7 @@ app.post('/api/send-update-to-parent/:id', async (req, res) => {
                 <div class="container">
                     <div class="header">
                         <div class="brand">EdAI Accelerator</div>
-                        <div class="tagline">Empowering Future Innovators</div>
+                        <div class="tagline">Turning Teens into Founders Early</div>
                         <div class="header-card">
                             <div class="highlight-badge">Progress Update</div>
                             <h1 class="header-title">${update.program_name}</h1>
@@ -3451,7 +3451,7 @@ app.post('/api/send-update-to-parent/:id', async (req, res) => {
                     
                     <div class="footer">
                         <p>© ${new Date().getFullYear()} EdAI Accelerator</p>
-                        <p>Empowering the next generation of Muslim innovators.</p>
+                        <p>Turning Teens into Founders Early.</p>
                     </div>
                 </div>
             </body>

@@ -2728,9 +2728,6 @@ app.post('/api/enroll-student', async (req, res) => {
             'manual',
             notes
         ]);
-            'manual',
-            notes
-        ]);
         
         res.status(201).json({
             success: true,
@@ -2936,9 +2933,6 @@ app.put('/api/update-student/:id', async (req, res) => {
             parentEmail,
             parentPhone,
             status,
-            notes,
-            id
-        ]);
             notes,
             id
         ]);

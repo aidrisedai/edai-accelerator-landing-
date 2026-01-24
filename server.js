@@ -1554,6 +1554,14 @@ app.post('/api/migrate-maps-database', async (req, res) => {
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         `);
+
+        // Ensure latest columns exist on existing tables
+        await pool.query(`
+            ALTER TABLE maps_applications
+            ADD COLUMN IF NOT EXISTS acceptance_token VARCHAR(255),
+            ADD COLUMN IF NOT EXISTS offer_accepted BOOLEAN DEFAULT FALSE,
+            ADD COLUMN IF NOT EXISTS offer_accepted_at TIMESTAMP WITH TIME ZONE;
+        `);
         
         // Create indexes
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_maps_applications_email ON maps_applications(email);`);

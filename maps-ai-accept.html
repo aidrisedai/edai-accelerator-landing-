@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirm Your Spot – MAPS AI Builder Lab</title>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Outfit', -apple-system, system-ui, sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container {
+      background: #ffffff;
+      max-width: 720px;
+      width: 100%;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+      padding: 2.5rem 2.25rem;
+    }
+    .logo { text-align: center; margin-bottom: 1.75rem; }
+    .logo h1 { font-size: 1.7rem; color: #0f172a; margin-bottom: 0.35rem; }
+    .logo p { color: #64748b; font-size: 0.95rem; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.75rem;
+    }
+    h2 { font-size: 1.4rem; margin-bottom: 0.5rem; color: #0f172a; }
+    .lead { color: #475569; font-size: 0.95rem; margin-bottom: 1.4rem; }
+    .section {
+      background: #f8fafc;
+      border-radius: 14px;
+      padding: 1.25rem 1.25rem 1.1rem;
+      margin-bottom: 1.2rem;
+      border: 1px solid #e2e8f0;
+    }
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 0.6rem;
+    }
+    .field-row { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.9rem; margin-bottom: 0.35rem; }
+    .field-label { color: #64748b; min-width: 110px; }
+    .field-value { color: #0f172a; font-weight: 500; }
+    .radio-group { display: flex; gap: 1.25rem; margin-top: 0.75rem; font-size: 0.9rem; }
+    .radio-group label { display: flex; align-items: center; gap: 0.4rem; color: #475569; cursor: pointer; }
+    .edit-fields { margin-top: 0.9rem; display: none; gap: 0.75rem; flex-wrap: wrap; }
+    .edit-field { flex: 1 1 220px; }
+    .edit-field label { display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.25rem; }
+    .edit-field input {
+      width: 100%;
+      padding: 0.55rem 0.65rem;
+      border-radius: 8px;
+      border: 1px solid #cbd5f5;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+    .edit-field input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25);
+    }
+    .terms-list { margin: 0.4rem 0 0.15rem; padding-left: 1.1rem; font-size: 0.88rem; color: #475569; }
+    .terms-list li { margin-bottom: 0.2rem; }
+    .checkbox-group { margin-top: 0.8rem; display: flex; flex-direction: column; gap: 0.45rem; font-size: 0.86rem; color: #334155; }
+    .checkbox-group label { display: flex; align-items: flex-start; gap: 0.45rem; cursor: pointer; }
+    .checkbox-group input { margin-top: 0.1rem; }
+    .actions { margin-top: 1.6rem; display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-primary {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #f9fafb;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15, 23, 42, 0.25); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; transform: none; }
+    .helper { font-size: 0.8rem; color: #64748b; text-align: center; }
+    .error {
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      padding: 0.9rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      margin-bottom: 0.8rem;
+    }
+    .success {
+      text-align: center;
+      padding: 1.5rem 0.5rem 0.25rem;
+    }
+    .success h2 { font-size: 1.45rem; color: #15803d; margin-bottom: 0.5rem; }
+    .success p { font-size: 0.95rem; color: #475569; margin-bottom: 0.25rem; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      background: #dcfce7;
+      color: #166534;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+    .loading { text-align: center; color: #64748b; font-size: 0.95rem; padding: 2.25rem 0.5rem; }
+    @media (max-width: 640px) {
+      body { padding: 1.25rem; }
+      .container { padding: 2rem 1.5rem; border-radius: 18px; }
+      .logo h1 { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <div class="badge">MAPS · AI Builder Lab</div>
+      <h1>Confirm Your Spot</h1>
+      <p>Review your info, agree to the terms, and lock in your seat.</p>
+    </div>
+    <div id="mainContent">
+      <div class="loading">Loading your details...</div>
+    </div>
+  </div>
+
+  <script>
+    const mainEl = document.getElementById('mainContent');
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    if (!token) {
+      mainEl.innerHTML = '<div class="error">Invalid confirmation link. Please check your email and try again.</div>';
+    } else {
+      loadOfferDetails();
+    }
+
+    async function loadOfferDetails() {
+      try {
+        const res = await fetch(`/api/get-maps-offer?token=${encodeURIComponent(token)}`);
+        const data = await res.json();
+        if (!data.success) {
+          mainEl.innerHTML = `<div class="error">${data.error || 'Unable to load your details. Please contact us if this persists.'}</div>`;
+          return;
+        }
+        const applicant = data.applicant;
+        if (applicant.offer_accepted) {
+          renderAlreadyAccepted(applicant);
+        } else {
+          renderForm(applicant);
+        }
+      } catch (err) {
+        console.error(err);
+        mainEl.innerHTML = '<div class="error">Something went wrong loading your details. Please refresh the page or contact us.</div>';
+      }
+    }
+
+    function renderAlreadyAccepted(applicant) {
+      const acceptedAt = applicant.offer_accepted_at
+        ? new Date(applicant.offer_accepted_at).toLocaleString()
+        : null;
+      mainEl.innerHTML = `
+        <div class="success">
+          <div class="pill">✅ Spot Confirmed</div>
+          <h2>Jazakallahu Khairan, ${escapeHtml(applicant.name || 'student')}!</h2>
+          <p>Your spot in the MAPS AI Builder Lab is already confirmed.</p>
+          ${acceptedAt ? `<p style="font-size:0.85rem;color:#6b7280;">Confirmed on ${acceptedAt}</p>` : ''}
+          <p style="margin-top:0.75rem;font-size:0.9rem;">If you believe this is a mistake, please reply to the email you received or contact aidris@edai.fun.</p>
+        </div>
+      `;
+    }
+
+    function renderForm(applicant) {
+      const name = escapeHtml(applicant.name || 'student');
+      const email = escapeHtml(applicant.email || '');
+      const phone = escapeHtml(applicant.phone || '');
+      const background = escapeHtml(applicant.background || '-');
+      const field = escapeHtml(applicant.field || '-');
+
+      mainEl.innerHTML = `
+        <div class="content">
+          <h2>Assalamu Alaikum ${name},</h2>
+          <p class="lead">
+            You have been <strong>accepted</strong> into the MAPS AI Builder Lab.
+            Please confirm your contact information and agree to the payment terms below to reserve your seat.
+          </p>
+
+          <div class="section">
+            <div class="section-title">1. Confirm Your Contact Information</div>
+            <div class="field-row"><div class="field-label">Name</div><div class="field-value">${name}</div></div>
+            <div class="field-row"><div class="field-label">Email</div><div class="field-value">${email}</div></div>
+            <div class="field-row"><div class="field-label">Phone</div><div class="field-value">${phone || '—'}</div></div>
+            <div class="field-row"><div class="field-label">Background</div><div class="field-value">${background}</div></div>
+            <div class="field-row"><div class="field-label">Field</div><div class="field-value">${field}</div></div>
+
+            <div class="radio-group">
+              <label><input type="radio" name="contactConfirmed" value="yes" checked> Everything above is correct</label>
+              <label><input type="radio" name="contactConfirmed" value="no"> Something has changed</label>
+            </div>
+
+            <div class="edit-fields" id="editFields">
+              <div class="edit-field">
+                <label for="updatedEmail">Updated email</label>
+                <input type="email" id="updatedEmail" placeholder="Enter new email" value="${email}">
+              </div>
+              <div class="edit-field">
+                <label for="updatedPhone">Updated phone</label>
+                <input type="tel" id="updatedPhone" placeholder="Enter new phone" value="${phone}">
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">2. Program & Payment Terms</div>
+            <p style="font-size:0.9rem;color:#475569;margin-bottom:0.4rem;">
+              <strong>Program:</strong> MAPS AI Builder Lab (Adults)
+            </p>
+            <p style="font-size:0.88rem;color:#64748b;margin-bottom:0.25rem;">
+              • 3 weeks · Tuesdays & Wednesdays · 6–8 PM · In-person at MAPS Redmond
+            </p>
+            <p style="font-size:0.9rem;color:#0f172a;margin-top:0.6rem;font-weight:600;">Tuition & payment expectations:</p>
+            <ul class="terms-list">
+              <li>Total tuition: <strong>$850</strong> per student.</li>
+              <li>You will receive a separate payment link and instructions after you submit this confirmation.</li>
+              <li>Your seat is held for a limited time; we may release it if payment is not completed by the communicated deadline.</li>
+            </ul>
+            <p style="font-size:0.86rem;color:#64748b;margin-top:0.4rem;">
+              This form <strong>does not collect payment</strong>. It confirms that you accept your offer and agree to complete payment once the link is sent.
+            </p>
+          </div>
+
+          <div class="section">
+            <div class="section-title">3. Confirm & Accept</div>
+            <div class="checkbox-group">
+              <label><input type="checkbox" id="agreeEnrollment"> I confirm that I am accepting my spot in the MAPS AI Builder Lab.</label>
+              <label><input type="checkbox" id="agreePayment"> I understand and agree to the tuition amount and that I will complete payment once I receive the payment link.</label>
+              <label><input type="checkbox" id="agreeUpdates"> I understand that my seat may be released if I do not complete payment by the deadline communicated later.</label>
+            </div>
+          </div>
+
+          <div id="errorBox" class="error" style="display:none;"></div>
+
+          <div class="actions">
+            <button class="btn-primary" id="confirmBtn" onclick="submitConfirmation()">✅ Confirm My Spot</button>
+            <p class="helper">If you have questions before confirming, reply to the email you received or contact <a href="mailto:aidris@edai.fun">aidris@edai.fun</a>.</p>
+          </div>
+        </div>
+      `;
+
+      const radios = document.querySelectorAll('input[name="contactConfirmed"]');
+      const editFields = document.getElementById('editFields');
+      radios.forEach(r => {
+        r.addEventListener('change', () => {
+          if (r.value === 'no' && r.checked) {
+            editFields.style.display = 'flex';
+          } else if (r.value === 'yes' && r.checked) {
+            editFields.style.display = 'none';
+          }
+        });
+      });
+    }
+
+    async function submitConfirmation() {
+      const btn = document.getElementById('confirmBtn');
+      const errorBox = document.getElementById('errorBox');
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+
+      const contactConfirmed = document.querySelector('input[name="contactConfirmed"]:checked')?.value === 'yes';
+      const updatedEmail = document.getElementById('updatedEmail')?.value.trim();
+      const updatedPhone = document.getElementById('updatedPhone')?.value.trim();
+
+      const agreeEnrollment = document.getElementById('agreeEnrollment').checked;
+      const agreePayment = document.getElementById('agreePayment').checked;
+      const agreeUpdates = document.getElementById('agreeUpdates').checked;
+
+      const errors = [];
+      if (!agreeEnrollment || !agreePayment || !agreeUpdates) {
+        errors.push('Please check all three boxes to confirm your spot and agree to the terms.');
+      }
+
+      if (!contactConfirmed) {
+        if (!updatedEmail) {
+          errors.push('Please provide an updated email address.');
+        } else if (!isValidEmail(updatedEmail)) {
+          errors.push('Please enter a valid email address.');
+        }
+        if (updatedPhone && !isValidPhone(updatedPhone)) {
+          errors.push('Please enter a valid phone number.');
+        }
+      }
+
+      if (errors.length) {
+        errorBox.textContent = errors.join(' ');
+        errorBox.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+
+      try {
+        const res = await fetch('/api/confirm-maps-offer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token,
+            contactConfirmed,
+            updatedEmail: contactConfirmed ? null : updatedEmail,
+            updatedPhone: contactConfirmed ? null : updatedPhone
+          })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to save your confirmation.');
+        }
+        mainEl.innerHTML = `
+          <div class="success">
+            <div class="pill">✅ Spot Confirmed</div>
+            <h2>Jazakallahu Khairan!</h2>
+            <p>Your acceptance has been recorded. Your spot in the MAPS AI Builder Lab is now confirmed (pending payment).</p>
+            <p style="margin-top:0.6rem;">You will receive a follow-up email soon with your payment link and final onboarding details.</p>
+            <p style="margin-top:1rem;font-size:0.85rem;color:#6b7280;">If you have any questions, please email <a href="mailto:aidris@edai.fun">aidris@edai.fun</a>.</p>
+          </div>
+        `;
+      } catch (err) {
+        console.error(err);
+        errorBox.textContent = err.message || 'Something went wrong. Please try again.';
+        errorBox.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = '✅ Confirm My Spot';
+      }
+    }
+
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+    function isValidPhone(phone) {
+      const cleaned = phone.replace(/[\s\-()]/g, '');
+      return /^[+]?\d{7,15}$/.test(cleaned);
+    }
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+  </script>
+</body>
+</html>

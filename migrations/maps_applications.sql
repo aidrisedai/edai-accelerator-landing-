@@ -22,17 +22,21 @@ CREATE TABLE IF NOT EXISTS maps_applications (
     
     -- Metadata
     application_status VARCHAR(50) DEFAULT 'pending',
+    acceptance_token VARCHAR(255),
+    offer_accepted BOOLEAN DEFAULT FALSE,
+    offer_accepted_at TIMESTAMP WITH TIME ZONE,
     submitted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
     -- Constraints
-    CONSTRAINT maps_valid_email CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
+    CONSTRAINT maps_valid_email CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$')
 );
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_maps_applications_email ON maps_applications(email);
 CREATE INDEX IF NOT EXISTS idx_maps_applications_status ON maps_applications(application_status);
 CREATE INDEX IF NOT EXISTS idx_maps_applications_submitted ON maps_applications(submitted_at);
+CREATE INDEX IF NOT EXISTS idx_maps_applications_acceptance_token ON maps_applications(acceptance_token);
 
 -- Trigger for updated_at
 CREATE TRIGGER update_maps_applications_updated_at 

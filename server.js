@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const { Pool } = require('pg');
+const crypto = require('crypto');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -58,6 +59,11 @@ app.get('/', (req, res) => {
 // Adult MAPS AI builder lab landing page
 app.get('/maps-ai', (req, res) => {
     res.sendFile(path.join(__dirname, 'maps-ai.html'));
+});
+
+// MAPS AI Builder Lab offer confirmation page
+app.get('/maps-ai-accept', (req, res) => {
+    res.sendFile(path.join(__dirname, 'maps-ai-accept.html'));
 });
 
 // Serve admin page
@@ -794,6 +800,74 @@ app.get('/api/get-maps-applications', async (req, res) => {
     }
 });
 
+// API endpoint to get MAPS offer details for confirmation page
+app.get('/api/get-maps-offer', async (req, res) => {
+    try {
+        const { token } = req.query;
+        if (!token) {
+            return res.status(400).json({ success: false, error: 'Token is required' });
+        }
+        const result = await pool.query(
+            'SELECT id, name, email, phone, background, field, coding_experience, has_laptop, schedule_confirm, referral_source, application_status, offer_accepted, offer_accepted_at, submitted_at, updated_at FROM maps_applications WHERE acceptance_token = $1',
+            [token]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Invalid or expired confirmation link' });
+        }
+        res.status(200).json({ success: true, applicant: result.rows[0] });
+    } catch (error) {
+        console.error('Error fetching MAPS offer details:', error);
+        res.status(500).json({ success: false, error: 'Failed to load offer details' });
+    }
+});
+
+// API endpoint to confirm MAPS offer (student acceptance)
+app.post('/api/confirm-maps-offer', async (req, res) => {
+    try {
+        const { token, contactConfirmed, updatedEmail, updatedPhone } = req.body;
+        if (!token) {
+            return res.status(400).json({ success: false, error: 'Token is required' });
+        }
+        const result = await pool.query('SELECT * FROM maps_applications WHERE acceptance_token = $1', [token]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Invalid or expired confirmation link' });
+        }
+        const applicant = result.rows[0];
+
+        let email = applicant.email;
+        let phone = applicant.phone;
+
+        if (!contactConfirmed) {
+            if (!updatedEmail) {
+                return res.status(400).json({ success: false, error: 'Updated email is required when contact info has changed.' });
+            }
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(updatedEmail.trim())) {
+                return res.status(400).json({ success: false, error: 'Invalid email format.' });
+            }
+            email = updatedEmail.trim().toLowerCase();
+
+            if (updatedPhone) {
+                const cleaned = updatedPhone.replace(/[\s\-()]/g, '');
+                if (!/^[+]?\d{7,15}$/.test(cleaned)) {
+                    return res.status(400).json({ success: false, error: 'Invalid phone number format.' });
+                }
+                phone = updatedPhone.trim();
+            }
+        }
+
+        await pool.query(
+            'UPDATE maps_applications SET email = $1, phone = $2, offer_accepted = TRUE, offer_accepted_at = NOW(), updated_at = NOW() WHERE id = $3',
+            [email, phone, applicant.id]
+        );
+
+        res.status(200).json({ success: true, message: 'Offer accepted successfully' });
+    } catch (error) {
+        console.error('Error confirming MAPS offer:', error);
+        res.status(500).json({ success: false, error: 'Failed to save your confirmation. Please try again.' });
+    }
+});
+
 // API endpoint to update MAPS application status
 app.post('/api/update-maps-status', async (req, res) => {
     try {
@@ -860,73 +934,87 @@ app.post('/api/accept-maps-applicant', async (req, res) => {
         
         const applicant = applicantResult.rows[0];
         
-        // Update status
+        // Generate or reuse acceptance token
+        let acceptanceToken = applicant.acceptance_token;
+        if (!acceptanceToken) {
+            acceptanceToken = crypto.randomBytes(32).toString('hex');
+        }
+        
+        // Update status and store token
         await pool.query(
-            'UPDATE maps_applications SET application_status = $1, updated_at = NOW() WHERE id = $2',
-            ['accepted', applicationId]
+            'UPDATE maps_applications SET application_status = $1, acceptance_token = $2, updated_at = NOW() WHERE id = $3',
+            ['accepted', acceptanceToken, applicationId]
         );
         
-        // Send acceptance email
+        const baseUrl = process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+        const confirmationLink = `${baseUrl}/maps-ai-accept?token=${encodeURIComponent(acceptanceToken)}`;
+        
+        // Send acceptance email (no payment link yet; point to confirmation page)
         const settings = await getSettings();
         const { Resend } = require('resend');
         const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
         
         await resend.emails.send({
-            from: settings.email_from_address || 'EdAI <noreply@edaiaccelerator.com>',
+            from: settings.email_from_address || 'EdAI <noreply@edai.fun>',
             to: applicant.email,
-            subject: '🎉 Congratulations! You\'ve Been Accepted - MAPS AI Builder Lab',
+            subject: "🎉 You've Been Accepted – MAPS AI Builder Lab (Confirm Your Spot)",
             html: `
                 <!DOCTYPE html>
                 <html>
                 <head>
                     <style>
-                        body { font-family: 'Outfit', -apple-system, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
-                        .header { background: linear-gradient(135deg, #10b981, #34d399); color: white; padding: 40px 30px; text-align: center; }
-                        .content { background: #f9f9f9; padding: 40px 30px; }
-                        .info-box { background: white; padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #10b981; }
-                        .cta-btn { display: inline-block; background: #0a0a0a; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 20px; }
-                        .footer { padding: 20px; text-align: center; color: #999; font-size: 14px; }
+                        body { font-family: 'Outfit', -apple-system, sans-serif; line-height: 1.6; color: #0f172a; max-width: 640px; margin: 0 auto; padding: 0; background:#f1f5f9; }
+                        .header { background: linear-gradient(135deg, #10b981, #22c55e); color: white; padding: 40px 30px; text-align: center; }
+                        .content { background: #ffffff; padding: 32px 28px 36px; }
+                        .info-box { background: #f8fafc; padding: 18px 18px 14px; border-radius: 12px; margin: 18px 0; border: 1px solid #e2e8f0; }
+                        .cta-btn { display: inline-block; background: #0f172a; color: white; padding: 14px 28px; border-radius: 999px; text-decoration: none; font-weight: 700; margin-top: 18px; }
+                        .cta-btn:hover { opacity: 0.93; }
+                        .footer { padding: 18px 26px 28px; text-align: center; color: #94a3b8; font-size: 13px; }
+                        .pill { display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:#ecfdf3;color:#15803d;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em; }
                     </style>
                 </head>
                 <body>
                     <div class="header">
-                        <h1 style="margin: 0; font-size: 28px;">🎉 Congratulations!</h1>
-                        <p style="margin: 10px 0 0 0; font-size: 18px;">You've Been Accepted!</p>
+                        <div class="pill">MAPS · AI Builder Lab</div>
+                        <h1 style="margin: 12px 0 4px 0; font-size: 26px;">🎉 Congratulations, ${applicant.name}!</h1>
+                        <p style="margin: 0; font-size: 16px; opacity: 0.95;">You have been accepted into the MAPS AI Builder Lab.</p>
                     </div>
                     <div class="content">
                         <p><strong>Assalamu Alaikum ${applicant.name},</strong></p>
-                        <p>Alhamdulillah! We are thrilled to inform you that you have been <strong>accepted</strong> into the MAPS AI Builder Lab!</p>
+                        <p>Alhamdulillah, we are excited to invite you into the <strong>MAPS AI Builder Lab</strong> for adult learners. This email confirms that you have been <strong>accepted</strong> into the upcoming cohort.</p>
                         
-                        ${customMessage ? `<div class="info-box"><p style="margin: 0;">${customMessage}</p></div>` : ''}
+                        ${customMessage ? `<div class="info-box"><p style="margin: 0; font-size:14px;">${customMessage}</p></div>` : ''}
                         
                         <div class="info-box">
-                            <h3 style="margin: 0 0 15px 0; color: #10b981;">📋 Program Details</h3>
-                            <p style="margin: 5px 0;"><strong>Duration:</strong> 3 weeks (6 sessions)</p>
-                            <p style="margin: 5px 0;"><strong>Schedule:</strong> Tuesdays & Wednesdays, 6–8 PM</p>
-                            <p style="margin: 5px 0;"><strong>Location:</strong> MAPS Redmond, WA</p>
-                            <p style="margin: 5px 0;"><strong>Investment:</strong> $850</p>
-                            ${startDate ? `<p style="margin: 5px 0;"><strong>Start Date:</strong> ${startDate}</p>` : ''}
+                            <h3 style="margin: 0 0 10px 0; font-size: 15px; color:#0f172a;">📋 Program Snapshot</h3>
+                            <p style="margin: 4px 0; font-size: 14px;"><strong>Duration:</strong> 3 weeks (6 sessions)</p>
+                            <p style="margin: 4px 0; font-size: 14px;"><strong>Schedule:</strong> Tuesdays & Wednesdays, 6–8 PM</p>
+                            <p style="margin: 4px 0; font-size: 14px;"><strong>Location:</strong> MAPS Redmond, WA</p>
+                            <p style="margin: 4px 0; font-size: 14px;"><strong>Tuition:</strong> $850</p>
+                            ${startDate ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Target Start Date:</strong> ${startDate}</p>` : ''}
                         </div>
                         
-                        <h3>📝 Next Steps</h3>
-                        <ol>
-                            <li><strong>Make Payment:</strong> Complete your $850 payment to secure your spot</li>
-                            <li><strong>Confirm:</strong> Reply to this email after payment to confirm enrollment</li>
-                            <li><strong>Preparation:</strong> Make sure you have a laptop ready for class</li>
+                        <h3 style="margin-top: 18px; font-size: 15px;">✅ What You Need To Do Now</h3>
+                        <p style="font-size: 14px; margin-bottom: 8px;">Before we send you the payment link and onboarding details, please:</p>
+                        <ol style="padding-left: 20px; font-size: 14px; color:#334155;">
+                            <li style="margin-bottom: 6px;">Confirm that your contact information is correct.</li>
+                            <li style="margin-bottom: 6px;">Formally accept your spot in the program.</li>
+                            <li>Agree to complete payment once you receive the payment link.</li>
                         </ol>
                         
-                        <div style="background: #10b981; padding: 20px; border-radius: 12px; text-align: center; margin: 25px 0;">
-                            <p style="color: white; margin: 0 0 15px 0; font-size: 16px;"><strong>💳 Complete Your Payment</strong></p>
-                            <a href="https://myvanco.io/VEI9M" style="display: inline-block; background: white; color: #10b981; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Pay $850 via MAPS Payment Portal</a>
-                            <p style="color: rgba(255,255,255,0.9); margin: 12px 0 0 0; font-size: 13px;">Secure payment processed by MAPS Redmond</p>
-                        </div>
+                        <p style="margin-top: 14px; font-size: 14px;">Click the button below to review the details and confirm your spot:</p>
+                        <p style="text-align:center;">
+                            <a href="${confirmationLink}" class="cta-btn">Confirm My Spot &amp; Terms</a>
+                        </p>
                         
-                        <p><strong>⚠️ Important:</strong> Spots are limited to 7 students. Please complete payment within 48 hours to secure your seat.</p>
+                        <p style="margin-top: 18px; font-size: 13px; color:#64748b;">
+                            This confirmation page does <strong>not</strong> collect payment. After you confirm, we will send a separate email with your payment link and final onboarding steps, in shaa Allah.
+                        </p>
                         
-                        <p>Questions? Reply to this email or contact us at <a href="mailto:aidris@edai.fun" style="color: #10b981;">aidris@edai.fun</a> or call/text <a href="tel:+15153570454" style="color: #10b981;">+1 (515) 357-0454</a>.</p>
+                        <p style="margin-top: 20px; font-size: 14px;">If you have any questions or concerns before confirming, simply reply to this email or contact us at <a href="mailto:aidris@edai.fun" style="color:#0f172a; font-weight:500;">aidris@edai.fun</a>.</p>
                         
-                        <p style="margin-top: 30px;">We can't wait to start building with you!</p>
-                        <p><strong>— The EdAI Team</strong></p>
+                        <p style="margin-top: 26px; font-size: 14px;">We look forward to building with you, bi-idhnillah.</p>
+                        <p style="margin: 2px 0 0 0; font-size: 14px;"><strong>— The EdAI Team</strong></p>
                     </div>
                     <div class="footer">
                         <p>© ${new Date().getFullYear()} EdAI · MAPS Redmond, WA</p>
@@ -1079,66 +1167,76 @@ app.post('/api/resend-maps-acceptance', async (req, res) => {
         
         const applicant = applicantResult.rows[0];
         
-        // Send acceptance email
+        // Ensure we have an acceptance token
+        let acceptanceToken = applicant.acceptance_token;
+        if (!acceptanceToken) {
+            acceptanceToken = crypto.randomBytes(32).toString('hex');
+            await pool.query(
+                'UPDATE maps_applications SET acceptance_token = $1, updated_at = NOW() WHERE id = $2',
+                [acceptanceToken, applicationId]
+            );
+        }
+        const baseUrl = process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+        const confirmationLink = `${baseUrl}/maps-ai-accept?token=${encodeURIComponent(acceptanceToken)}`;
+        
+        // Send acceptance email pointing to confirmation page
         const settings = await getSettings();
         const { Resend } = require('resend');
         const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
         
         await resend.emails.send({
-            from: settings.email_from_address || 'EdAI <noreply@edaiaccelerator.com>',
+            from: settings.email_from_address || 'EdAI <noreply@edai.fun>',
             to: applicant.email,
-            subject: '🎉 Congratulations! You\'ve Been Accepted - MAPS AI Builder Lab',
+            subject: "🎉 You've Been Accepted – MAPS AI Builder Lab (Confirm Your Spot)",
             html: `
                 <!DOCTYPE html>
                 <html>
                 <head>
                     <style>
-                        body { font-family: 'Outfit', -apple-system, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
-                        .header { background: linear-gradient(135deg, #10b981, #34d399); color: white; padding: 40px 30px; text-align: center; }
-                        .content { background: #f9f9f9; padding: 40px 30px; }
-                        .info-box { background: white; padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #10b981; }
-                        .footer { padding: 20px; text-align: center; color: #999; font-size: 14px; }
+                        body { font-family: 'Outfit', -apple-system, sans-serif; line-height: 1.6; color: #0f172a; max-width: 640px; margin: 0 auto; padding: 0; background:#f1f5f9; }
+                        .header { background: linear-gradient(135deg, #10b981, #22c55e); color: white; padding: 40px 30px; text-align: center; }
+                        .content { background: #ffffff; padding: 32px 28px 36px; }
+                        .info-box { background: #f8fafc; padding: 18px 18px 14px; border-radius: 12px; margin: 18px 0; border: 1px solid #e2e8f0; }
+                        .cta-btn { display: inline-block; background: #0f172a; color: white; padding: 14px 28px; border-radius: 999px; text-decoration: none; font-weight: 700; margin-top: 18px; }
+                        .cta-btn:hover { opacity: 0.93; }
+                        .footer { padding: 18px 26px 28px; text-align: center; color: #94a3b8; font-size: 13px; }
+                        .pill { display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:#ecfdf3;color:#15803d;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em; }
                     </style>
                 </head>
                 <body>
                     <div class="header">
-                        <h1 style="margin: 0; font-size: 28px;">🎉 Congratulations!</h1>
-                        <p style="margin: 10px 0 0 0; font-size: 18px;">You've Been Accepted!</p>
+                        <div class="pill">MAPS · AI Builder Lab</div>
+                        <h1 style="margin: 12px 0 4px 0; font-size: 26px;">🎉 Congratulations, ${applicant.name}!</h1>
+                        <p style="margin: 0; font-size: 16px; opacity: 0.95;">You have been accepted into the MAPS AI Builder Lab.</p>
                     </div>
                     <div class="content">
                         <p><strong>Assalamu Alaikum ${applicant.name},</strong></p>
-                        <p>Alhamdulillah! We are thrilled to inform you that you have been <strong>accepted</strong> into the MAPS AI Builder Lab!</p>
+                        <p>Alhamdulillah, we are excited to confirm again that you have been <strong>accepted</strong> into the upcoming MAPS AI Builder Lab cohort.</p>
                         
-                        ${customMessage ? `<div class="info-box"><p style="margin: 0;">${customMessage}</p></div>` : ''}
+                        ${customMessage ? `<div class="info-box"><p style="margin: 0; font-size:14px;">${customMessage}</p></div>` : ''}
                         
                         <div class="info-box">
-                            <h3 style="margin: 0 0 15px 0; color: #10b981;">📋 Program Details</h3>
-                            <p style="margin: 5px 0;"><strong>Duration:</strong> 3 weeks (6 sessions)</p>
-                            <p style="margin: 5px 0;"><strong>Schedule:</strong> Tuesdays & Wednesdays, 6–8 PM</p>
-                            <p style="margin: 5px 0;"><strong>Location:</strong> MAPS Redmond, WA</p>
-                            <p style="margin: 5px 0;"><strong>Investment:</strong> $850</p>
-                            ${startDate ? `<p style="margin: 5px 0;"><strong>Start Date:</strong> ${startDate}</p>` : ''}
+                            <h3 style="margin: 0 0 10px 0; font-size: 15px; color:#0f172a;">📋 Program Snapshot</h3>
+                            <p style="margin: 4px 0; font-size: 14px;"><strong>Duration:</strong> 3 weeks (6 sessions)</p>
+                            <p style="margin: 4px 0; font-size: 14px;"><strong>Schedule:</strong> Tuesdays & Wednesdays, 6–8 PM</p>
+                            <p style="margin: 4px 0; font-size: 14px;"><strong>Location:</strong> MAPS Redmond, WA</p>
+                            <p style="margin: 4px 0; font-size: 14px;"><strong>Tuition:</strong> $850</p>
+                            ${startDate ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Target Start Date:</strong> ${startDate}</p>` : ''}
                         </div>
                         
-                        <h3>📝 Next Steps</h3>
-                        <ol>
-                            <li><strong>Make Payment:</strong> Complete your $850 payment to secure your spot</li>
-                            <li><strong>Confirm:</strong> Reply to this email after payment to confirm enrollment</li>
-                            <li><strong>Preparation:</strong> Make sure you have a laptop ready for class</li>
-                        </ol>
+                        <p style="margin-top: 14px; font-size: 14px;">If you haven\'t already, please confirm your spot and agree to the payment terms here:</p>
+                        <p style="text-align:center;">
+                            <a href="${confirmationLink}" class="cta-btn">Confirm My Spot &amp; Terms</a>
+                        </p>
                         
-                        <div style="background: #10b981; padding: 20px; border-radius: 12px; text-align: center; margin: 25px 0;">
-                            <p style="color: white; margin: 0 0 15px 0; font-size: 16px;"><strong>💳 Complete Your Payment</strong></p>
-                            <a href="https://myvanco.io/VEI9M" style="display: inline-block; background: white; color: #10b981; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Pay $850 via MAPS Payment Portal</a>
-                            <p style="color: rgba(255,255,255,0.9); margin: 12px 0 0 0; font-size: 13px;">Secure payment processed by MAPS Redmond</p>
-                        </div>
+                        <p style="margin-top: 18px; font-size: 13px; color:#64748b;">
+                            After you confirm, we will send a separate email with your payment link and final onboarding steps, in shaa Allah.
+                        </p>
                         
-                        <p><strong>⚠️ Important:</strong> Spots are limited to 7 students. Please complete payment within 48 hours to secure your seat.</p>
+                        <p style="margin-top: 20px; font-size: 14px;">If you have questions, reply to this email or contact <a href="mailto:aidris@edai.fun" style="color:#0f172a; font-weight:500;">aidris@edai.fun</a>.</p>
                         
-                        <p>Questions? Reply to this email or contact us at <a href="mailto:aidris@edai.fun" style="color: #10b981;">aidris@edai.fun</a> or call/text <a href="tel:+15153570454" style="color: #10b981;">+1 (515) 357-0454</a>.</p>
-                        
-                        <p style="margin-top: 30px;">We can't wait to start building with you!</p>
-                        <p><strong>— The EdAI Team</strong></p>
+                        <p style="margin-top: 26px; font-size: 14px;">We look forward to seeing you in class.</p>
+                        <p style="margin: 2px 0 0 0; font-size: 14px;"><strong>— The EdAI Team</strong></p>
                     </div>
                     <div class="footer">
                         <p>© ${new Date().getFullYear()} EdAI · MAPS Redmond, WA</p>
@@ -1449,6 +1547,9 @@ app.post('/api/migrate-maps-database', async (req, res) => {
                 schedule_confirm VARCHAR(100),
                 referral_source VARCHAR(100),
                 application_status VARCHAR(50) DEFAULT 'pending',
+                acceptance_token VARCHAR(255),
+                offer_accepted BOOLEAN DEFAULT FALSE,
+                offer_accepted_at TIMESTAMP WITH TIME ZONE,
                 submitted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
@@ -1458,6 +1559,7 @@ app.post('/api/migrate-maps-database', async (req, res) => {
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_maps_applications_email ON maps_applications(email);`);
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_maps_applications_status ON maps_applications(application_status);`);
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_maps_applications_submitted ON maps_applications(submitted_at);`);
+        await pool.query(`CREATE INDEX IF NOT EXISTS idx_maps_applications_acceptance_token ON maps_applications(acceptance_token);`);
         
         // Create trigger for updated_at (drop first if exists to avoid error)
         await pool.query(`DROP TRIGGER IF EXISTS update_maps_applications_updated_at ON maps_applications;`);

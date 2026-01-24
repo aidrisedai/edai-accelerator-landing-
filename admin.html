@@ -1893,6 +1893,16 @@
                         <div class="detail-value"><span class="status-badge status-${applicant.status}">${applicant.status}</span></div>
                     </div>
                     <div class="detail-row">
+                        <div class="detail-label">Offer Accepted</div>
+                        <div class="detail-value">${applicant.offer_accepted ? '✅ Yes' : '—'}</div>
+                    </div>
+                    ${applicant.offer_accepted_at ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Accepted At</div>
+                            <div class="detail-value">${new Date(applicant.offer_accepted_at).toLocaleString()}</div>
+                        </div>
+                    ` : ''}
+                    <div class="detail-row">
                         <div class="detail-label">Submitted</div>
                         <div class="detail-value">${new Date(applicant.submitted_at).toLocaleString()}</div>
                     </div>

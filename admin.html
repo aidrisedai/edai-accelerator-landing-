@@ -1780,13 +1780,16 @@
                                 <td>${app.background || '-'}</td>
                                 <td>${app.field || '-'}</td>
                                 <td>
-                                    <select class="status-select status-${app.status}" onchange="updateMapsStatus(${app.id}, this.value)">
-                                        <option value="pending" ${app.status === 'pending' ? 'selected' : ''}>Pending</option>
-                                        <option value="reviewed" ${app.status === 'reviewed' ? 'selected' : ''}>Reviewed</option>
-                                        <option value="accepted" ${app.status === 'accepted' ? 'selected' : ''}>Accepted</option>
-                                        <option value="rejected" ${app.status === 'rejected' ? 'selected' : ''}>Rejected</option>
-                                        <option value="enrolled" ${app.status === 'enrolled' ? 'selected' : ''}>Enrolled</option>
-                                    </select>
+                                    <div style="display:flex;align-items:center;">
+                                        <select class="status-select status-${app.status}" onchange="updateMapsStatus(${app.id}, this.value)">
+                                            <option value="pending" ${app.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                            <option value="reviewed" ${app.status === 'reviewed' ? 'selected' : ''}>Reviewed</option>
+                                            <option value="accepted" ${app.status === 'accepted' ? 'selected' : ''}>Accepted</option>
+                                            <option value="rejected" ${app.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                                            <option value="enrolled" ${app.status === 'enrolled' ? 'selected' : ''}>Enrolled</option>
+                                        </select>
+                                        ${app.offer_accepted ? '<span title="Student accepted offer" style="margin-left:8px;font-size:1.1rem;">✅</span>' : ''}
+                                    </div>
                                 </td>
                                 <td><button class="btn-view" onclick='viewMapsApplicant(${JSON.stringify(app).replace(/'/g, "&#39;")})'>View</button></td>
                             </tr>
@@ -1894,7 +1897,11 @@
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">Offer Accepted</div>
-                        <div class="detail-value">${applicant.offer_accepted ? '✅ Yes' : '—'}</div>
+                        <div class="detail-value">
+                            ${applicant.offer_accepted 
+                                ? `<span style="color:#166534;font-weight:600;">✅ Yes (${new Date(applicant.offer_accepted_at).toLocaleString()})</span>` 
+                                : '<span style="color:#64748b;">Pending</span>'}
+                        </div>
                     </div>
                     ${applicant.offer_accepted_at ? `
                         <div class="detail-row">

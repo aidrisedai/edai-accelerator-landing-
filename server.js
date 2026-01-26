@@ -964,20 +964,20 @@ app.post('/api/accept-maps-applicant', async (req, res) => {
                 <head>
                     <style>
                         body { font-family: 'Outfit', -apple-system, sans-serif; line-height: 1.6; color: #0f172a; max-width: 640px; margin: 0 auto; padding: 0; background:#f1f5f9; }
-                        .header { background: linear-gradient(135deg, #10b981, #22c55e); color: white; padding: 40px 30px; text-align: center; }
-                        .content { background: #ffffff; padding: 32px 28px 36px; }
-                        .info-box { background: #f8fafc; padding: 18px 18px 14px; border-radius: 12px; margin: 18px 0; border: 1px solid #e2e8f0; }
-                        .cta-btn { display: inline-block; background: #0f172a; color: white; padding: 14px 28px; border-radius: 999px; text-decoration: none; font-weight: 700; margin-top: 18px; }
-                        .cta-btn:hover { opacity: 0.93; }
-                        .footer { padding: 18px 26px 28px; text-align: center; color: #94a3b8; font-size: 13px; }
-                        .pill { display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:#ecfdf3;color:#15803d;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em; }
+                        .header { background: #022c22; padding: 48px 30px; text-align: center; border-bottom: 4px solid #10b981; }
+                        .content { background: #ffffff; padding: 32px 28px 36px; border-radius: 0 0 16px 16px; }
+                        .info-box { background: #f8fafc; padding: 24px; border-radius: 12px; margin: 24px 0; border: 1px solid #e2e8f0; }
+                        .cta-btn { display: inline-block; background: #0f172a; color: white; padding: 16px 32px; border-radius: 99px; text-decoration: none; font-weight: 700; margin-top: 24px; font-size: 16px; }
+                        .cta-btn:hover { opacity: 0.9; }
+                        .footer { padding: 24px; text-align: center; color: #64748b; font-size: 13px; }
+                        .pill { display:inline-block; padding: 6px 12px; background: rgba(16, 185, 129, 0.15); color: #34d399; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px; }
                     </style>
                 </head>
                 <body>
                     <div class="header">
                         <div class="pill">MAPS · AI Builder Lab</div>
-                        <h1 style="margin: 12px 0 4px 0; font-size: 26px;">🎉 Congratulations, ${applicant.name}!</h1>
-                        <p style="margin: 0; font-size: 16px; opacity: 0.95;">You have been accepted into the MAPS AI Builder Lab.</p>
+                        <h1 style="margin: 0 0 12px 0; font-size: 32px; font-weight: 800; color: white; letter-spacing: -0.5px; line-height: 1.2;">🎉 Congratulations!</h1>
+                        <p style="margin: 0; font-size: 18px; color: #d1fae5; font-weight: 500;">You have been accepted, ${applicant.name}!</p>
                     </div>
                     <div class="content">
                         <p><strong>Assalamu Alaikum ${applicant.name},</strong></p>
@@ -1194,20 +1194,20 @@ app.post('/api/resend-maps-acceptance', async (req, res) => {
                 <head>
                     <style>
                         body { font-family: 'Outfit', -apple-system, sans-serif; line-height: 1.6; color: #0f172a; max-width: 640px; margin: 0 auto; padding: 0; background:#f1f5f9; }
-                        .header { background: linear-gradient(135deg, #10b981, #22c55e); color: white; padding: 40px 30px; text-align: center; }
-                        .content { background: #ffffff; padding: 32px 28px 36px; }
-                        .info-box { background: #f8fafc; padding: 18px 18px 14px; border-radius: 12px; margin: 18px 0; border: 1px solid #e2e8f0; }
-                        .cta-btn { display: inline-block; background: #0f172a; color: white; padding: 14px 28px; border-radius: 999px; text-decoration: none; font-weight: 700; margin-top: 18px; }
-                        .cta-btn:hover { opacity: 0.93; }
-                        .footer { padding: 18px 26px 28px; text-align: center; color: #94a3b8; font-size: 13px; }
-                        .pill { display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:#ecfdf3;color:#15803d;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em; }
+                        .header { background: #022c22; padding: 48px 30px; text-align: center; border-bottom: 4px solid #10b981; }
+                        .content { background: #ffffff; padding: 32px 28px 36px; border-radius: 0 0 16px 16px; }
+                        .info-box { background: #f8fafc; padding: 24px; border-radius: 12px; margin: 24px 0; border: 1px solid #e2e8f0; }
+                        .cta-btn { display: inline-block; background: #0f172a; color: white; padding: 16px 32px; border-radius: 99px; text-decoration: none; font-weight: 700; margin-top: 24px; font-size: 16px; }
+                        .cta-btn:hover { opacity: 0.9; }
+                        .footer { padding: 24px; text-align: center; color: #64748b; font-size: 13px; }
+                        .pill { display:inline-block; padding: 6px 12px; background: rgba(16, 185, 129, 0.15); color: #34d399; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px; }
                     </style>
                 </head>
                 <body>
                     <div class="header">
                         <div class="pill">MAPS · AI Builder Lab</div>
-                        <h1 style="margin: 12px 0 4px 0; font-size: 26px;">🎉 Congratulations, ${applicant.name}!</h1>
-                        <p style="margin: 0; font-size: 16px; opacity: 0.95;">You have been accepted into the MAPS AI Builder Lab.</p>
+                        <h1 style="margin: 0 0 12px 0; font-size: 32px; font-weight: 800; color: white; letter-spacing: -0.5px; line-height: 1.2;">🎉 Congratulations!</h1>
+                        <p style="margin: 0; font-size: 18px; color: #d1fae5; font-weight: 500;">You have been accepted, ${applicant.name}!</p>
                     </div>
                     <div class="content">
                         <p><strong>Assalamu Alaikum ${applicant.name},</strong></p>

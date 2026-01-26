@@ -187,7 +187,14 @@
         <div class="success">
           <div class="pill">✅ Spot Confirmed</div>
           <h2>Jazakallahu Khairan, ${escapeHtml(applicant.name || 'student')}!</h2>
-          <p>Your spot in the MAPS AI Builder Lab is already confirmed.</p>
+          <p>Your spot in the MAPS AI Builder Lab is confirmed.</p>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:1rem;margin:1.2rem 0;text-align:left;">
+            <p style="color:#166534;font-weight:600;margin-bottom:0.4rem;">📅 Next Steps:</p>
+            <p style="font-size:0.9rem;color:#15803d;line-height:1.5;">
+              We look forward to receiving you on <strong>Tuesday, Jan 27th by 6:00 PM</strong> at MAPS Redmond.
+              Please aim to arrive 10-15 minutes early so we can get started on time, in shaa Allah.
+            </p>
+          </div>
           ${acceptedAt ? `<p style="font-size:0.85rem;color:#6b7280;">Confirmed on ${acceptedAt}</p>` : ''}
           <p style="margin-top:0.75rem;font-size:0.9rem;">If you believe this is a mistake, please reply to the email you received or contact aidris@edai.fun.</p>
         </div>
@@ -343,6 +350,15 @@
             <div class="pill">✅ Spot Confirmed</div>
             <h2>Jazakallahu Khairan!</h2>
             <p>Your acceptance has been recorded. Your spot in the MAPS AI Builder Lab is now confirmed (pending payment).</p>
+            
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:1rem;margin:1.2rem 0;text-align:left;">
+              <p style="color:#166534;font-weight:600;margin-bottom:0.4rem;">📅 Next Steps:</p>
+              <p style="font-size:0.9rem;color:#15803d;line-height:1.5;">
+                We look forward to receiving you on <strong>Tuesday, Jan 27th by 6:00 PM</strong> at MAPS Redmond.
+                Please aim to arrive 10-15 minutes early so we can get started on time, in shaa Allah.
+              </p>
+            </div>
+
             <p style="margin-top:0.6rem;">You will receive a follow-up email soon with your payment link and final onboarding details.</p>
             <p style="margin-top:1rem;font-size:0.85rem;color:#6b7280;">If you have any questions, please email <a href="mailto:aidris@edai.fun">aidris@edai.fun</a>.</p>
           </div>

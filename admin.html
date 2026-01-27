@@ -1675,8 +1675,90 @@
             }
         });
         
+
+        async function showMapsEnrollModal(applicationId, studentName) {
+            try {
+                const response = await fetch('/api/get-programs');
+                const data = await response.json();
+                
+                if (!data.success || data.programs.length === 0) {
+                    alert('No programs available.');
+                    return;
+                }
+                
+                // Filter to active/upcoming programs
+                const availablePrograms = data.programs.filter(p => 
+                    p.status === 'active' || p.status === 'upcoming'
+                );
+                
+                const programOptions = availablePrograms.map(p => 
+                    `<option value="${p.id}">${p.name} (${p.program_type})</option>`
+                ).join('');
+                
+                const programSelect = document.createElement('div');
+                programSelect.innerHTML = `
+                    <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 500px;">
+                        <h3 style="margin-bottom: 1rem; color: #1f2937;">Enroll ${studentName} in Program</h3>
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Program</label>
+                            <select id="enrollMapsProgramSelect" style="width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem;">
+                                <option value="">Choose a program...</option>
+                                ${programOptions}
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            <button onclick="closeMapsEnrollModal()" style="padding: 0.75rem 1.5rem; background: #f3f4f6; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+                            <button onclick="enrollMapsStudent(${applicationId})" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Enroll</button>
+                        </div>
+                    </div>
+                `;
+                
+                const modal = document.createElement('div');
+                modal.id = 'mapsEnrollModal';
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000;';
+                modal.appendChild(programSelect);
+                document.body.appendChild(modal);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load programs.');
+            }
+        }
+        
+        function closeMapsEnrollModal() {
+            const modal = document.getElementById('mapsEnrollModal');
+            if (modal) modal.remove();
+        }
+        
+        async function enrollMapsStudent(applicationId) {
+            const programId = document.getElementById('enrollMapsProgramSelect').value;
+            if (!programId) return alert('Please select a program');
+            
+            try {
+                const response = await fetch('/api/enroll-maps-student', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ applicationId, programId: parseInt(programId) })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Student enrolled successfully!');
+                    closeMapsEnrollModal();
+                    closeModal();
+                    loadMapsApplicants();
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to enroll student.');
+            }
+        }
+
         // ========================================
-        // MAPS AI Builder Lab Functions
+        // Task Management Functions
         // ========================================
         
         let currentTab = 'teen';
@@ -1939,7 +2021,7 @@
                     <p>This applicant has been accepted.</p>
                     <div style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
                         <button class="btn-send-invite" onclick="resendMapsAcceptanceEmail(${applicant.id}, '${applicant.name.replace(/'/g, "\\'")}')" style="background: linear-gradient(135deg, #10b981, #34d399);">📧 Resend Acceptance Email</button>
-                        <button class="btn-send-invite" onclick="updateMapsStatus(${applicant.id}, 'enrolled'); closeModal();" style="background: linear-gradient(135deg, #6366f1, #818cf8);">📚 Mark as Enrolled</button>
+                        <button class="btn-send-invite" onclick="showMapsEnrollModal(${applicant.id}, '${applicant.name.replace(/'/g, "\\'")}')" style="background: linear-gradient(135deg, #6366f1, #818cf8);">📚 Enroll in Program</button>
                     </div>
                 </div>
                 ` : ''}
@@ -2079,5 +2161,199 @@
             }
         }
     </script>
-</body>
-</html>
+    
+    <!-- Task Management Scripts & Styles -->
+    <style>
+        .task-item {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .task-actions button {
+            margin-left: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-edit-task { background: #e0e7ff; color: #3730a3; }
+        .btn-delete-task { background: #fee2e2; color: #991b1b; }
+        .task-form-group { margin-bottom: 1rem; }
+        .task-form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        .task-form-group input, .task-form-group textarea { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; }
+    </style>
+
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="taskModalTitle">Add Task</h2>
+                <button class="btn-close" onclick="closeTaskModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="taskClassId">
+                <input type="hidden" id="taskId">
+                <div class="task-form-group">
+                    <label>Title</label>
+                    <input type="text" id="taskTitle" placeholder="e.g. Watch Introduction Video">
+                </div>
+                <div class="task-form-group">
+                    <label>Description (Instructions)</label>
+                    <textarea id="taskDescription" rows="3" placeholder="Explain what the student needs to do..."></textarea>
+                </div>
+                <div class="task-form-group">
+                    <label>Resources (Links/Materials)</label>
+                    <textarea id="taskResources" rows="3" placeholder="Links to slides, videos, etc."></textarea>
+                    <small style="color:#6b7280">You can paste links directly.</small>
+                </div>
+                <div class="task-form-group">
+                    <label>Sequence Order</label>
+                    <input type="number" id="taskOrder" value="0">
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:1.5rem;">
+                    <button onclick="closeTaskModal()" style="padding:0.5rem 1rem; background:#f3f4f6; border:none; border-radius:6px; cursor:pointer;">Cancel</button>
+                    <button onclick="saveTask()" style="padding:0.5rem 1rem; background:#2563eb; color:white; border:none; border-radius:6px; cursor:pointer;">Save Task</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    async function manageClassTasks(classId, classTitle) {
+        try {
+            const response = await fetch('/api/get-class-tasks/' + classId);
+            const data = await response.json();
+            
+            if (!data.success) throw new Error(data.error);
+            
+            const tasks = data.tasks;
+            
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.textContent = 'Manage Tasks: ' + classTitle;
+            
+            let html = `
+                <div style="margin-bottom: 1.5rem; display: flex; justify-content: flex-end;">
+                    <button onclick="openAddTaskModal(${classId})" style="padding: 0.5rem 1rem; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">+ Add New Task</button>
+                </div>
+                <div id="tasksList">
+            `;
+            
+            if (tasks.length === 0) {
+                html += '<p style="text-align:center; color:#6b7280; padding:2rem;">No tasks yet. Add one to get started!</p>';
+            } else {
+                tasks.forEach(task => {
+                    html += `
+                        <div class="task-item">
+                            <div>
+                                <div style="font-weight:600;">${task.title}</div>
+                                <div style="font-size:0.9rem; color:#6b7280;">${task.description ? task.description.substring(0, 50) + (task.description.length>50?'...':'') : 'No description'}</div>
+                            </div>
+                            <div class="task-actions">
+                                <button class="btn-edit-task" onclick='openEditTaskModal(${JSON.stringify(task).replace(/'/g, "&#39;")})'>Edit</button>
+                                <button class="btn-delete-task" onclick="deleteTask(${task.id}, ${classId}, '${classTitle.replace(/'/g, "\\'")}')">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += '</div>';
+            html += `<div style="margin-top:2rem; border-top:1px solid #e5e7eb; padding-top:1rem; text-align:right;">
+                <button onclick="closeModal()" style="padding:0.5rem 1rem; background:#f3f4f6; border:none; border-radius:6px; cursor:pointer;">Close</button>
+            </div>`;
+            
+            modalBody.innerHTML = html;
+            document.getElementById('applicantModal').classList.add('active'); 
+            
+        } catch (e) {
+            alert('Failed to load tasks: ' + e.message);
+        }
+    }
+
+    function openAddTaskModal(classId) {
+        document.getElementById('taskModalTitle').textContent = 'Add Task';
+        document.getElementById('taskClassId').value = classId;
+        document.getElementById('taskId').value = '';
+        document.getElementById('taskTitle').value = '';
+        document.getElementById('taskDescription').value = '';
+        document.getElementById('taskResources').value = '';
+        document.getElementById('taskOrder').value = '0';
+        
+        document.getElementById('taskModal').classList.add('active');
+    }
+
+    function openEditTaskModal(task) {
+        document.getElementById('taskModalTitle').textContent = 'Edit Task';
+        document.getElementById('taskClassId').value = task.class_id;
+        document.getElementById('taskId').value = task.id;
+        document.getElementById('taskTitle').value = task.title;
+        document.getElementById('taskDescription').value = task.description || '';
+        document.getElementById('taskResources').value = task.resources || '';
+        document.getElementById('taskOrder').value = task.sequence_order || 0;
+        
+        document.getElementById('taskModal').classList.add('active');
+    }
+
+    function closeTaskModal() {
+        document.getElementById('taskModal').classList.remove('active');
+    }
+
+    async function saveTask() {
+        const classId = document.getElementById('taskClassId').value;
+        const taskId = document.getElementById('taskId').value;
+        const title = document.getElementById('taskTitle').value;
+        const description = document.getElementById('taskDescription').value;
+        const resources = document.getElementById('taskResources').value;
+        const sequenceOrder = document.getElementById('taskOrder').value;
+        
+        if (!title) return alert('Title is required');
+        
+        const endpoint = taskId ? '/api/update-task' : '/api/create-task';
+        const body = { classId, title, description, resources, sequenceOrder };
+        if (taskId) body.taskId = taskId;
+        
+        try {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                closeTaskModal();
+                // Refresh task list - HACK: we read the title from the modal itself
+                const headerText = document.getElementById('modalTitle').textContent;
+                const classTitle = headerText.replace('Manage Tasks: ', '');
+                manageClassTasks(classId, classTitle);
+            } else {
+                alert(data.error);
+            }
+        } catch(e) { alert('Error saving task'); }
+    }
+
+    async function deleteTask(taskId, classId, classTitle) {
+        if(!confirm('Are you sure you want to delete this task?')) return;
+        
+        try {
+            const res = await fetch('/api/delete-task', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ taskId })
+            });
+            const data = await res.json();
+            if(data.success) {
+                manageClassTasks(classId, classTitle);
+            } else {
+                alert(data.error);
+            }
+        } catch(e) { alert('Error deleting task'); }
+    }
+    </script>

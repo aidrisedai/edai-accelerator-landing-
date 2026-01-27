@@ -97,6 +97,27 @@
             z-index: 100;
         }
         
+        .wisdom-banner {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .wisdom-banner::before {
+            content: '"';
+            position: absolute;
+            top: -20px;
+            left: 20px;
+            font-size: 150px;
+            opacity: 0.1;
+            font-family: serif;
+        }
+        .wisdom-text { font-size: 1.25rem; font-weight: 500; font-style: italic; line-height: 1.6; }
+        
         .program-card {
             background: white;
             border-radius: 16px;
@@ -112,23 +133,42 @@
         .class-item {
             background: white;
             border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+        .class-header {
+            padding: 1.5rem;
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+        .class-tasks {
+            padding: 0;
+        }
+        .task-row {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.1s;
+        }
+        .task-row:last-child { border-bottom: none; }
+        .task-row:hover { background: #f8fafc; }
         
         .status-badge {
-            padding: 0.5rem 1rem;
+            padding: 0.25rem 0.75rem;
             border-radius: 50px;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             font-weight: 600;
+            text-transform: uppercase;
         }
-        .status-pending { background: #fee2e2; color: #dc2626; }
+        .status-pending { background: #f3f4f6; color: #6b7280; }
         .status-submitted { background: #dbeafe; color: #1e40af; }
-        .status-reviewed { background: #d1fae5; color: #065f46; }
+        .status-completed { background: #d1fae5; color: #065f46; }
         
         /* Modal */
         .modal {
@@ -151,11 +191,16 @@
             overflow-y: auto;
         }
         
-        .submission-history {
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e5e7eb;
+        .resource-link {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            background: #eff6ff;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
         }
+        .resource-link:hover { text-decoration: underline; background: #dbeafe; }
     </style>
 </head>
 <body>
@@ -195,6 +240,10 @@
         </header>
         
         <div class="container">
+            <div id="wisdomBanner" class="wisdom-banner" style="display:none;">
+                <p class="wisdom-text" id="wisdomText">"Seek knowledge from the cradle to the grave."</p>
+            </div>
+
             <div id="programsList">
                 <h2 style="margin-bottom: 1.5rem;">My Programs</h2>
                 <div id="programsContainer">Loading...</div>
@@ -205,36 +254,45 @@
                 <h2 id="programTitle" style="margin-bottom: 0.5rem; font-size: 2rem;"></h2>
                 <p id="programDesc" style="color: var(--text-muted); margin-bottom: 2rem;"></p>
                 
-                <h3>Curriculum & Progress</h3>
+                <h3>Curriculum & Tasks</h3>
                 <div id="classesList" class="class-list"></div>
             </div>
         </div>
     </div>
 
-    <!-- Submission Modal -->
-    <div id="submissionModal" class="modal">
+    <!-- Task Detail Modal -->
+    <div id="taskModal" class="modal">
         <div class="modal-content">
-            <h3 id="modalClassTitle" style="margin-bottom: 1rem;">Submit Work</h3>
-            <p id="modalClassObjectives" style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;"></p>
+            <h3 id="modalTaskTitle" style="margin-bottom: 1rem; font-size: 1.5rem;">Task Title</h3>
             
-            <input type="hidden" id="submitClassId">
+            <div id="modalTaskDesc" style="color: var(--text-main); margin-bottom: 1.5rem; line-height: 1.6;"></div>
+            
+            <div id="modalTaskResources" style="margin-bottom: 2rem;">
+                <h4 style="margin-bottom: 0.5rem; font-size: 1rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Resources</h4>
+                <div id="resourcesContent"></div>
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid #e5e7eb; margin-bottom: 1.5rem;">
+            
+            <h4 style="margin-bottom: 1rem;">Your Submission</h4>
+            <input type="hidden" id="submitTaskId">
             
             <div class="input-group">
-                <label>What did you work on?</label>
-                <textarea id="submissionText" class="form-input" rows="4" placeholder="Describe your progress, challenges, and what you learned..."></textarea>
+                <label>Notes / Answer</label>
+                <textarea id="submissionText" class="form-input" rows="4" placeholder="Type your answer or notes here..."></textarea>
             </div>
             
             <div class="input-group">
-                <label>Link to Work (Optional)</label>
-                <input type="url" id="submissionLink" class="form-input" placeholder="https://github.com/..." >
+                <label>Link (if applicable)</label>
+                <input type="url" id="submissionLink" class="form-input" placeholder="https://..." >
             </div>
             
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
-                <button onclick="submitWork()" class="btn">Submit Work</button>
+                <button onclick="closeModal()" class="btn btn-secondary">Close</button>
+                <button onclick="submitTask()" class="btn">Mark as Completed</button>
             </div>
             
-            <div id="feedbackSection" class="submission-history" style="display: none;">
+            <div id="feedbackSection" style="display: none; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
                 <h4 style="margin-bottom: 0.5rem; color: var(--primary);">Instructor Feedback</h4>
                 <p id="feedbackText" style="background: #f0f9ff; padding: 1rem; border-radius: 8px; color: var(--text-main);"></p>
             </div>
@@ -301,6 +359,18 @@
             document.getElementById('dashboardView').style.display = 'block';
             document.getElementById('studentNameDisplay').textContent = currentStudent.name;
             loadPrograms();
+            loadWisdom();
+        }
+        
+        async function loadWisdom() {
+            try {
+                const res = await fetch('/api/get-daily-wisdom');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('wisdomText').textContent = data.quote;
+                    document.getElementById('wisdomBanner').style.display = 'block';
+                }
+            } catch(e) { console.error('Failed to load wisdom'); }
         }
 
         async function loadPrograms() {
@@ -327,46 +397,66 @@
             document.getElementById('programsList').style.display = 'none';
             document.getElementById('programDetail').style.display = 'block';
             
-            // Get program info (reuse from list or fetch)
-            // For simplicity, just fetch classes
             const res = await fetch(`/api/get-program-classes/${programId}`);
             const data = await res.json();
             
-            renderClasses(data.classes);
+            renderCurriculum(data.classes);
         }
 
-        async function renderClasses(classes) {
+        async function renderCurriculum(classes) {
             const list = document.getElementById('classesList');
-            list.innerHTML = 'Loading...';
-            
-            // Fetch student submissions for this program (or all, filter client side)
-            // I need an endpoint for this. I'll use get-submission one by one or create a bulk one.
-            // For MVP, I'll fetch one by one in the loop (inefficient but works for small scale).
+            list.innerHTML = 'Loading tasks...';
             
             let html = '';
+            
             for (const cls of classes) {
-                const subRes = await fetch(`/api/get-submission?studentId=${currentEnrollmentId}&classId=${cls.id}`);
-                const subData = await subRes.json();
-                const submission = subData.submission;
+                // Fetch tasks for each class with completion status
+                const tasksRes = await fetch(`/api/get-class-tasks/${cls.id}?studentId=${currentEnrollmentId}`);
+                const tasksData = await tasksRes.json();
+                const tasks = tasksData.tasks || [];
                 
-                const status = submission ? submission.status : 'pending';
-                const statusLabel = submission ? (submission.status === 'submitted' ? 'Submitted' : 'Reviewed') : 'To Do';
-                const statusClass = submission ? (submission.status === 'submitted' ? 'status-submitted' : 'status-reviewed') : 'status-pending';
-                
-                // Determine week/class label
                 const weekLabel = cls.sequence_order ? `Week ${cls.sequence_order}: ` : '';
                 
                 html += `
                     <div class="class-item">
-                        <div>
-                            <h4 style="font-size: 1.2rem; margin-bottom: 0.25rem;">${weekLabel}${cls.title}</h4>
-                            <p style="font-size: 0.9rem; color: var(--text-muted);">${cls.objectives || ''}</p>
+                        <div class="class-header">
+                            <div>
+                                <h4 style="font-size: 1.2rem; margin-bottom: 0.25rem;">${weekLabel}${cls.title}</h4>
+                                <p style="font-size: 0.9rem; color: var(--text-muted);">${cls.objectives || ''}</p>
+                            </div>
+                            <div style="text-align: right; font-size: 0.9rem; font-weight: 600; color: var(--primary);">
+                                ${tasks.length} Tasks
+                            </div>
                         </div>
-                        <div style="text-align: right;">
-                            <span class="status-badge ${statusClass}" style="display: inline-block; margin-bottom: 0.5rem;">${statusLabel}</span><br>
-                            <button onclick='openSubmissionModal(${JSON.stringify(cls).replace(/'/g, "&#39;")}, ${JSON.stringify(submission || null).replace(/'/g, "&#39;")})' class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
-                                ${submission ? 'Edit / View' : 'Submit Work'}
-                            </button>
+                        <div class="class-tasks">
+                `;
+                
+                if (tasks.length === 0) {
+                    html += '<div style="padding:1rem 1.5rem; color:#9ca3af; font-style:italic;">No tasks assigned yet.</div>';
+                } else {
+                    tasks.forEach(task => {
+                        const statusClass = task.status === 'submitted' ? 'status-submitted' : (task.status === 'completed' ? 'status-completed' : 'status-pending');
+                        const statusLabel = task.status === 'pending' ? 'To Do' : (task.status === 'submitted' ? 'Completed' : 'Reviewed');
+                        
+                        html += `
+                            <div class="task-row" onclick='openTaskModal(${JSON.stringify(task).replace(/'/g, "&#39;")})' style="cursor: pointer;">
+                                <div style="display:flex; align-items:center; gap:1rem;">
+                                    <div style="background:${task.status !== 'pending' ? '#d1fae5' : '#e5e7eb'}; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:${task.status !== 'pending' ? '#065f46' : 'white'}; font-weight:bold;">
+                                        ${task.status !== 'pending' ? '✓' : ''}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight:500;">${task.title}</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="status-badge ${statusClass}">${statusLabel}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += `
                         </div>
                     </div>
                 `;
@@ -374,39 +464,56 @@
             list.innerHTML = html;
         }
 
-        function openSubmissionModal(cls, submission) {
-            document.getElementById('modalClassTitle').textContent = cls.title;
-            document.getElementById('modalClassObjectives').textContent = cls.objectives || '';
-            document.getElementById('submitClassId').value = cls.id;
+        function openTaskModal(task) {
+            document.getElementById('modalTaskTitle').textContent = task.title;
+            document.getElementById('modalTaskDesc').textContent = task.description || 'No instructions provided.';
+            document.getElementById('submitTaskId').value = task.id;
             
-            document.getElementById('submissionText').value = submission ? submission.submission_text : '';
-            document.getElementById('submissionLink').value = submission ? submission.submission_link : '';
+            // Format resources (links)
+            const resourcesContainer = document.getElementById('resourcesContent');
+            if (task.resources) {
+                // Check if JSON
+                try {
+                    const links = JSON.parse(task.resources);
+                    // Handle if it's not array
+                } catch(e) {
+                    // Treat as text, maybe check for URLs
+                    const text = task.resources;
+                    const urlRegex = /(https?:\/\/[^\s]+)/g;
+                    const formatted = text.replace(urlRegex, '<a href="$1" target="_blank" class="resource-link">🔗 $1</a>');
+                    resourcesContainer.innerHTML = formatted;
+                }
+            } else {
+                resourcesContainer.innerHTML = '<p style="color:#9ca3af">No resources provided.</p>';
+            }
+            
+            document.getElementById('submissionText').value = task.submission_text || '';
+            document.getElementById('submissionLink').value = task.submission_link || '';
             
             const feedbackSection = document.getElementById('feedbackSection');
-            if (submission && submission.instructor_feedback) {
+            if (task.instructor_feedback) {
                 feedbackSection.style.display = 'block';
-                document.getElementById('feedbackText').textContent = submission.instructor_feedback;
+                document.getElementById('feedbackText').textContent = task.instructor_feedback;
             } else {
                 feedbackSection.style.display = 'none';
             }
             
-            document.getElementById('submissionModal').classList.add('active');
+            document.getElementById('taskModal').classList.add('active');
         }
 
-        async function submitWork() {
-            const classId = document.getElementById('submitClassId').value;
+        async function submitTask() {
+            const taskId = document.getElementById('submitTaskId').value;
             const text = document.getElementById('submissionText').value;
             const link = document.getElementById('submissionLink').value;
             
-            if (!text && !link) return alert('Please enter text or a link');
-            
             try {
-                const res = await fetch('/api/submit-work', {
+                const res = await fetch('/api/submit-task', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         studentId: currentEnrollmentId,
-                        classId,
+                        taskId,
+                        status: 'submitted',
                         text,
                         link
                     })
@@ -414,12 +521,12 @@
                 
                 const data = await res.json();
                 if (data.success) {
-                    alert('Work submitted successfully!');
+                    alert('Task marked as completed!');
                     closeModal();
-                    // Reload submissions
+                    // Reload current program
                     const res = await fetch(`/api/get-program-classes/${currentProgramId}`);
-                    const data = await res.json();
-                    renderClasses(data.classes);
+                    const pData = await res.json();
+                    renderCurriculum(pData.classes);
                 } else {
                     alert(data.error);
                 }
@@ -427,7 +534,7 @@
         }
 
         function closeModal() {
-            document.getElementById('submissionModal').classList.remove('active');
+            document.getElementById('taskModal').classList.remove('active');
         }
 
         function showPrograms() {

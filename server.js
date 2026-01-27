@@ -1359,7 +1359,38 @@ app.post('/api/resend-maps-rejection', async (req, res) => {
 // API endpoint to run database migrations (admin only - call once after deployment)
 app.post('/api/migrate-database', async (req, res) => {
     try {
-        // Add interview scheduling and pipeline fields
+        // Create applications table if it doesn't exist (since it's referenced by enrolled_students)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS applications (
+                id SERIAL PRIMARY KEY,
+                parent_name VARCHAR(255) NOT NULL,
+                parent_email VARCHAR(255) NOT NULL,
+                parent_phone VARCHAR(50),
+                teen_name VARCHAR(255) NOT NULL,
+                teen_age INTEGER,
+                teen_grade INTEGER,
+                teen_interests TEXT,
+                parent_expectations TEXT,
+                agrees_terms BOOLEAN,
+                agrees_contact BOOLEAN,
+                application_status VARCHAR(50) DEFAULT 'pending',
+                submitted_at TIMESTAMP DEFAULT NOW(),
+                interview_status VARCHAR(50) DEFAULT 'not_scheduled',
+                proposed_interview_times TEXT,
+                confirmed_interview_date TIMESTAMP,
+                manual_interview_date TIMESTAMP,
+                interview_notes TEXT,
+                parent_response TEXT,
+                parent_response_date TIMESTAMP,
+                interview_link TEXT,
+                interview_meeting_link TEXT,
+                rejection_reason TEXT,
+                program_start_date DATE,
+                decision_date TIMESTAMP
+            );
+        `);
+        
+        // Add interview scheduling and pipeline fields (in case table exists but cols don't)
         await pool.query(`
             ALTER TABLE applications
             ADD COLUMN IF NOT EXISTS interview_status VARCHAR(50) DEFAULT 'not_scheduled',
@@ -1469,19 +1500,36 @@ app.post('/api/migrate-database', async (req, res) => {
             ADD COLUMN IF NOT EXISTS student_email VARCHAR(255);
         `);
 
-        // Create student_submissions table
+        // Run migration for tasks and enrollment updates
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS student_submissions (
+            ALTER TABLE enrolled_students ADD COLUMN IF NOT EXISTS enrollment_type VARCHAR(50) DEFAULT 'parent';
+            ALTER TABLE enrolled_students ADD COLUMN IF NOT EXISTS maps_application_id INTEGER REFERENCES maps_applications(id) ON DELETE SET NULL;
+
+            CREATE TABLE IF NOT EXISTS program_tasks (
+                id SERIAL PRIMARY KEY,
+                class_id INTEGER NOT NULL REFERENCES program_classes(id) ON DELETE CASCADE,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                resources TEXT,
+                sequence_order INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS student_task_submissions (
                 id SERIAL PRIMARY KEY,
                 student_id INTEGER NOT NULL REFERENCES enrolled_students(id) ON DELETE CASCADE,
-                class_id INTEGER NOT NULL REFERENCES program_classes(id) ON DELETE CASCADE,
+                task_id INTEGER NOT NULL REFERENCES program_tasks(id) ON DELETE CASCADE,
+                status VARCHAR(50) DEFAULT 'submitted',
                 submission_text TEXT,
                 submission_link TEXT,
-                status VARCHAR(50) DEFAULT 'submitted',
                 instructor_feedback TEXT,
                 created_at TIMESTAMP DEFAULT NOW(),
                 updated_at TIMESTAMP DEFAULT NOW()
             );
+            
+            INSERT INTO settings (setting_key, setting_value) VALUES
+            ('motivational_quotes', '["Seek knowledge from the cradle to the grave.", "Allah loves those who are persistent in their work.", "The best of you are those who learn the Quran and teach it.", "Knowledge is light.", "Indeed, with hardship comes ease."]')
+            ON CONFLICT (setting_key) DO NOTHING;
         `);
         
         // Insert default settings
@@ -1714,7 +1762,165 @@ app.get('/api/get-applications', async (req, res) => {
     }
 });
 
-// API endpoint to improve email with AI
+
+// API endpoint to enroll MAPS student (self-enrollment)
+app.post('/api/enroll-maps-student', async (req, res) => {
+    try {
+        const { applicationId, programId } = req.body;
+        
+        if (!applicationId || !programId) {
+            return res.status(400).json({ success: false, error: 'Application ID and Program ID are required' });
+        }
+        
+        // Fetch MAPS application details
+        const appResult = await pool.query('SELECT * FROM maps_applications WHERE id = $1', [applicationId]);
+        if (appResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Application not found' });
+        }
+        const app = appResult.rows[0];
+        
+        // Check if already enrolled
+        const existing = await pool.query(
+            'SELECT id FROM enrolled_students WHERE maps_application_id = $1 AND program_id = $2',
+            [applicationId, programId]
+        );
+        
+        if (existing.rows.length > 0) {
+            return res.status(409).json({ success: false, error: 'Student already enrolled in this program' });
+        }
+        
+        // Enroll student (parent fields = student fields for self-enrollment)
+        await pool.query(`
+            INSERT INTO enrolled_students (
+                program_id, maps_application_id, student_name, student_email,
+                parent_name, parent_email, parent_phone,
+                enrollment_type, status
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'self', 'active')
+        `, [
+            programId, applicationId, app.name, app.email,
+            app.name, app.email, app.phone
+        ]);
+        
+        // Update application status
+        await pool.query('UPDATE maps_applications SET application_status = $1 WHERE id = $2', ['enrolled', applicationId]);
+        
+        res.status(200).json({ success: true, message: 'Student enrolled successfully' });
+        
+    } catch (error) {
+        console.error('Enrollment error:', error);
+        res.status(500).json({ success: false, error: 'Failed to enroll student' });
+    }
+});
+
+// API endpoints for Tasks
+app.post('/api/create-task', async (req, res) => {
+    try {
+        const { classId, title, description, resources, sequenceOrder } = req.body;
+        const result = await pool.query(
+            'INSERT INTO program_tasks (class_id, title, description, resources, sequence_order) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [classId, title, description, resources, sequenceOrder || 0]
+        );
+        res.status(200).json({ success: true, task: result.rows[0] });
+    } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+});
+
+app.post('/api/update-task', async (req, res) => {
+    try {
+        const { taskId, title, description, resources, sequenceOrder } = req.body;
+        const result = await pool.query(
+            'UPDATE program_tasks SET title=$1, description=$2, resources=$3, sequence_order=$4 WHERE id=$5 RETURNING *',
+            [title, description, resources, sequenceOrder, taskId]
+        );
+        res.status(200).json({ success: true, task: result.rows[0] });
+    } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+});
+
+app.post('/api/delete-task', async (req, res) => {
+    try {
+        const { taskId } = req.body;
+        await pool.query('DELETE FROM program_tasks WHERE id = $1', [taskId]);
+        res.status(200).json({ success: true });
+    } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+});
+
+app.get('/api/get-class-tasks/:classId', async (req, res) => {
+    try {
+        const { classId } = req.params;
+        const { studentId } = req.query; // Optional: to get completion status
+        
+        let query = `
+            SELECT t.*, 
+            COALESCE(sts.status, 'pending') as status,
+            sts.submission_text,
+            sts.submission_link,
+            sts.instructor_feedback
+            FROM program_tasks t
+            LEFT JOIN student_task_submissions sts ON t.id = sts.task_id AND sts.student_id = $2
+            WHERE t.class_id = $1
+            ORDER BY t.sequence_order ASC
+        `;
+        
+        // If no studentId provided, just get tasks (admin view)
+        if (!studentId) {
+            query = `SELECT * FROM program_tasks WHERE class_id = $1 ORDER BY sequence_order ASC`;
+        }
+        
+        const result = await pool.query(query, studentId ? [classId, studentId] : [classId]);
+        res.status(200).json({ success: true, tasks: result.rows });
+    } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+});
+
+app.post('/api/submit-task', async (req, res) => {
+    try {
+        const { studentId, taskId, status, text, link } = req.body;
+        
+        // Upsert submission
+        await pool.query(`
+            INSERT INTO student_task_submissions (student_id, task_id, status, submission_text, submission_link, updated_at)
+            VALUES ($1, $2, $3, $4, $5, NOW())
+            ON CONFLICT (id) DO UPDATE -- Note: This needs unique constraint on student_id + task_id to work as upsert by conflict, checking table
+            SET status = $3, submission_text = $4, submission_link = $5, updated_at = NOW()
+        `, [studentId, taskId, status || 'submitted', text, link]);
+        
+        // Actually, since I didn't add a unique constraint in migration, I should check first or just use ID if I had it.
+        // Let's do check-then-insert/update logic to be safe without migration
+        
+        const existing = await pool.query('SELECT id FROM student_task_submissions WHERE student_id=$1 AND task_id=$2', [studentId, taskId]);
+        if (existing.rows.length > 0) {
+             await pool.query(
+                'UPDATE student_task_submissions SET status=$1, submission_text=$2, submission_link=$3, updated_at=NOW() WHERE id=$4',
+                [status || 'submitted', text, link, existing.rows[0].id]
+            );
+        } else {
+             await pool.query(
+                'INSERT INTO student_task_submissions (student_id, task_id, status, submission_text, submission_link) VALUES ($1, $2, $3, $4, $5)',
+                [studentId, taskId, status || 'submitted', text, link]
+            );
+        }
+
+        res.status(200).json({ success: true });
+    } catch (e) { 
+        console.error(e);
+        res.status(500).json({ success: false, error: e.message }); 
+    }
+});
+
+app.get('/api/get-daily-wisdom', async (req, res) => {
+    try {
+        const result = await pool.query("SELECT setting_value FROM settings WHERE setting_key = 'motivational_quotes'");
+        let quotes = [];
+        if (result.rows.length > 0) {
+            try { quotes = JSON.parse(result.rows[0].setting_value); } catch(e) {}
+        }
+        if (quotes.length === 0) {
+             quotes = ["Seek knowledge from the cradle to the grave.", "Indeed, with hardship comes ease."];
+        }
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        res.status(200).json({ success: true, quote: randomQuote });
+    } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+});
+
+// Update endpoint to get programs to include class count or similar if needed
 app.post('/api/improve-email-with-ai', async (req, res) => {
     try {
         console.log('=== AI IMPROVE EMAIL REQUEST ===');

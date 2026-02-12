@@ -32,6 +32,12 @@ const chatQuestions = [
         field: 'parentPhone'
     },
     {
+        bot: "Which state are you applying from? We currently have cohorts in California and Washington.",
+        type: 'options',
+        options: ['California', 'Washington State'],
+        field: 'state'
+    },
+    {
         bot: "Perfect! Now, how many children would you like to enroll in our program? We welcome multiple children from the same family.",
         type: 'options',
         options: ['1 child', '2 children', '3 children', '4+ children'],
@@ -67,12 +73,6 @@ const chatQuestions = [
         placeholder: "Tell us about your hopes and expectations..."
     },
     {
-        bot: "Since our Nov cohort is full, we are accepting rolling admissions for Dec 2025. However, if demand is high, we may start an early cohort. Which schedule works best for you?",
-        type: 'options',
-        options: ['Sun 9 AM - 12:30 PM', 'Sat 5 PM - 8 PM', 'Dec 2025 Only', 'Other (Please specify in interview)'],
-        field: 'schedulePreference'
-    },
-    {
         bot: "Almost done! The program cost is $800. Do you require financial aid to participate?",
         type: 'options',
         options: ['No, I can pay the full amount', 'Yes, I would like to apply for financial aid'],
@@ -90,7 +90,7 @@ const chatQuestions = [
         options: ['Yes, please keep me updated', 'No, just this application'],
         field: 'agreeContact'
     }
-]; 
+];
 
 // Waitlist (Dec 2025) chat questions
 const waitlistQuestions = [
@@ -477,7 +477,7 @@ function saveCurrentChildData() {
     const childData = {};
     
     // Copy child-specific data with prefix
-    ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'schedulePreference', 'financialAid', 'agreeTerms', 'parentQuestions'].forEach(field => {
+    ['teenName', 'teenAge', 'teenGrade', 'teenInterests', 'parentExpectations', 'financialAid', 'agreeTerms', 'parentQuestions'].forEach(field => {
         if (chatState.data[field]) {
             childData[childPrefix + field] = chatState.data[field];
             
@@ -513,15 +513,13 @@ function showConfirmationSummary() {
         const prefix = `child${i}_`;
         const name = chatState.data[prefix + 'teenName'] || 'Student';
         const grade = chatState.data[prefix + 'teenGrade'] || '';
-        const schedule = chatState.data[prefix + 'schedulePreference'] || 'Dec 2025';
         const aid = chatState.data[prefix + 'financialAid'];
         
         if (aid && aid.includes('Yes')) financialAidRequested = true;
         
         studentsSummary += `
             <div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
-                <strong>${name}</strong> (${grade})<br>
-                Schedule: ${schedule}
+                <strong>${name}</strong> (${grade})
             </div>
         `;
     }
@@ -536,7 +534,8 @@ function showConfirmationSummary() {
             <div style="margin-bottom: 15px;">
                 <strong>Parent:</strong> ${chatState.data.parentName}<br>
                 <strong>Email:</strong> ${chatState.data.parentEmail}<br>
-                <strong>Phone:</strong> ${chatState.data.parentPhone}
+                <strong>Phone:</strong> ${chatState.data.parentPhone}<br>
+                <strong>State:</strong> ${chatState.data.state}
             </div>
             
             <h4 style="margin: 10px 0 5px;">Students</h4>
@@ -582,9 +581,7 @@ function submitFinalApplication() {
         const btns = document.querySelectorAll('#chatInputContainer button');
         btns.forEach(b => b.disabled = true);
         
-        const finishingLine = chatState.mode === 'waitlist' 
-            ? "Barakallahu feekum! I have what I need to add you to the December 2025 waitlist. Submitting now..."
-            : "Barakallahu feekum! Application submitted. Please watch your email (aidris@edai.fun) for an interview invite. We will also text you from 515-357-0454.";
+        const finishingLine = "Barakallahu feekum! Application submitted. Please watch your email (aidris@edai.fun) for an interview invite. We will also text you from 515-357-0454.";
         addBotMessage(finishingLine);
         
         // Prepare application data with all children
@@ -592,10 +589,11 @@ function submitFinalApplication() {
             parentName: chatState.data.parentName,
             parentEmail: chatState.data.parentEmail,
             parentPhone: chatState.data.parentPhone,
+            state: chatState.data.state,
             totalChildren: chatState.totalChildren,
             agreeContact: chatState.data.agreeContact || chatState.data.agreeComms,
-            applicationMethod: chatState.mode === 'waitlist' ? 'waitlist' : 'chat',
-            applicationStatus: chatState.mode === 'waitlist' ? 'waitlist' : 'pending',
+            applicationMethod: 'chat',
+            applicationStatus: 'pending',
             submissionDate: new Date().toISOString()
         };
         
@@ -609,7 +607,6 @@ function submitFinalApplication() {
                 grade: chatState.data[prefix + 'teenGrade'],
                 interests: chatState.data[prefix + 'teenInterests'],
                 parentExpectations: chatState.data[prefix + 'parentExpectations'],
-                schedulePreference: chatState.data[prefix + 'schedulePreference'],
                 financialAid: chatState.data[prefix + 'financialAid'],
                 agreeTerms: chatState.data[prefix + 'agreeTerms'],
                 questions: chatState.data[prefix + 'parentQuestions']

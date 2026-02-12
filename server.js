@@ -101,13 +101,14 @@ app.post('/api/submit-application', async (req, res) => {
             parentName,
             parentEmail,
             parentPhone,
+            state,
             totalChildren,
             agreeContact,
             applicationMethod,
             ...childrenData
         } = req.body;
         
-        console.log('Extracted parent data:', { parentName, parentEmail, parentPhone, totalChildren, agreeContact });
+        console.log('Extracted parent data:', { parentName, parentEmail, parentPhone, state, totalChildren, agreeContact });
         console.log('Extracted children data object:', childrenData);
         
         // Extract children data
@@ -249,6 +250,7 @@ app.post('/api/submit-application', async (req, res) => {
                     parent_name,
                     parent_email,
                     parent_phone,
+                    state,
                     teen_name,
                     teen_age,
                     teen_grade,
@@ -257,12 +259,13 @@ app.post('/api/submit-application', async (req, res) => {
                     agrees_terms,
                     agrees_contact,
                     application_status
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                 RETURNING id, submitted_at
             `, [
                 parentName.trim(),
                 parentEmail.trim().toLowerCase(),
                 parentPhone.trim(),
+                state ? state.trim() : null,
                 child.name.trim(),
                 age,
                 grade,
@@ -1498,6 +1501,11 @@ app.post('/api/migrate-database', async (req, res) => {
         await pool.query(`
             ALTER TABLE enrolled_students
             ADD COLUMN IF NOT EXISTS student_email VARCHAR(255);
+        `);
+
+        // Add state column to applications table
+        await pool.query(`
+            ALTER TABLE applications ADD COLUMN IF NOT EXISTS state VARCHAR(100);
         `);
 
         // Run migration for tasks and enrollment updates

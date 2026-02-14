@@ -882,6 +882,7 @@
         
         let currentProgramId = null;
         let currentProgramStudents = [];
+        let currentPhase2Invitations = {};
         
         async function viewProgram(programId) {
             currentProgramId = programId;
@@ -915,6 +916,19 @@
                 currentProgramClasses = classesData.success ? classesData.classes : [];
                 
                 currentProgramStudents = studentsData.students || [];
+                
+                // Fetch Phase 2 invitations for this program
+                currentPhase2Invitations = {};
+                try {
+                    const phase2Response = await fetch(`/api/get-phase2-invitations/${programId}`);
+                    const phase2Data = await phase2Response.json();
+                    if (phase2Data.success && phase2Data.invitations) {
+                        phase2Data.invitations.forEach(inv => {
+                            currentPhase2Invitations[inv.enrolled_student_id] = inv;
+                        });
+                    }
+                } catch (e) { console.log('Phase 2 invitations not available yet'); }
+                
                 displayProgramDetail(programData.program, currentProgramStudents, currentProgramClasses);
                 
             } catch (error) {
@@ -942,9 +956,10 @@
                                 <span class="status-badge status-${program.status}">${program.status}</span>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 0.5rem;">
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                             <button class="btn-secondary" onclick="showAddClassModal()">➕ Add Class</button>
                             <button class="btn-primary" onclick="showAddStudentModal()">➕ Add Student</button>
+                            <button class="btn-secondary" onclick="sendBulkPhase2Invites()" style="background: linear-gradient(135deg, #f97316, #fb923c); color: white; border: none;">🚀 Send All Phase 2 Invites</button>
                         </div>
                     </div>
                     
@@ -1041,6 +1056,7 @@
                                             <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Parent Email</th>
                                             <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Enrolled</th>
                                             <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Source</th>
+                                            <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Phase 2</th>
                                             <th style="text-align: left; padding: 1rem; color: #6b7280; font-weight: 600; font-size: 0.875rem;">Actions</th>
                                         </tr>
                                     </thead>
@@ -1057,7 +1073,10 @@
                                                         ${student.enrollment_source}
                                                     </span>
                                                 </td>
-                                                <td style="padding: 1rem; display: flex; gap: 0.5rem;">
+                                                <td style="padding: 1rem;">
+                                                    ${getPhase2Badge(student.id)}
+                                                </td>
+                                                <td style="padding: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                                     <button onclick="showProgressModal(${student.id}, '${student.student_name.replace(/'/g, "\\'")}')" style="padding: 0.5rem 0.75rem; background: #e0f2fe; color: #0369a1; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
                                                         📝 Progress
                                                     </button>
@@ -1117,6 +1136,75 @@
             document.getElementById(`content-progress-${tabName}`).style.display = 'block';
         }
 
+        // --- Phase 2 Invitation Functions ---
+        
+        function getPhase2Badge(studentId) {
+            const inv = currentPhase2Invitations[studentId];
+            if (!inv) {
+                return `<button onclick="sendPhase2Invite(${studentId})" style="padding: 0.25rem 0.75rem; background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">🚀 Invite</button>`;
+            }
+            const colors = {
+                sent: { bg: '#fef3c7', color: '#92400e', label: '📧 Sent' },
+                accepted: { bg: '#d1fae5', color: '#065f46', label: '✅ Accepted' },
+                declined: { bg: '#fee2e2', color: '#991b1b', label: '❌ Declined' }
+            };
+            const c = colors[inv.status] || colors.sent;
+            let notesHtml = inv.parent_notes ? ` title="${inv.parent_notes.replace(/"/g, '&quot;')}"` : '';
+            return `<span${notesHtml} style="padding: 0.25rem 0.75rem; background: ${c.bg}; color: ${c.color}; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: default;">${c.label}</span>`;
+        }
+        
+        async function sendPhase2Invite(studentId) {
+            const student = currentProgramStudents.find(s => s.id === studentId);
+            if (!student) return;
+            if (!confirm(`Send Phase 2 invitation email to ${student.parent_name} (${student.parent_email}) for ${student.student_name}?`)) return;
+            
+            try {
+                const response = await fetch('/api/send-phase2-invite', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert(data.message);
+                    viewProgram(currentProgramId);
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to send invitation.');
+            }
+        }
+        
+        async function sendBulkPhase2Invites() {
+            if (!currentProgramId) return;
+            const uninvited = currentProgramStudents.filter(s => !currentPhase2Invitations[s.id]);
+            if (uninvited.length === 0) {
+                alert('All students have already been invited to Phase 2.');
+                return;
+            }
+            if (!confirm(`Send Phase 2 invitation emails to ${uninvited.length} student(s) who haven't been invited yet?`)) return;
+            
+            try {
+                const response = await fetch('/api/send-bulk-phase2-invites', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ programId: currentProgramId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert(data.message);
+                    viewProgram(currentProgramId);
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to send invitations.');
+            }
+        }
+        
         // --- Class Management Functions ---
         
         function showAddClassModal() {

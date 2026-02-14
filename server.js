@@ -91,6 +91,11 @@ app.get('/student', (req, res) => {
     res.sendFile(path.join(__dirname, 'student.html'));
 });
 
+// Serve Phase 2 confirmation page
+app.get('/phase2-confirm', (req, res) => {
+    res.sendFile(path.join(__dirname, 'phase2-confirm.html'));
+});
+
 // API endpoint for form submission
 app.post('/api/submit-application', async (req, res) => {
     try {
@@ -1508,6 +1513,20 @@ app.post('/api/migrate-database', async (req, res) => {
             ALTER TABLE applications ADD COLUMN IF NOT EXISTS state VARCHAR(100);
         `);
 
+        // Create phase2_invitations table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS phase2_invitations (
+                id SERIAL PRIMARY KEY,
+                enrolled_student_id INTEGER NOT NULL REFERENCES enrolled_students(id) ON DELETE CASCADE,
+                program_id INTEGER NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+                invitation_token VARCHAR(255) UNIQUE NOT NULL,
+                status VARCHAR(50) DEFAULT 'sent',
+                parent_notes TEXT,
+                sent_at TIMESTAMP DEFAULT NOW(),
+                responded_at TIMESTAMP
+            );
+        `);
+
         // Run migration for tasks and enrollment updates
         await pool.query(`
             ALTER TABLE enrolled_students ADD COLUMN IF NOT EXISTS enrollment_type VARCHAR(50) DEFAULT 'parent';
@@ -1727,6 +1746,7 @@ app.get('/api/get-applications', async (req, res) => {
                 a.parent_name,
                 a.parent_email,
                 a.parent_phone,
+                a.state,
                 a.teen_name,
                 a.teen_age,
                 a.teen_grade,
@@ -4043,6 +4063,364 @@ app.get('/api/get-submission', async (req, res) => {
     } catch (error) {
         console.error('Error getting submission:', error);
         res.status(500).json({ success: false, error: 'Failed to load submission' });
+    }
+});
+
+// ============= PHASE 2 INVITATION API ENDPOINTS =============
+
+// Helper: Phase 2 curriculum data
+const PHASE2_CURRICULUM = [
+    { week: 21, theme: 'Entry, Expectations & Reality', activity: 'Confirm teams, sign working agreements, set honest goals', expert: 'EdAI leadership + returning founder' },
+    { week: 22, theme: 'Problem Discovery & Customer Access', activity: 'Interview 10+ potential users, document pain points', expert: 'Founder / customer development expert' },
+    { week: 23, theme: 'Problem Lock-In & Market Sizing', activity: 'Choose one problem, estimate addressable market', expert: 'Operator / market analyst' },
+    { week: 24, theme: 'Team Roles & Conflict Norms', activity: 'Define ownership, decision rights, disagreement process', expert: 'Leadership coach' },
+    { week: 25, theme: 'Business Models & Company Structures', activity: 'Understand LLC/C-corp/partnership (don\'t form yet)', expert: 'Legal expert' },
+    { week: 26, theme: 'Product Scope & Roadmapping', activity: 'Define brutally minimal MVP', expert: 'Product manager' },
+    { week: 27, theme: 'Budget & Resource Reality', activity: 'Create actual spend plan for builds ($0-500 range)', expert: 'Finance / accounting' },
+    { week: 28, theme: 'Build Sprint 1', activity: 'Build core product with real constraints', expert: 'Engineering mentor' },
+    { week: 29, theme: 'User Testing Week', activity: '15+ user tests, document feedback systematically', expert: 'UX researcher' },
+    { week: 30, theme: 'Sales Conversations & Value Prop', activity: 'Attempt to sell (even if free beta), refine messaging', expert: 'Sales professional' },
+    { week: 31, theme: 'Pivot or Persevere Decision', activity: 'Use data to decide: continue, pivot, or stop', expert: 'Product manager + mentor panel' },
+    { week: 32, theme: 'Build Sprint 2', activity: 'Iterate based on user feedback and sales learnings', expert: 'Engineering mentor' },
+    { week: 33, theme: 'GTM Strategy (Real Channels)', activity: 'Choose distribution, run small tests', expert: 'Growth expert' },
+    { week: 34, theme: 'Operations & Systems', activity: 'Internal workflows, tools, documentation', expert: 'Operator' },
+    { week: 35, theme: 'Metrics & Decision Making', activity: 'Define 3-5 key metrics, set up tracking', expert: 'Product / analytics' },
+    { week: 36, theme: 'Legal, Risk & Responsibility', activity: 'Privacy, safety, ethics, when to actually incorporate', expert: 'Legal / ethics advisor' },
+    { week: 37, theme: 'Build Sprint 3', activity: 'Scale what\'s working, kill what\'s not', expert: 'Engineering mentor' },
+    { week: 38, theme: 'Capital Options & Ownership', activity: 'Funding paths only if traction warrants it', expert: 'Investor (candid Q&A)' },
+    { week: 39, theme: 'Demo Preparation & Story', activity: 'Present the truth: what worked, what didn\'t, what\'s next', expert: 'Pitch coach' },
+    { week: 40, theme: 'Demo Day & Real Decision Point', activity: 'Present to community, commit to continue or sunset', expert: 'Community + parents + advisors' }
+];
+
+function buildCurriculumTableHtml() {
+    let rows = PHASE2_CURRICULUM.map(w =>
+        `<tr style="border-bottom:1px solid #e2e8f0;">
+            <td style="padding:8px 10px;font-weight:600;color:#2563eb;text-align:center;">${w.week}</td>
+            <td style="padding:8px 10px;font-weight:600;color:#0f172a;">${w.theme}</td>
+            <td style="padding:8px 10px;color:#475569;font-size:13px;">${w.activity}</td>
+            <td style="padding:8px 10px;color:#64748b;font-size:13px;">${w.expert}</td>
+        </tr>`
+    ).join('');
+    return `<table style="width:100%;border-collapse:collapse;font-family:'Outfit',-apple-system,sans-serif;font-size:14px;">
+        <thead><tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1;">
+            <th style="padding:10px;text-align:center;font-size:12px;text-transform:uppercase;color:#64748b;">Week</th>
+            <th style="padding:10px;text-align:left;font-size:12px;text-transform:uppercase;color:#64748b;">Theme</th>
+            <th style="padding:10px;text-align:left;font-size:12px;text-transform:uppercase;color:#64748b;">What Students Do</th>
+            <th style="padding:10px;text-align:left;font-size:12px;text-transform:uppercase;color:#64748b;">Expert / Support</th>
+        </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// Send Phase 2 invite to a single student
+app.post('/api/send-phase2-invite', async (req, res) => {
+    try {
+        const { studentId } = req.body;
+        if (!studentId) return res.status(400).json({ success: false, error: 'Student ID is required' });
+
+        // Get student details
+        const studentResult = await pool.query(
+            'SELECT es.*, p.name as program_name FROM enrolled_students es JOIN programs p ON es.program_id = p.id WHERE es.id = $1',
+            [studentId]
+        );
+        if (studentResult.rows.length === 0) return res.status(404).json({ success: false, error: 'Student not found' });
+        const student = studentResult.rows[0];
+
+        // Check for existing invitation
+        const existing = await pool.query(
+            'SELECT id, status FROM phase2_invitations WHERE enrolled_student_id = $1',
+            [studentId]
+        );
+        if (existing.rows.length > 0) {
+            return res.status(409).json({ success: false, error: `Invitation already ${existing.rows[0].status} for this student` });
+        }
+
+        // Generate token and create invitation
+        const token = crypto.randomBytes(32).toString('hex');
+        await pool.query(
+            'INSERT INTO phase2_invitations (enrolled_student_id, program_id, invitation_token) VALUES ($1, $2, $3)',
+            [studentId, student.program_id, token]
+        );
+
+        // Build confirmation link
+        const baseUrl = process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+        const confirmLink = `${baseUrl}/phase2-confirm?token=${encodeURIComponent(token)}`;
+
+        // Send email
+        const settings = await getSettings();
+        const { Resend } = require('resend');
+        const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
+
+        await resend.emails.send({
+            from: settings.email_from_address || 'EdAI <noreply@edai.fun>',
+            to: student.parent_email,
+            subject: `🚀 ${student.student_name} is Invited to Phase 2 — EdAI Accelerator`,
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: 'Outfit', -apple-system, sans-serif; line-height: 1.6; color: #0f172a; max-width: 720px; margin: 0 auto; padding: 0; background:#f1f5f9; }
+                        .header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); padding: 48px 30px; text-align: center; border-bottom: 4px solid #f97316; }
+                        .content { background: #ffffff; padding: 32px 28px 36px; }
+                        .info-box { background: #f8fafc; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #e2e8f0; }
+                        .cta-btn { display: inline-block; background: linear-gradient(135deg, #2563eb, #1e40af); color: white; padding: 16px 36px; border-radius: 99px; text-decoration: none; font-weight: 700; margin-top: 24px; font-size: 16px; }
+                        .footer { padding: 24px; text-align: center; color: #64748b; font-size: 13px; background: #f8fafc; }
+                        .pill { display:inline-block; padding: 6px 14px; background: rgba(249,115,22,0.15); color: #ea580c; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="pill">Phase 2 · Accelerator</div>
+                        <h1 style="margin: 0 0 12px 0; font-size: 28px; font-weight: 800; color: white; line-height: 1.2;">🚀 ${student.student_name} is Invited to Phase 2!</h1>
+                        <p style="margin: 0; font-size: 16px; color: #bfdbfe; font-weight: 500;">20 Weeks of Real-World Venture Building</p>
+                    </div>
+                    <div class="content">
+                        <p><strong>Assalamu Alaikum ${student.parent_name},</strong></p>
+                        <p>Alhamdulillah, <strong>${student.student_name}</strong> has completed Phase 1 of the EdAI Accelerator! We are excited to invite them to continue their journey in <strong>Phase 2</strong> — a 20-week deep dive where students go from prototype to real venture.</p>
+
+                        <div class="info-box">
+                            <h3 style="margin:0 0 10px 0;font-size:15px;color:#0f172a;">📋 Phase 2 at a Glance</h3>
+                            <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 20 weeks (Weeks 21–40)</p>
+                            <p style="margin:4px 0;font-size:14px;"><strong>Schedule:</strong> Saturdays, 9 AM – 12:30 PM</p>
+                            <p style="margin:4px 0;font-size:14px;"><strong>Focus:</strong> Customer discovery, team formation, real builds, sales, Demo Day</p>
+                            <p style="margin:4px 0;font-size:14px;"><strong>Expert Access:</strong> Weekly sessions with founders, engineers, lawyers, investors & more</p>
+                        </div>
+
+                        <h3 style="margin-top:24px;font-size:15px;">📚 What Phase 2 Covers</h3>
+                        <p style="font-size:14px;color:#475569;">Each week brings a new focus area with hands-on activities and expert guidance:</p>
+                        <div style="overflow-x:auto;margin:16px 0;border:1px solid #e2e8f0;border-radius:12px;">
+                            ${buildCurriculumTableHtml()}
+                        </div>
+
+                        <h3 style="margin-top:24px;font-size:15px;">✅ What We Need From You</h3>
+                        <p style="font-size:14px;">Please let us know if ${student.student_name} will be joining Phase 2 by clicking the button below. This helps us plan teams and secure expert sessions.</p>
+
+                        <p style="text-align:center;">
+                            <a href="${confirmLink}" class="cta-btn">Respond to Invitation →</a>
+                        </p>
+
+                        <p style="margin-top:24px;font-size:13px;color:#64748b;">If you have questions, reply to this email or contact us at <a href="mailto:aidris@edai.fun" style="color:#2563eb;font-weight:500;">aidris@edai.fun</a> or text/call <a href="tel:+15153570454" style="color:#2563eb;font-weight:500;">515-357-0454</a>.</p>
+
+                        <p style="margin-top:26px;font-size:14px;">We look forward to building the next chapter with ${student.student_name}, bi-idhnillah.</p>
+                        <p style="margin:2px 0 0 0;font-size:14px;"><strong>— The EdAI Team</strong></p>
+                    </div>
+                    <div class="footer">
+                        <p>© ${new Date().getFullYear()} EdAI Accelerator</p>
+                    </div>
+                </body>
+                </html>
+            `
+        });
+
+        console.log(`Phase 2 invite sent to ${student.parent_email} for ${student.student_name}`);
+        res.status(200).json({ success: true, message: `Phase 2 invitation sent to ${student.parent_email}` });
+
+    } catch (error) {
+        console.error('Error sending Phase 2 invite:', error);
+        res.status(500).json({ success: false, error: 'Failed to send invitation: ' + error.message });
+    }
+});
+
+// Bulk send Phase 2 invites for all students in a program
+app.post('/api/send-bulk-phase2-invites', async (req, res) => {
+    try {
+        const { programId } = req.body;
+        if (!programId) return res.status(400).json({ success: false, error: 'Program ID is required' });
+
+        // Get all active students who haven't been invited yet
+        const studentsResult = await pool.query(`
+            SELECT es.id FROM enrolled_students es
+            WHERE es.program_id = $1 AND es.status = 'active'
+            AND es.id NOT IN (SELECT enrolled_student_id FROM phase2_invitations WHERE program_id = $1)
+        `, [programId]);
+
+        if (studentsResult.rows.length === 0) {
+            return res.status(200).json({ success: true, message: 'All students have already been invited', sent: 0 });
+        }
+
+        let sent = 0;
+        let errors = [];
+
+        for (const row of studentsResult.rows) {
+            try {
+                // Use the single invite endpoint logic internally
+                const studentResult = await pool.query(
+                    'SELECT es.*, p.name as program_name FROM enrolled_students es JOIN programs p ON es.program_id = p.id WHERE es.id = $1',
+                    [row.id]
+                );
+                if (studentResult.rows.length === 0) continue;
+                const student = studentResult.rows[0];
+
+                const token = crypto.randomBytes(32).toString('hex');
+                await pool.query(
+                    'INSERT INTO phase2_invitations (enrolled_student_id, program_id, invitation_token) VALUES ($1, $2, $3)',
+                    [row.id, programId, token]
+                );
+
+                const baseUrl = process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+                const confirmLink = `${baseUrl}/phase2-confirm?token=${encodeURIComponent(token)}`;
+
+                const settings = await getSettings();
+                const { Resend } = require('resend');
+                const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
+
+                await resend.emails.send({
+                    from: settings.email_from_address || 'EdAI <noreply@edai.fun>',
+                    to: student.parent_email,
+                    subject: `🚀 ${student.student_name} is Invited to Phase 2 — EdAI Accelerator`,
+                    html: `
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <style>
+                                body { font-family: 'Outfit', -apple-system, sans-serif; line-height: 1.6; color: #0f172a; max-width: 720px; margin: 0 auto; padding: 0; background:#f1f5f9; }
+                                .header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); padding: 48px 30px; text-align: center; border-bottom: 4px solid #f97316; }
+                                .content { background: #ffffff; padding: 32px 28px 36px; }
+                                .info-box { background: #f8fafc; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #e2e8f0; }
+                                .cta-btn { display: inline-block; background: linear-gradient(135deg, #2563eb, #1e40af); color: white; padding: 16px 36px; border-radius: 99px; text-decoration: none; font-weight: 700; margin-top: 24px; font-size: 16px; }
+                                .footer { padding: 24px; text-align: center; color: #64748b; font-size: 13px; background: #f8fafc; }
+                                .pill { display:inline-block; padding: 6px 14px; background: rgba(249,115,22,0.15); color: #ea580c; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px; }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="header">
+                                <div class="pill">Phase 2 · Accelerator</div>
+                                <h1 style="margin: 0 0 12px 0; font-size: 28px; font-weight: 800; color: white; line-height: 1.2;">🚀 ${student.student_name} is Invited to Phase 2!</h1>
+                                <p style="margin: 0; font-size: 16px; color: #bfdbfe; font-weight: 500;">20 Weeks of Real-World Venture Building</p>
+                            </div>
+                            <div class="content">
+                                <p><strong>Assalamu Alaikum ${student.parent_name},</strong></p>
+                                <p>Alhamdulillah, <strong>${student.student_name}</strong> has completed Phase 1 of the EdAI Accelerator! We are excited to invite them to continue their journey in <strong>Phase 2</strong> — a 20-week deep dive where students go from prototype to real venture.</p>
+
+                                <div class="info-box">
+                                    <h3 style="margin:0 0 10px 0;font-size:15px;color:#0f172a;">📋 Phase 2 at a Glance</h3>
+                                    <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 20 weeks (Weeks 21–40)</p>
+                                    <p style="margin:4px 0;font-size:14px;"><strong>Schedule:</strong> Saturdays, 9 AM – 12:30 PM</p>
+                                    <p style="margin:4px 0;font-size:14px;"><strong>Focus:</strong> Customer discovery, team formation, real builds, sales, Demo Day</p>
+                                    <p style="margin:4px 0;font-size:14px;"><strong>Expert Access:</strong> Weekly sessions with founders, engineers, lawyers, investors & more</p>
+                                </div>
+
+                                <h3 style="margin-top:24px;font-size:15px;">📚 What Phase 2 Covers</h3>
+                                <p style="font-size:14px;color:#475569;">Each week brings a new focus area with hands-on activities and expert guidance:</p>
+                                <div style="overflow-x:auto;margin:16px 0;border:1px solid #e2e8f0;border-radius:12px;">
+                                    ${buildCurriculumTableHtml()}
+                                </div>
+
+                                <h3 style="margin-top:24px;font-size:15px;">✅ What We Need From You</h3>
+                                <p style="font-size:14px;">Please let us know if ${student.student_name} will be joining Phase 2 by clicking the button below.</p>
+
+                                <p style="text-align:center;">
+                                    <a href="${confirmLink}" class="cta-btn">Respond to Invitation →</a>
+                                </p>
+
+                                <p style="margin-top:24px;font-size:13px;color:#64748b;">Questions? Contact <a href="mailto:aidris@edai.fun" style="color:#2563eb;">aidris@edai.fun</a> or call/text <a href="tel:+15153570454" style="color:#2563eb;">515-357-0454</a>.</p>
+                                <p style="margin-top:26px;font-size:14px;"><strong>— The EdAI Team</strong></p>
+                            </div>
+                            <div class="footer"><p>© ${new Date().getFullYear()} EdAI Accelerator</p></div>
+                        </body>
+                        </html>
+                    `
+                });
+
+                sent++;
+                console.log(`Phase 2 invite sent to ${student.parent_email} for ${student.student_name}`);
+            } catch (err) {
+                console.error(`Failed to send invite for student ${row.id}:`, err.message);
+                errors.push({ studentId: row.id, error: err.message });
+            }
+        }
+
+        res.status(200).json({ success: true, message: `Sent ${sent} invitation(s)`, sent, errors: errors.length > 0 ? errors : undefined });
+
+    } catch (error) {
+        console.error('Error sending bulk Phase 2 invites:', error);
+        res.status(500).json({ success: false, error: 'Failed to send invitations: ' + error.message });
+    }
+});
+
+// Get Phase 2 invitation by token (for confirmation page)
+app.get('/api/get-phase2-invite', async (req, res) => {
+    try {
+        const { token } = req.query;
+        if (!token) return res.status(400).json({ success: false, error: 'Token is required' });
+
+        const result = await pool.query(`
+            SELECT pi.*, es.student_name, es.parent_name, es.parent_email, es.parent_phone,
+                   es.student_grade, p.name as program_name
+            FROM phase2_invitations pi
+            JOIN enrolled_students es ON pi.enrolled_student_id = es.id
+            JOIN programs p ON pi.program_id = p.id
+            WHERE pi.invitation_token = $1
+        `, [token]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Invitation not found. Please check your email link.' });
+        }
+
+        const invitation = result.rows[0];
+        res.status(200).json({ success: true, invitation });
+
+    } catch (error) {
+        console.error('Error getting Phase 2 invite:', error);
+        res.status(500).json({ success: false, error: 'Failed to load invitation' });
+    }
+});
+
+// Parent responds to Phase 2 invitation
+app.post('/api/respond-phase2-invite', async (req, res) => {
+    try {
+        const { token, response, parentNotes } = req.body;
+        if (!token || !response) return res.status(400).json({ success: false, error: 'Token and response are required' });
+
+        if (!['accepted', 'declined'].includes(response)) {
+            return res.status(400).json({ success: false, error: 'Response must be accepted or declined' });
+        }
+
+        // Verify invitation exists and hasn't been responded to
+        const result = await pool.query(
+            'SELECT * FROM phase2_invitations WHERE invitation_token = $1',
+            [token]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Invitation not found' });
+        }
+
+        const invitation = result.rows[0];
+        if (invitation.status !== 'sent') {
+            return res.status(409).json({ success: false, error: 'This invitation has already been responded to', status: invitation.status });
+        }
+
+        await pool.query(
+            'UPDATE phase2_invitations SET status = $1, parent_notes = $2, responded_at = NOW() WHERE invitation_token = $3',
+            [response, parentNotes || null, token]
+        );
+
+        res.status(200).json({ success: true, message: response === 'accepted' ? 'Welcome to Phase 2!' : 'Response recorded. Thank you.' });
+
+    } catch (error) {
+        console.error('Error responding to Phase 2 invite:', error);
+        res.status(500).json({ success: false, error: 'Failed to save response' });
+    }
+});
+
+// Get all Phase 2 invitations for a program (admin)
+app.get('/api/get-phase2-invitations/:programId', async (req, res) => {
+    try {
+        const { programId } = req.params;
+
+        const result = await pool.query(`
+            SELECT pi.*, es.student_name, es.parent_name, es.parent_email
+            FROM phase2_invitations pi
+            JOIN enrolled_students es ON pi.enrolled_student_id = es.id
+            WHERE pi.program_id = $1
+            ORDER BY pi.sent_at DESC
+        `, [programId]);
+
+        res.status(200).json({ success: true, invitations: result.rows });
+
+    } catch (error) {
+        console.error('Error getting Phase 2 invitations:', error);
+        res.status(500).json({ success: false, error: 'Failed to load invitations' });
     }
 });
 

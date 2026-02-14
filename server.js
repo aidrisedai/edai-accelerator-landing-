@@ -4072,24 +4072,16 @@ app.get('/api/get-submission', async (req, res) => {
 const PHASE2_CURRICULUM = [
     { week: 21, theme: 'Entry, Expectations & Reality', activity: 'Confirm teams, sign working agreements, set honest goals', expert: 'EdAI leadership + returning founder' },
     { week: 22, theme: 'Problem Discovery & Customer Access', activity: 'Interview 10+ potential users, document pain points', expert: 'Founder / customer development expert' },
-    { week: 23, theme: 'Problem Lock-In & Market Sizing', activity: 'Choose one problem, estimate addressable market', expert: 'Operator / market analyst' },
-    { week: 24, theme: 'Team Roles & Conflict Norms', activity: 'Define ownership, decision rights, disagreement process', expert: 'Leadership coach' },
-    { week: 25, theme: 'Business Models & Company Structures', activity: 'Understand LLC/C-corp/partnership (don\'t form yet)', expert: 'Legal expert' },
-    { week: 26, theme: 'Product Scope & Roadmapping', activity: 'Define brutally minimal MVP', expert: 'Product manager' },
-    { week: 27, theme: 'Budget & Resource Reality', activity: 'Create actual spend plan for builds ($0-500 range)', expert: 'Finance / accounting' },
-    { week: 28, theme: 'Build Sprint 1', activity: 'Build core product with real constraints', expert: 'Engineering mentor' },
-    { week: 29, theme: 'User Testing Week', activity: '15+ user tests, document feedback systematically', expert: 'UX researcher' },
-    { week: 30, theme: 'Sales Conversations & Value Prop', activity: 'Attempt to sell (even if free beta), refine messaging', expert: 'Sales professional' },
-    { week: 31, theme: 'Pivot or Persevere Decision', activity: 'Use data to decide: continue, pivot, or stop', expert: 'Product manager + mentor panel' },
-    { week: 32, theme: 'Build Sprint 2', activity: 'Iterate based on user feedback and sales learnings', expert: 'Engineering mentor' },
-    { week: 33, theme: 'GTM Strategy (Real Channels)', activity: 'Choose distribution, run small tests', expert: 'Growth expert' },
-    { week: 34, theme: 'Operations & Systems', activity: 'Internal workflows, tools, documentation', expert: 'Operator' },
-    { week: 35, theme: 'Metrics & Decision Making', activity: 'Define 3-5 key metrics, set up tracking', expert: 'Product / analytics' },
-    { week: 36, theme: 'Legal, Risk & Responsibility', activity: 'Privacy, safety, ethics, when to actually incorporate', expert: 'Legal / ethics advisor' },
-    { week: 37, theme: 'Build Sprint 3', activity: 'Scale what\'s working, kill what\'s not', expert: 'Engineering mentor' },
-    { week: 38, theme: 'Capital Options & Ownership', activity: 'Funding paths only if traction warrants it', expert: 'Investor (candid Q&A)' },
-    { week: 39, theme: 'Demo Preparation & Story', activity: 'Present the truth: what worked, what didn\'t, what\'s next', expert: 'Pitch coach' },
-    { week: 40, theme: 'Demo Day & Real Decision Point', activity: 'Present to community, commit to continue or sunset', expert: 'Community + parents + advisors' }
+    { week: 23, theme: 'Problem Lock-In & Team Formation', activity: 'Choose one problem, define ownership & decision rights', expert: 'Operator / leadership coach' },
+    { week: 24, theme: 'Business Models & Product Roadmap', activity: 'Understand business structures, define minimal MVP', expert: 'Legal expert / product manager' },
+    { week: 25, theme: 'Budget, Build & Launch Sprint', activity: 'Create spend plan, build core product with real constraints', expert: 'Finance / engineering mentor' },
+    { week: 26, theme: 'User Testing & Sales', activity: 'Run 15+ user tests, attempt first sales conversations', expert: 'UX researcher / sales professional' },
+    { week: 27, theme: 'Pivot or Persevere Decision', activity: 'Use data to decide: continue, pivot, or stop', expert: 'Product manager + mentor panel' },
+    { week: 28, theme: 'Build Sprint 2 & GTM Strategy', activity: 'Iterate on feedback, choose distribution channels', expert: 'Engineering mentor / growth expert' },
+    { week: 29, theme: 'Operations, Metrics & Legal', activity: 'Set up workflows, tracking, and address legal/ethics', expert: 'Operator / legal advisor' },
+    { week: 30, theme: 'Build Sprint 3 & Capital Options', activity: 'Scale what works, explore funding if traction warrants', expert: 'Engineering mentor / investor' },
+    { week: 31, theme: 'Demo Preparation & Story', activity: 'Present the truth: what worked, what didn\'t, what\'s next', expert: 'Pitch coach' },
+    { week: 32, theme: 'Demo Day & Real Decision Point', activity: 'Present to community, commit to continue or sunset', expert: 'Community + parents + advisors' }
 ];
 
 function buildCurriculumTableHtml() {
@@ -4156,30 +4148,20 @@ app.post('/api/send-phase2-invite', async (req, res) => {
             html: `
                 <!DOCTYPE html>
                 <html>
-                <head>
-                    <style>
-                        body { font-family: 'Outfit', -apple-system, sans-serif; line-height: 1.6; color: #0f172a; max-width: 720px; margin: 0 auto; padding: 0; background:#f1f5f9; }
-                        .header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); padding: 48px 30px; text-align: center; border-bottom: 4px solid #f97316; }
-                        .content { background: #ffffff; padding: 32px 28px 36px; }
-                        .info-box { background: #f8fafc; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #e2e8f0; }
-                        .cta-btn { display: inline-block; background: linear-gradient(135deg, #2563eb, #1e40af); color: white; padding: 16px 36px; border-radius: 99px; text-decoration: none; font-weight: 700; margin-top: 24px; font-size: 16px; }
-                        .footer { padding: 24px; text-align: center; color: #64748b; font-size: 13px; background: #f8fafc; }
-                        .pill { display:inline-block; padding: 6px 14px; background: rgba(249,115,22,0.15); color: #ea580c; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <div class="pill">Phase 2 · Accelerator</div>
-                        <h1 style="margin: 0 0 12px 0; font-size: 28px; font-weight: 800; color: white; line-height: 1.2;">🚀 ${student.student_name} is Invited to Phase 2!</h1>
-                        <p style="margin: 0; font-size: 16px; color: #bfdbfe; font-weight: 500;">20 Weeks of Real-World Venture Building</p>
+                <head><meta charset="utf-8"></head>
+                <body style="font-family:'Outfit',-apple-system,BlinkMacSystemFont,sans-serif;line-height:1.6;color:#0f172a;max-width:720px;margin:0 auto;padding:0;background:#f1f5f9;">
+                    <div style="background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);padding:48px 30px;text-align:center;border-bottom:4px solid #f97316;">
+                        <div style="display:inline-block;padding:6px 14px;background:rgba(249,115,22,0.15);color:#ea580c;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:24px;">Phase 2 · Accelerator</div>
+                        <h1 style="margin:0 0 12px 0;font-size:28px;font-weight:800;color:white;line-height:1.2;">🚀 ${student.student_name} is Invited to Phase 2!</h1>
+                        <p style="margin:0;font-size:16px;color:#bfdbfe;font-weight:500;">12 Weeks of Real-World Venture Building</p>
                     </div>
-                    <div class="content">
+                    <div style="background:#ffffff;padding:32px 28px 36px;">
                         <p><strong>Assalamu Alaikum ${student.parent_name},</strong></p>
-                        <p>Alhamdulillah, <strong>${student.student_name}</strong> has completed Phase 1 of the EdAI Accelerator! We are excited to invite them to continue their journey in <strong>Phase 2</strong> — a 20-week deep dive where students go from prototype to real venture.</p>
+                        <p>Alhamdulillah, <strong>${student.student_name}</strong> has completed Phase 1 of the EdAI Accelerator! We are excited to invite them to continue their journey in <strong>Phase 2</strong> — a 12-week deep dive where students go from prototype to real venture.</p>
 
-                        <div class="info-box">
+                        <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
                             <h3 style="margin:0 0 10px 0;font-size:15px;color:#0f172a;">📋 Phase 2 at a Glance</h3>
-                            <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 20 weeks (Weeks 21–40)</p>
+                            <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 12 weeks (Weeks 21–32)</p>
                             <p style="margin:4px 0;font-size:14px;"><strong>Schedule:</strong> Saturdays, 9 AM – 12:30 PM</p>
                             <p style="margin:4px 0;font-size:14px;"><strong>Focus:</strong> Customer discovery, team formation, real builds, sales, Demo Day</p>
                             <p style="margin:4px 0;font-size:14px;"><strong>Expert Access:</strong> Weekly sessions with founders, engineers, lawyers, investors & more</p>
@@ -4195,7 +4177,7 @@ app.post('/api/send-phase2-invite', async (req, res) => {
                         <p style="font-size:14px;">Please let us know if ${student.student_name} will be joining Phase 2 by clicking the button below. This helps us plan teams and secure expert sessions.</p>
 
                         <p style="text-align:center;">
-                            <a href="${confirmLink}" class="cta-btn">Respond to Invitation →</a>
+                            <a href="${confirmLink}" style="display:inline-block;background:#2563eb;color:white;padding:16px 36px;border-radius:99px;text-decoration:none;font-weight:700;margin-top:24px;font-size:16px;">Respond to Invitation →</a>
                         </p>
 
                         <p style="margin-top:24px;font-size:13px;color:#64748b;">If you have questions, reply to this email or contact us at <a href="mailto:aidris@edai.fun" style="color:#2563eb;font-weight:500;">aidris@edai.fun</a> or text/call <a href="tel:+15153570454" style="color:#2563eb;font-weight:500;">515-357-0454</a>.</p>
@@ -4203,7 +4185,7 @@ app.post('/api/send-phase2-invite', async (req, res) => {
                         <p style="margin-top:26px;font-size:14px;">We look forward to building the next chapter with ${student.student_name}, bi-idhnillah.</p>
                         <p style="margin:2px 0 0 0;font-size:14px;"><strong>— The EdAI Team</strong></p>
                     </div>
-                    <div class="footer">
+                    <div style="padding:24px;text-align:center;color:#64748b;font-size:13px;background:#f8fafc;">
                         <p>© ${new Date().getFullYear()} EdAI Accelerator</p>
                     </div>
                 </body>
@@ -4270,30 +4252,20 @@ app.post('/api/send-bulk-phase2-invites', async (req, res) => {
                     html: `
                         <!DOCTYPE html>
                         <html>
-                        <head>
-                            <style>
-                                body { font-family: 'Outfit', -apple-system, sans-serif; line-height: 1.6; color: #0f172a; max-width: 720px; margin: 0 auto; padding: 0; background:#f1f5f9; }
-                                .header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); padding: 48px 30px; text-align: center; border-bottom: 4px solid #f97316; }
-                                .content { background: #ffffff; padding: 32px 28px 36px; }
-                                .info-box { background: #f8fafc; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #e2e8f0; }
-                                .cta-btn { display: inline-block; background: linear-gradient(135deg, #2563eb, #1e40af); color: white; padding: 16px 36px; border-radius: 99px; text-decoration: none; font-weight: 700; margin-top: 24px; font-size: 16px; }
-                                .footer { padding: 24px; text-align: center; color: #64748b; font-size: 13px; background: #f8fafc; }
-                                .pill { display:inline-block; padding: 6px 14px; background: rgba(249,115,22,0.15); color: #ea580c; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px; }
-                            </style>
-                        </head>
-                        <body>
-                            <div class="header">
-                                <div class="pill">Phase 2 · Accelerator</div>
-                                <h1 style="margin: 0 0 12px 0; font-size: 28px; font-weight: 800; color: white; line-height: 1.2;">🚀 ${student.student_name} is Invited to Phase 2!</h1>
-                                <p style="margin: 0; font-size: 16px; color: #bfdbfe; font-weight: 500;">20 Weeks of Real-World Venture Building</p>
+                        <head><meta charset="utf-8"></head>
+                        <body style="font-family:'Outfit',-apple-system,BlinkMacSystemFont,sans-serif;line-height:1.6;color:#0f172a;max-width:720px;margin:0 auto;padding:0;background:#f1f5f9;">
+                            <div style="background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);padding:48px 30px;text-align:center;border-bottom:4px solid #f97316;">
+                                <div style="display:inline-block;padding:6px 14px;background:rgba(249,115,22,0.15);color:#ea580c;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:24px;">Phase 2 · Accelerator</div>
+                                <h1 style="margin:0 0 12px 0;font-size:28px;font-weight:800;color:white;line-height:1.2;">🚀 ${student.student_name} is Invited to Phase 2!</h1>
+                                <p style="margin:0;font-size:16px;color:#bfdbfe;font-weight:500;">12 Weeks of Real-World Venture Building</p>
                             </div>
-                            <div class="content">
+                            <div style="background:#ffffff;padding:32px 28px 36px;">
                                 <p><strong>Assalamu Alaikum ${student.parent_name},</strong></p>
-                                <p>Alhamdulillah, <strong>${student.student_name}</strong> has completed Phase 1 of the EdAI Accelerator! We are excited to invite them to continue their journey in <strong>Phase 2</strong> — a 20-week deep dive where students go from prototype to real venture.</p>
+                                <p>Alhamdulillah, <strong>${student.student_name}</strong> has completed Phase 1 of the EdAI Accelerator! We are excited to invite them to continue their journey in <strong>Phase 2</strong> — a 12-week deep dive where students go from prototype to real venture.</p>
 
-                                <div class="info-box">
+                                <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
                                     <h3 style="margin:0 0 10px 0;font-size:15px;color:#0f172a;">📋 Phase 2 at a Glance</h3>
-                                    <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 20 weeks (Weeks 21–40)</p>
+                                    <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 12 weeks (Weeks 21–32)</p>
                                     <p style="margin:4px 0;font-size:14px;"><strong>Schedule:</strong> Saturdays, 9 AM – 12:30 PM</p>
                                     <p style="margin:4px 0;font-size:14px;"><strong>Focus:</strong> Customer discovery, team formation, real builds, sales, Demo Day</p>
                                     <p style="margin:4px 0;font-size:14px;"><strong>Expert Access:</strong> Weekly sessions with founders, engineers, lawyers, investors & more</p>
@@ -4309,13 +4281,13 @@ app.post('/api/send-bulk-phase2-invites', async (req, res) => {
                                 <p style="font-size:14px;">Please let us know if ${student.student_name} will be joining Phase 2 by clicking the button below.</p>
 
                                 <p style="text-align:center;">
-                                    <a href="${confirmLink}" class="cta-btn">Respond to Invitation →</a>
+                                    <a href="${confirmLink}" style="display:inline-block;background:#2563eb;color:white;padding:16px 36px;border-radius:99px;text-decoration:none;font-weight:700;margin-top:24px;font-size:16px;">Respond to Invitation →</a>
                                 </p>
 
                                 <p style="margin-top:24px;font-size:13px;color:#64748b;">Questions? Contact <a href="mailto:aidris@edai.fun" style="color:#2563eb;">aidris@edai.fun</a> or call/text <a href="tel:+15153570454" style="color:#2563eb;">515-357-0454</a>.</p>
                                 <p style="margin-top:26px;font-size:14px;"><strong>— The EdAI Team</strong></p>
                             </div>
-                            <div class="footer"><p>© ${new Date().getFullYear()} EdAI Accelerator</p></div>
+                            <div style="padding:24px;text-align:center;color:#64748b;font-size:13px;background:#f8fafc;"><p>© ${new Date().getFullYear()} EdAI Accelerator</p></div>
                         </body>
                         </html>
                     `

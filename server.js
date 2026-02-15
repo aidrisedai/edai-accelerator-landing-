@@ -4070,22 +4070,22 @@ app.get('/api/get-submission', async (req, res) => {
 
 // Helper: Phase 2 curriculum data
 const PHASE2_CURRICULUM = [
-    { week: 21, theme: 'Entry, Expectations & Reality', activity: 'Confirm teams, sign working agreements, set honest goals', expert: 'EdAI leadership + returning founder' },
-    { week: 22, theme: 'Problem Discovery & Customer Access', activity: 'Interview 10+ potential users, document pain points', expert: 'Founder / customer development expert' },
-    { week: 23, theme: 'Problem Lock-In & Market Sizing', activity: 'Choose one problem, estimate addressable market', expert: 'Operator / market analyst' },
-    { week: 24, theme: 'Team Roles & Conflict Norms', activity: 'Define ownership, decision rights, disagreement process', expert: 'Leadership coach' },
-    { week: 25, theme: 'Business Models & Company Structures', activity: 'Understand LLC/C-corp/partnership (don\'t form yet)', expert: 'Legal expert' },
-    { week: 26, theme: 'Product Scope & Roadmapping', activity: 'Define brutally minimal MVP', expert: 'Product manager' },
-    { week: 27, theme: 'Budget & Build Sprint 1', activity: 'Create spend plan, build core product with real constraints', expert: 'Finance / engineering mentor' },
-    { week: 28, theme: 'User Testing Week', activity: '15+ user tests, document feedback systematically', expert: 'UX researcher' },
-    { week: 29, theme: 'Sales Conversations & Value Prop', activity: 'Attempt to sell (even if free beta), refine messaging', expert: 'Sales professional' },
-    { week: 30, theme: 'Pivot or Persevere Decision', activity: 'Use data to decide: continue, pivot, or stop', expert: 'Product manager + mentor panel' },
-    { week: 31, theme: 'Build Sprint 2', activity: 'Iterate based on user feedback and sales learnings', expert: 'Engineering mentor' },
-    { week: 32, theme: 'GTM Strategy & Operations', activity: 'Choose distribution channels, set up internal workflows', expert: 'Growth expert / operator' },
-    { week: 33, theme: 'Metrics & Decision Making', activity: 'Define 3-5 key metrics, set up tracking', expert: 'Product / analytics' },
-    { week: 34, theme: 'Legal, Risk & Capital Options', activity: 'Privacy, ethics, funding paths if traction warrants', expert: 'Legal advisor / investor' },
-    { week: 35, theme: 'Demo Preparation & Story', activity: 'Present the truth: what worked, what didn\'t, what\'s next', expert: 'Pitch coach' },
-    { week: 36, theme: 'Demo Day & Real Decision Point', activity: 'Present to community, commit to continue or sunset', expert: 'Community + parents + advisors' }
+    { week: 1, theme: 'Entry, Expectations & Reality', activity: 'Confirm teams, sign working agreements, set honest goals', expert: 'EdAI leadership + returning founder' },
+    { week: 2, theme: 'Problem Discovery & Customer Access', activity: 'Interview 10+ potential users, document pain points', expert: 'Founder / customer development expert' },
+    { week: 3, theme: 'Problem Lock-In & Market Sizing', activity: 'Choose one problem, estimate addressable market', expert: 'Operator / market analyst' },
+    { week: 4, theme: 'Team Roles & Conflict Norms', activity: 'Define ownership, decision rights, disagreement process', expert: 'Leadership coach' },
+    { week: 5, theme: 'Business Models & Company Structures', activity: 'Understand LLC/C-corp/partnership (don\'t form yet)', expert: 'Legal expert' },
+    { week: 6, theme: 'Product Scope & Roadmapping', activity: 'Define brutally minimal MVP', expert: 'Product manager' },
+    { week: 7, theme: 'Budget & Build Sprint 1', activity: 'Create spend plan, build core product with real constraints', expert: 'Finance / engineering mentor' },
+    { week: 8, theme: 'User Testing Week', activity: '15+ user tests, document feedback systematically', expert: 'UX researcher' },
+    { week: 9, theme: 'Sales Conversations & Value Prop', activity: 'Attempt to sell (even if free beta), refine messaging', expert: 'Sales professional' },
+    { week: 10, theme: 'Pivot or Persevere Decision', activity: 'Use data to decide: continue, pivot, or stop', expert: 'Product manager + mentor panel' },
+    { week: 11, theme: 'Build Sprint 2', activity: 'Iterate based on user feedback and sales learnings', expert: 'Engineering mentor' },
+    { week: 12, theme: 'GTM Strategy & Operations', activity: 'Choose distribution channels, set up internal workflows', expert: 'Growth expert / operator' },
+    { week: 13, theme: 'Metrics & Decision Making', activity: 'Define 3-5 key metrics, set up tracking', expert: 'Product / analytics' },
+    { week: 14, theme: 'Legal, Risk & Capital Options', activity: 'Privacy, ethics, funding paths if traction warrants', expert: 'Legal advisor / investor' },
+    { week: 15, theme: 'Demo Preparation & Story', activity: 'Present the truth: what worked, what didn\'t, what\'s next', expert: 'Pitch coach' },
+    { week: 16, theme: 'Demo Day & Real Decision Point', activity: 'Present to community, commit to continue or sunset', expert: 'Community + parents + advisors' }
 ];
 
 function buildCurriculumTableHtml() {

@@ -4072,16 +4072,20 @@ app.get('/api/get-submission', async (req, res) => {
 const PHASE2_CURRICULUM = [
     { week: 21, theme: 'Entry, Expectations & Reality', activity: 'Confirm teams, sign working agreements, set honest goals', expert: 'EdAI leadership + returning founder' },
     { week: 22, theme: 'Problem Discovery & Customer Access', activity: 'Interview 10+ potential users, document pain points', expert: 'Founder / customer development expert' },
-    { week: 23, theme: 'Problem Lock-In & Team Formation', activity: 'Choose one problem, define ownership & decision rights', expert: 'Operator / leadership coach' },
-    { week: 24, theme: 'Business Models & Product Roadmap', activity: 'Understand business structures, define minimal MVP', expert: 'Legal expert / product manager' },
-    { week: 25, theme: 'Budget, Build & Launch Sprint', activity: 'Create spend plan, build core product with real constraints', expert: 'Finance / engineering mentor' },
-    { week: 26, theme: 'User Testing & Sales', activity: 'Run 15+ user tests, attempt first sales conversations', expert: 'UX researcher / sales professional' },
-    { week: 27, theme: 'Pivot or Persevere Decision', activity: 'Use data to decide: continue, pivot, or stop', expert: 'Product manager + mentor panel' },
-    { week: 28, theme: 'Build Sprint 2 & GTM Strategy', activity: 'Iterate on feedback, choose distribution channels', expert: 'Engineering mentor / growth expert' },
-    { week: 29, theme: 'Operations, Metrics & Legal', activity: 'Set up workflows, tracking, and address legal/ethics', expert: 'Operator / legal advisor' },
-    { week: 30, theme: 'Build Sprint 3 & Capital Options', activity: 'Scale what works, explore funding if traction warrants', expert: 'Engineering mentor / investor' },
-    { week: 31, theme: 'Demo Preparation & Story', activity: 'Present the truth: what worked, what didn\'t, what\'s next', expert: 'Pitch coach' },
-    { week: 32, theme: 'Demo Day & Real Decision Point', activity: 'Present to community, commit to continue or sunset', expert: 'Community + parents + advisors' }
+    { week: 23, theme: 'Problem Lock-In & Market Sizing', activity: 'Choose one problem, estimate addressable market', expert: 'Operator / market analyst' },
+    { week: 24, theme: 'Team Roles & Conflict Norms', activity: 'Define ownership, decision rights, disagreement process', expert: 'Leadership coach' },
+    { week: 25, theme: 'Business Models & Company Structures', activity: 'Understand LLC/C-corp/partnership (don\'t form yet)', expert: 'Legal expert' },
+    { week: 26, theme: 'Product Scope & Roadmapping', activity: 'Define brutally minimal MVP', expert: 'Product manager' },
+    { week: 27, theme: 'Budget & Build Sprint 1', activity: 'Create spend plan, build core product with real constraints', expert: 'Finance / engineering mentor' },
+    { week: 28, theme: 'User Testing Week', activity: '15+ user tests, document feedback systematically', expert: 'UX researcher' },
+    { week: 29, theme: 'Sales Conversations & Value Prop', activity: 'Attempt to sell (even if free beta), refine messaging', expert: 'Sales professional' },
+    { week: 30, theme: 'Pivot or Persevere Decision', activity: 'Use data to decide: continue, pivot, or stop', expert: 'Product manager + mentor panel' },
+    { week: 31, theme: 'Build Sprint 2', activity: 'Iterate based on user feedback and sales learnings', expert: 'Engineering mentor' },
+    { week: 32, theme: 'GTM Strategy & Operations', activity: 'Choose distribution channels, set up internal workflows', expert: 'Growth expert / operator' },
+    { week: 33, theme: 'Metrics & Decision Making', activity: 'Define 3-5 key metrics, set up tracking', expert: 'Product / analytics' },
+    { week: 34, theme: 'Legal, Risk & Capital Options', activity: 'Privacy, ethics, funding paths if traction warrants', expert: 'Legal advisor / investor' },
+    { week: 35, theme: 'Demo Preparation & Story', activity: 'Present the truth: what worked, what didn\'t, what\'s next', expert: 'Pitch coach' },
+    { week: 36, theme: 'Demo Day & Real Decision Point', activity: 'Present to community, commit to continue or sunset', expert: 'Community + parents + advisors' }
 ];
 
 function buildCurriculumTableHtml() {
@@ -4153,16 +4157,16 @@ app.post('/api/send-phase2-invite', async (req, res) => {
                     <div style="background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);padding:48px 30px;text-align:center;border-bottom:4px solid #f97316;">
                         <div style="display:inline-block;padding:6px 14px;background:rgba(249,115,22,0.15);color:#ea580c;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:24px;">Phase 2 · Accelerator</div>
                         <h1 style="margin:0 0 12px 0;font-size:28px;font-weight:800;color:white;line-height:1.2;">🚀 ${student.student_name} is Invited to Phase 2!</h1>
-                        <p style="margin:0;font-size:16px;color:#bfdbfe;font-weight:500;">12 Weeks of Real-World Venture Building</p>
+                        <p style="margin:0;font-size:16px;color:#bfdbfe;font-weight:500;">16 Weeks of Real-World Venture Building</p>
                     </div>
                     <div style="background:#ffffff;padding:32px 28px 36px;">
                         <p><strong>Assalamu Alaikum ${student.parent_name},</strong></p>
-                        <p>Alhamdulillah, <strong>${student.student_name}</strong> has completed Phase 1 of the EdAI Accelerator! We are excited to invite them to continue their journey in <strong>Phase 2</strong> — a 12-week deep dive where students go from prototype to real venture.</p>
+                        <p>Alhamdulillah, <strong>${student.student_name}</strong> has completed Phase 1 of the EdAI Accelerator! We are excited to invite them to continue their journey in <strong>Phase 2</strong> — a 16-week deep dive where students go from prototype to real venture.</p>
 
                         <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
                             <h3 style="margin:0 0 10px 0;font-size:15px;color:#0f172a;">📋 Phase 2 at a Glance</h3>
-                            <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 12 weeks (Weeks 21–32)</p>
-                            <p style="margin:4px 0;font-size:14px;"><strong>Dates:</strong> Tentative March 28 – June 20, 2026</p>
+                            <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 16 weeks (Weeks 21–36)</p>
+                            <p style="margin:4px 0;font-size:14px;"><strong>Dates:</strong> February 28 – June 13, 2026, in shaa Allah</p>
                             <p style="margin:4px 0;font-size:14px;"><strong>Schedule:</strong> Saturdays, 9 AM – 12:30 PM</p>
                             <p style="margin:4px 0;font-size:14px;"><strong>Focus:</strong> Customer discovery, team formation, real builds, sales, Demo Day</p>
                             <p style="margin:4px 0;font-size:14px;"><strong>Expert Access:</strong> Weekly sessions with founders, engineers, lawyers, investors & more</p>
@@ -4258,16 +4262,16 @@ app.post('/api/send-bulk-phase2-invites', async (req, res) => {
                             <div style="background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);padding:48px 30px;text-align:center;border-bottom:4px solid #f97316;">
                                 <div style="display:inline-block;padding:6px 14px;background:rgba(249,115,22,0.15);color:#ea580c;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:24px;">Phase 2 · Accelerator</div>
                                 <h1 style="margin:0 0 12px 0;font-size:28px;font-weight:800;color:white;line-height:1.2;">🚀 ${student.student_name} is Invited to Phase 2!</h1>
-                                <p style="margin:0;font-size:16px;color:#bfdbfe;font-weight:500;">12 Weeks of Real-World Venture Building</p>
+                                <p style="margin:0;font-size:16px;color:#bfdbfe;font-weight:500;">16 Weeks of Real-World Venture Building</p>
                             </div>
                             <div style="background:#ffffff;padding:32px 28px 36px;">
                                 <p><strong>Assalamu Alaikum ${student.parent_name},</strong></p>
-                                <p>Alhamdulillah, <strong>${student.student_name}</strong> has completed Phase 1 of the EdAI Accelerator! We are excited to invite them to continue their journey in <strong>Phase 2</strong> — a 12-week deep dive where students go from prototype to real venture.</p>
+                                <p>Alhamdulillah, <strong>${student.student_name}</strong> has completed Phase 1 of the EdAI Accelerator! We are excited to invite them to continue their journey in <strong>Phase 2</strong> — a 16-week deep dive where students go from prototype to real venture.</p>
 
                                 <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
                                     <h3 style="margin:0 0 10px 0;font-size:15px;color:#0f172a;">📋 Phase 2 at a Glance</h3>
-                                    <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 12 weeks (Weeks 21–32)</p>
-                                    <p style="margin:4px 0;font-size:14px;"><strong>Dates:</strong> Tentative March 28 – June 20, 2026</p>
+                                    <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 16 weeks (Weeks 21–36)</p>
+                                    <p style="margin:4px 0;font-size:14px;"><strong>Dates:</strong> February 28 – June 13, 2026, in shaa Allah</p>
                                     <p style="margin:4px 0;font-size:14px;"><strong>Schedule:</strong> Saturdays, 9 AM – 12:30 PM</p>
                                     <p style="margin:4px 0;font-size:14px;"><strong>Focus:</strong> Customer discovery, team formation, real builds, sales, Demo Day</p>
                                     <p style="margin:4px 0;font-size:14px;"><strong>Expert Access:</strong> Weekly sessions with founders, engineers, lawyers, investors & more</p>

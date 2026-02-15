@@ -358,6 +358,7 @@
               </div>
             `;
           }
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
           errEl.innerHTML = `<div class="error" style="margin-bottom:1rem;">${escapeHtml(data.error || 'Something went wrong.')}</div>`;
           btnAccept.disabled = false;

@@ -4165,7 +4165,7 @@ app.post('/api/send-phase2-invite', async (req, res) => {
 
                         <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
                             <h3 style="margin:0 0 10px 0;font-size:15px;color:#0f172a;">📋 Phase 2 at a Glance</h3>
-                            <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 16 weeks (Weeks 21–36)</p>
+                            <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 16 weeks</p>
                             <p style="margin:4px 0;font-size:14px;"><strong>Dates:</strong> February 28 – June 13, 2026, in shaa Allah</p>
                             <p style="margin:4px 0;font-size:14px;"><strong>Schedule:</strong> Saturdays, 9 AM – 12:30 PM</p>
                             <p style="margin:4px 0;font-size:14px;"><strong>Focus:</strong> Customer discovery, team formation, real builds, sales, Demo Day</p>
@@ -4270,7 +4270,7 @@ app.post('/api/send-bulk-phase2-invites', async (req, res) => {
 
                                 <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
                                     <h3 style="margin:0 0 10px 0;font-size:15px;color:#0f172a;">📋 Phase 2 at a Glance</h3>
-                                    <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 16 weeks (Weeks 21–36)</p>
+                                    <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 16 weeks</p>
                                     <p style="margin:4px 0;font-size:14px;"><strong>Dates:</strong> February 28 – June 13, 2026, in shaa Allah</p>
                                     <p style="margin:4px 0;font-size:14px;"><strong>Schedule:</strong> Saturdays, 9 AM – 12:30 PM</p>
                                     <p style="margin:4px 0;font-size:14px;"><strong>Focus:</strong> Customer discovery, team formation, real builds, sales, Demo Day</p>

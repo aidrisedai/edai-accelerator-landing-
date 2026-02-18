@@ -1150,7 +1150,31 @@
             };
             const c = colors[inv.status] || colors.sent;
             let notesHtml = inv.parent_notes ? ` title="${inv.parent_notes.replace(/"/g, '&quot;')}"` : '';
-            return `<span${notesHtml} style="padding: 0.25rem 0.75rem; background: ${c.bg}; color: ${c.color}; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: default;">${c.label}</span>`;
+            let resendBtn = inv.status === 'sent' ? ` <button onclick="resendPhase2Invite(${studentId})" style="padding: 0.25rem 0.5rem; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 8px; font-size: 0.7rem; font-weight: 600; cursor: pointer;" title="Resend email">🔄 Resend</button>` : '';
+            return `<span${notesHtml} style="padding: 0.25rem 0.75rem; background: ${c.bg}; color: ${c.color}; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: default;">${c.label}</span>${resendBtn}`;
+        }
+        
+        async function resendPhase2Invite(studentId) {
+            const student = currentProgramStudents.find(s => s.id === studentId);
+            if (!student) return;
+            if (!confirm(`Resend Phase 2 invitation email to ${student.parent_name} (${student.parent_email})?`)) return;
+            
+            try {
+                const response = await fetch('/api/resend-phase2-invite', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert(data.message);
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to resend invitation.');
+            }
         }
         
         async function sendPhase2Invite(studentId) {

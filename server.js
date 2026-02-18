@@ -4207,6 +4207,104 @@ app.post('/api/send-phase2-invite', async (req, res) => {
     }
 });
 
+// Resend Phase 2 invite email (uses existing token)
+app.post('/api/resend-phase2-invite', async (req, res) => {
+    try {
+        const { studentId } = req.body;
+        if (!studentId) return res.status(400).json({ success: false, error: 'Student ID is required' });
+
+        // Get student details
+        const studentResult = await pool.query(
+            'SELECT es.*, p.name as program_name FROM enrolled_students es JOIN programs p ON es.program_id = p.id WHERE es.id = $1',
+            [studentId]
+        );
+        if (studentResult.rows.length === 0) return res.status(404).json({ success: false, error: 'Student not found' });
+        const student = studentResult.rows[0];
+
+        // Get existing invitation
+        const existing = await pool.query(
+            'SELECT * FROM phase2_invitations WHERE enrolled_student_id = $1',
+            [studentId]
+        );
+        if (existing.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'No invitation found for this student' });
+        }
+        const invitation = existing.rows[0];
+
+        // Build confirmation link with existing token
+        const baseUrl = process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+        const confirmLink = `${baseUrl}/phase2-confirm?token=${encodeURIComponent(invitation.invitation_token)}`;
+
+        // Resend email
+        const settings = await getSettings();
+        const { Resend } = require('resend');
+        const resend = new Resend(settings.resend_api_key || process.env.RESEND_API_KEY);
+
+        await resend.emails.send({
+            from: settings.email_from_address || 'EdAI <noreply@edai.fun>',
+            to: student.parent_email,
+            subject: `🚀 ${student.student_name} is Invited to Phase 2 — EdAI Accelerator`,
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head><meta charset="utf-8"></head>
+                <body style="font-family:'Outfit',-apple-system,BlinkMacSystemFont,sans-serif;line-height:1.6;color:#0f172a;max-width:720px;margin:0 auto;padding:0;background:#f1f5f9;">
+                    <div style="background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);padding:48px 30px;text-align:center;border-bottom:4px solid #f97316;">
+                        <div style="display:inline-block;padding:6px 14px;background:rgba(249,115,22,0.15);color:#ea580c;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:24px;">Phase 2 · Accelerator</div>
+                        <h1 style="margin:0 0 12px 0;font-size:28px;font-weight:800;color:white;line-height:1.2;">🚀 ${student.student_name} is Invited to Phase 2!</h1>
+                        <p style="margin:0;font-size:16px;color:#bfdbfe;font-weight:500;">16 Weeks of Real-World Venture Building</p>
+                    </div>
+                    <div style="background:#ffffff;padding:32px 28px 36px;">
+                        <p><strong>Assalamu Alaikum ${student.parent_name},</strong></p>
+                        <p>Alhamdulillah, <strong>${student.student_name}</strong> has completed Phase 1 of the EdAI Accelerator! We are excited to invite them to continue their journey in <strong>Phase 2</strong> — a 16-week deep dive where students go from prototype to real venture.</p>
+
+                        <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
+                            <h3 style="margin:0 0 10px 0;font-size:15px;color:#0f172a;">📋 Phase 2 at a Glance</h3>
+                            <p style="margin:4px 0;font-size:14px;"><strong>Duration:</strong> 16 weeks</p>
+                            <p style="margin:4px 0;font-size:14px;"><strong>Dates:</strong> February 28 – June 13, 2026, in shaa Allah</p>
+                            <p style="margin:4px 0;font-size:14px;"><strong>Schedule:</strong> Saturdays, 9 AM – 12:30 PM</p>
+                            <p style="margin:4px 0;font-size:14px;"><strong>Focus:</strong> Customer discovery, team formation, real builds, sales, Demo Day</p>
+                            <p style="margin:4px 0;font-size:14px;"><strong>Expert Access:</strong> Weekly sessions with founders, engineers, lawyers, investors & more</p>
+                        </div>
+
+                        <h3 style="margin-top:24px;font-size:15px;">📚 What Phase 2 Covers</h3>
+                        <p style="font-size:14px;color:#475569;">Each week brings a new focus area with hands-on activities and expert guidance:</p>
+                        <div style="overflow-x:auto;margin:16px 0;border:1px solid #e2e8f0;border-radius:12px;">
+                            ${buildCurriculumTableHtml()}
+                        </div>
+
+                        <h3 style="margin-top:24px;font-size:15px;">✅ What We Need From You</h3>
+                        <p style="font-size:14px;">Please let us know if ${student.student_name} will be joining Phase 2 by clicking the button below. This helps us plan teams and secure expert sessions.</p>
+
+                        <p style="text-align:center;">
+                            <a href="${confirmLink}" style="display:inline-block;background:#2563eb;color:white;padding:16px 36px;border-radius:99px;text-decoration:none;font-weight:700;margin-top:24px;font-size:16px;">Respond to Invitation →</a>
+                        </p>
+
+                        <p style="margin-top:24px;font-size:13px;color:#64748b;">If you have questions, reply to this email or contact us at <a href="mailto:aidris@edai.fun" style="color:#2563eb;font-weight:500;">aidris@edai.fun</a> or text/call <a href="tel:+15153570454" style="color:#2563eb;font-weight:500;">515-357-0454</a>.</p>
+
+                        <p style="margin-top:26px;font-size:14px;">We look forward to building the next chapter with ${student.student_name}, bi-idhnillah.</p>
+                        <p style="margin:2px 0 0 0;font-size:14px;"><strong>— The EdAI Team</strong></p>
+                    </div>
+                    <div style="padding:24px;text-align:center;color:#64748b;font-size:13px;background:#f8fafc;">
+                        <p>© ${new Date().getFullYear()} EdAI Accelerator</p>
+                    </div>
+                </body>
+                </html>
+            `
+        });
+
+        // Update sent_at timestamp
+        await pool.query('UPDATE phase2_invitations SET sent_at = NOW() WHERE enrolled_student_id = $1', [studentId]);
+
+        console.log(`Phase 2 invite resent to ${student.parent_email} for ${student.student_name}`);
+        res.status(200).json({ success: true, message: `Phase 2 invitation resent to ${student.parent_email}` });
+
+    } catch (error) {
+        console.error('Error resending Phase 2 invite:', error);
+        res.status(500).json({ success: false, error: 'Failed to resend invitation: ' + error.message });
+    }
+});
+
 // Bulk send Phase 2 invites for all students in a program
 app.post('/api/send-bulk-phase2-invites', async (req, res) => {
     try {
